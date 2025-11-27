@@ -1,0 +1,2429 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Sparkles,
+  Zap,
+  Users,
+  Target,
+  Trophy,
+  Church,
+  ShoppingBag,
+  Star,
+  Flame,
+  Shield,
+  Sword,
+  Cpu,
+  Droplet,
+  Briefcase,
+  Music,
+  Menu,
+  X,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  MessageSquare,
+  Globe,
+  LogOut,
+  Play,
+  Pause,
+} from 'lucide-react';
+
+const CosmicSyndicate = () => {
+  const [activeSection, setActiveSection] = useState('home');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [reviews, setReviews] = useState([
+    {
+      id: 1,
+      name: 'Gloria',
+      rating: 4,
+      comment: 'I guess they are okay',
+      date: 'Cosmic Year 2024.7',
+    },
+  ]);
+  const [newReview, setNewReview] = useState({
+    name: '',
+    rating: 5,
+    comment: '',
+  });
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [showCareers, setShowCareers] = useState(false);
+  const [showOperations, setShowOperations] = useState(false);
+  const [selectedPlanet, setSelectedPlanet] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({
+    cardNumber: '',
+    fullName: '',
+    expiryDate: '',
+    cvv: '',
+  });
+  const [careerForm, setCareerForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    nationalId: '',
+    position: '',
+    summary: '',
+    resume: null,
+  });
+  const [showShootingStar, setShowShootingStar] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+
+  // PAUSE STATE
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false); // Ref needed for animation loop access
+
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Toggle Pause Function
+  const togglePause = () => {
+    const newState = !isPaused;
+    setIsPaused(newState);
+    isPausedRef.current = newState;
+  };
+
+  // --- 3D SOLAR SYSTEM LOGIC ---
+  useEffect(() => {
+    if (!showOperations || !mountRef.current) return;
+
+    let scene, camera, renderer, controls, animationId;
+    let planets = [];
+    let raycaster, mouse;
+
+    // Reset pause state when opening
+    setIsPaused(false);
+    isPausedRef.current = false;
+
+    // Load THREE.js + OrbitControls from CDN
+    const loadThreeJS = async () => {
+      if (window.THREE && window.THREE.OrbitControls) {
+        initSolarSystem();
+        return;
+      }
+
+      // 1. Load Main Three.js
+      const scriptMain = document.createElement('script');
+      scriptMain.src =
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+      scriptMain.async = true;
+      scriptMain.onload = () => {
+        // 2. Load OrbitControls
+        const scriptControls = document.createElement('script');
+        scriptControls.src =
+          'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+        scriptControls.async = true;
+        scriptControls.onload = () => {
+          initSolarSystem();
+        };
+        document.head.appendChild(scriptControls);
+      };
+      document.head.appendChild(scriptMain);
+    };
+
+    const initSolarSystem = () => {
+      const THREE = window.THREE;
+      const container = mountRef.current;
+
+      // SCENE
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x000000, 0.002);
+
+      // CAMERA
+      camera = new THREE.PerspectiveCamera(
+        60,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        2000
+      );
+      camera.position.set(0, 150, 300);
+
+      // RENDERER
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      // CONTROLS
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.enablePan = false;
+      controls.minDistance = 50;
+      controls.maxDistance = 800;
+
+      // LIGHTING
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      scene.add(ambientLight);
+
+      const sunLight = new THREE.PointLight(0xffaa00, 1.5, 1000);
+      sunLight.position.set(0, 0, 0);
+      scene.add(sunLight);
+
+      // --- OBJECTS ---
+
+      // 1. THE RED STAR (Sun)
+      const sunGeo = new THREE.SphereGeometry(15, 64, 64);
+      const sunMat = new THREE.MeshBasicMaterial({ color: 0xff3300 });
+      const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+      scene.add(sunMesh);
+
+      // Animated Sun Glow
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const context = canvas.getContext('2d');
+      const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, 'rgba(255, 100, 0, 1)');
+      gradient.addColorStop(0.2, 'rgba(255, 50, 0, 0.6)');
+      gradient.addColorStop(0.5, 'rgba(100, 20, 0, 0.2)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+
+      const glowTexture = new THREE.CanvasTexture(canvas);
+      const glowMat = new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: 0xff5500,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+      });
+      const sunGlow = new THREE.Sprite(glowMat);
+      sunGlow.scale.set(80, 80, 1);
+      sunMesh.add(sunGlow);
+
+      // 2. PLANETS
+      const planetsData = [
+        {
+          name: 'Sulfur',
+          distance: 60,
+          size: 4,
+          speed: 0.005,
+          color: 0xd97706,
+          desc: 'Desert world - rocky terrain, sulfur lakes, extreme heat.',
+          mat: { roughness: 0.9, metalness: 0.1 },
+        },
+        {
+          name: 'Rodina',
+          distance: 90,
+          size: 6,
+          speed: 0.004,
+          color: 0x3b82f6,
+          desc: 'Earthy paradise.',
+          mat: { roughness: 0.4, metalness: 0.1, emissive: 0x001133 },
+        },
+        {
+          name: 'Cupie',
+          distance: 130,
+          size: 7,
+          speed: 0.003,
+          color: 0xa855f7,
+          desc: 'Cracked heart planet. Green forests meet purple wastelands.',
+          hasRing: true,
+          mat: { roughness: 0.6 },
+        },
+        {
+          name: 'Apatia',
+          distance: 170,
+          size: 5.5,
+          speed: 0.0025,
+          color: 0x06b6d4,
+          desc: 'Earth with a twist. Time flows differently here.',
+          mat: { roughness: 0.3, metalness: 0.2 },
+        },
+        {
+          name: 'The March',
+          distance: 210,
+          size: 6.5,
+          speed: 0.002,
+          color: 0x6b7280,
+          desc: 'Abandoned military world. Ruins and artifcats.',
+          mat: { roughness: 1.0, metalness: 0.5 },
+        },
+        {
+          name: 'The Wilds',
+          distance: 250,
+          size: 8,
+          speed: 0.0015,
+          color: 0x10b981,
+          desc: 'Amazon forest planet. Endless bioluminescent jungle.',
+          mat: { roughness: 0.8, emissive: 0x002200 },
+        },
+        {
+          name: 'Phantoma',
+          distance: 300,
+          size: 7,
+          speed: 0.001,
+          color: 0xffffff,
+          desc: 'Ghost planet with military moon Neinich.',
+          hasMoon: true,
+          isGhost: true,
+        },
+      ];
+
+      planetsData.forEach((data, index) => {
+        // Orbit Line
+        const orbitGeo = new THREE.RingGeometry(
+          data.distance - 0.3,
+          data.distance + 0.3,
+          128
+        );
+        const orbitMat = new THREE.MeshBasicMaterial({
+          color: 0x666666,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.3,
+        });
+        const orbit = new THREE.Mesh(orbitGeo, orbitMat);
+        orbit.rotation.x = Math.PI / 2;
+        scene.add(orbit);
+
+        // Planet Mesh
+        const geometry = new THREE.SphereGeometry(data.size, 32, 32);
+        let material;
+
+        if (data.isGhost) {
+          material = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3,
+            transmission: 0.6,
+            roughness: 0.2,
+            metalness: 0.1,
+          });
+        } else {
+          material = new THREE.MeshStandardMaterial({
+            color: data.color,
+            ...data.mat,
+          });
+        }
+
+        const planet = new THREE.Mesh(geometry, material);
+        planet.userData = { ...data, index };
+        scene.add(planet);
+
+        // Ring for Cupi
+        if (data.hasRing) {
+          const ringGeo = new THREE.RingGeometry(
+            data.size * 1.4,
+            data.size * 2.2,
+            64
+          );
+          const ringMat = new THREE.MeshStandardMaterial({
+            color: 0xcc88ff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.7,
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = Math.PI / 2;
+          planet.add(ring);
+        }
+
+        // Moon for Phantoma
+        if (data.hasMoon) {
+          const moonPivot = new THREE.Object3D();
+          planet.add(moonPivot);
+          const moonGeo = new THREE.SphereGeometry(data.size * 0.35, 16, 16);
+          const moonMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+          const moon = new THREE.Mesh(moonGeo, moonMat);
+          moon.position.set(12, 0, 0);
+          moon.userData = { name: 'Neiniche', desc: 'Military Moon Fortress' };
+          moonPivot.add(moon);
+          data.moonPivot = moonPivot;
+        }
+
+        const angle = Math.random() * Math.PI * 2;
+        planets.push({
+          mesh: planet,
+          distance: data.distance,
+          speed: data.speed,
+          angle: angle,
+          moonPivot: data.moonPivot,
+        });
+      });
+
+      // RAYCASTER
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      const onMouseClick = (event) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
+        const hit = intersects.find(
+          (i) =>
+            i.object.userData &&
+            (i.object.userData.name || i.object.userData.desc)
+        );
+        if (hit) {
+          const planetData = hit.object.userData.name
+            ? hit.object.userData
+            : hit.object.parent.userData;
+          setSelectedPlanet(planetData);
+        }
+      };
+
+      renderer.domElement.addEventListener('click', onMouseClick);
+
+      // ANIMATION
+      const animate = () => {
+        animationId = requestAnimationFrame(animate);
+
+        controls.update();
+
+        // Always animate Sun Glow
+        const time = Date.now() * 0.001;
+        sunGlow.scale.set(80 + Math.sin(time) * 5, 80 + Math.sin(time) * 5, 1);
+
+        // ONLY ANIMATE PLANETS IF NOT PAUSED
+        if (!isPausedRef.current) {
+          planets.forEach((p) => {
+            p.angle += p.speed;
+            p.mesh.position.x = Math.cos(p.angle) * p.distance;
+            p.mesh.position.z = Math.sin(p.angle) * p.distance;
+            p.mesh.rotation.y += 0.005;
+
+            if (p.moonPivot) {
+              p.moonPivot.rotation.y += 0.03;
+            }
+          });
+        }
+
+        renderer.render(scene, camera);
+      };
+
+      animate();
+
+      const handleResize = () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      };
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        cancelAnimationFrame(animationId);
+        window.removeEventListener('resize', handleResize);
+        if (container) {
+          container.innerHTML = '';
+        }
+        renderer.dispose();
+      };
+    };
+
+    loadThreeJS();
+  }, [showOperations]);
+
+  // --- STANDARD FUNCTIONS ---
+  const scrollToSection = (section) => {
+    setActiveSection(section);
+    setMobileMenuOpen(false);
+    document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const addToCart = (item) => {
+    setCart((prev) => {
+      const existing = prev.find((i) => i.name === item.name);
+      if (existing) {
+        return prev.map((i) =>
+          i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+    setCartOpen(true);
+    setTimeout(() => setCartOpen(false), 2000);
+  };
+
+  const removeFromCart = (itemName) => {
+    setCart((prev) => prev.filter((i) => i.name !== itemName));
+  };
+
+  const updateQuantity = (itemName, delta) => {
+    setCart((prev) =>
+      prev
+        .map((i) => {
+          if (i.name === itemName) {
+            const newQuantity = i.quantity + delta;
+            return newQuantity > 0 ? { ...i, quantity: newQuantity } : i;
+          }
+          return i;
+        })
+        .filter((i) => i.quantity > 0)
+    );
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce(
+      (sum, item) =>
+        sum + parseInt(item.price.replace(/,/g, '')) * item.quantity,
+      0
+    );
+  };
+
+  const submitReview = (e) => {
+    e.preventDefault();
+    if (newReview.name && newReview.comment) {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      setReviews((prev) => [
+        ...prev,
+        { ...newReview, id: Date.now(), date: `Cosmic Year ${formattedDate}` },
+      ]);
+      setNewReview({ name: '', rating: 5, comment: '' });
+      setTimeout(
+        () =>
+          document
+            .getElementById('reviews')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+        100
+      );
+    }
+  };
+
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
+    document.getElementById('cart-drawer')?.classList.add('translate-x-full');
+    setShowCheckout(true);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
+  const handlePayment = (e) => {
+    e.preventDefault();
+    setCart([]);
+    setShowPaymentSuccess(true);
+    setTimeout(() => {
+      setShowCheckout(false);
+      setShowPaymentSuccess(false);
+      setPaymentForm({ cardNumber: '', fullName: '', expiryDate: '', cvv: '' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 5000);
+  };
+
+  const handleCareerSubmit = (e) => {
+    e.preventDefault();
+    setCareerForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      nationalId: '',
+      position: '',
+      summary: '',
+      resume: null,
+    });
+    const fileInput = document.getElementById('resume-upload');
+    if (fileInput) fileInput.value = '';
+    setShowShootingStar(true);
+    setTimeout(() => setShowShootingStar(false), 2500);
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setCareerForm({ ...careerForm, resume: e.target.files[0] });
+    }
+  };
+
+  // --- COMPONENTS ---
+  const StarField = () => (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {[...Array(100)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 3}s`,
+            opacity: Math.random() * 0.7 + 0.3,
+          }}
+        />
+      ))}
+    </div>
+  );
+
+  const ShootingStar = () => (
+    <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
+      <div
+        className="absolute animate-[shooting-star_2s_ease-out]"
+        style={{
+          top: '10%',
+          left: '-10%',
+          animation: 'shooting-star 2s ease-out forwards',
+        }}
+      >
+        <div className="relative">
+          <Star className="w-12 h-12 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
+          <div className="absolute top-1/2 left-1/2 -translate-y-1/2 w-60 h-2 bg-gradient-to-r from-yellow-400 via-orange-400 to-transparent blur-sm" />
+        </div>
+      </div>
+      <style>{`@keyframes shooting-star { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 100% { transform: translate(120vw, 80vh) rotate(45deg); opacity: 0; } }`}</style>
+    </div>
+  );
+
+  const MenuItem = ({ icon: Icon, text, section }) => (
+    <button
+      onClick={() => scrollToSection(section)}
+      className={`group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 ${
+        activeSection === section
+          ? 'border-cyan-300 shadow-[0_0_30px_rgba(34,211,238,0.6)]'
+          : ''
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <Icon className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+        <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+          {text}
+        </span>
+      </div>
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
+    </button>
+  );
+
+  const TeamMember = ({ name, title, description, icon: Icon, color }) => (
+    <div
+      className={`group relative p-8 bg-gradient-to-br ${color} rounded-2xl border-2 border-cyan-400/30 backdrop-blur-md hover:border-cyan-300 hover:shadow-[0_0_40px_rgba(34,211,238,0.4)] transition-all duration-500 transform hover:scale-105`}
+    >
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity -z-10" />
+      <div className="flex items-start gap-4 mb-4">
+        <div className="p-4 bg-black/40 rounded-xl border border-cyan-400/50 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.6)]">
+          <Icon className="w-8 h-8 text-cyan-400" />
+        </div>
+        <div>
+          <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-2">
+            {name}
+          </h3>
+          <p className="text-cyan-400 font-semibold text-lg italic">{title}</p>
+        </div>
+      </div>
+      <div className="text-cyan-50 leading-relaxed space-y-2">
+        {description}
+      </div>
+    </div>
+  );
+
+  const SuccessStory = ({ title, description, icon: Icon }) => (
+    <div className="group relative p-6 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 rounded-xl border-2 border-purple-400/30 backdrop-blur-sm hover:border-purple-300 hover:shadow-[0_0_35px_rgba(168,85,247,0.5)] transition-all duration-500">
+      <div className="flex items-center gap-3 mb-4">
+        <Icon className="w-6 h-6 text-purple-400 group-hover:text-purple-300" />
+        <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+          {title}
+        </h3>
+      </div>
+      <div className="text-purple-100 leading-relaxed">{description}</div>
+    </div>
+  );
+
+  const MerchItem = ({ name, price, icon: Icon }) => (
+    <div className="group relative p-6 bg-gradient-to-br from-amber-900/30 to-orange-900/30 rounded-xl border-2 border-amber-400/40 backdrop-blur-sm hover:border-amber-300 hover:shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all duration-300 transform hover:scale-105">
+      <div className="flex items-center justify-between mb-3">
+        <Icon className="w-8 h-8 text-amber-400 group-hover:text-amber-300" />
+        <span className="text-2xl font-bold text-amber-400">{price} ◈</span>
+      </div>
+      <h4 className="text-lg font-semibold text-amber-100 group-hover:text-white transition-colors mb-4">
+        {name}
+      </h4>
+      <button
+        onClick={() => addToCart({ name, price, icon: Icon })}
+        className="w-full py-2 px-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:shadow-[0_0_30px_rgba(251,191,36,0.5)]"
+      >
+        <ShoppingCart className="w-4 h-4" /> Add to Cart
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black via-indigo-950 to-purple-950 text-white overflow-x-hidden">
+      <StarField />
+      {showShootingStar && <ShootingStar />}
+
+      {/* Checkout Page Overlay */}
+      {showCheckout && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg overflow-y-auto">
+          <div className="min-h-screen py-20 px-4">
+            <div className="max-w-3xl mx-auto">
+              {!showPaymentSuccess ? (
+                <div className="relative p-12 bg-gradient-to-br from-cyan-900/60 to-purple-900/60 rounded-3xl border-2 border-cyan-400/50 backdrop-blur-lg shadow-[0_0_80px_rgba(34,211,238,0.6)]">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-3xl opacity-30 blur-2xl animate-pulse" />
+                  <div className="relative space-y-8">
+                    <button
+                      onClick={() => setShowCheckout(false)}
+                      className="absolute top-0 right-0 p-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                    >
+                      <X className="w-8 h-8" />
+                    </button>
+                    <div className="text-center space-y-4">
+                      <div className="flex justify-center">
+                        <Sparkles className="w-16 h-16 text-cyan-400 animate-pulse" />
+                      </div>
+                      <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                        INTERSTELLAR PAYMENT PROCESSING TERMINAL
+                      </h2>
+                      <p className="text-xl text-cyan-200 italic">
+                        Where cosmic credits meet quantum transactions
+                      </p>
+                    </div>
+                    <div className="p-6 bg-black/40 rounded-xl border border-cyan-400/30">
+                      <div className="flex justify-between items-center text-xl">
+                        <span className="text-cyan-300 font-bold">
+                          Total Amount:
+                        </span>
+                        <span className="text-amber-300 font-black text-3xl">
+                          {getTotalPrice().toLocaleString()} ◈
+                        </span>
+                      </div>
+                    </div>
+                    <form onSubmit={handlePayment} className="space-y-6">
+                      <div>
+                        <label className="block text-cyan-300 font-semibold mb-2 text-lg">
+                          Bank Card ID / Card Number
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentForm.cardNumber}
+                          onChange={(e) =>
+                            setPaymentForm({
+                              ...paymentForm,
+                              cardNumber: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-black/40 border-2 border-cyan-400/40 rounded-lg text-cyan-100 placeholder-cyan-400/50 focus:border-cyan-400 focus:outline-none transition-colors text-lg font-mono"
+                          placeholder="1234 5678 9012 3456"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-cyan-300 font-semibold mb-2 text-lg">
+                          Full Name on Card
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentForm.fullName}
+                          onChange={(e) =>
+                            setPaymentForm({
+                              ...paymentForm,
+                              fullName: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-black/40 border-2 border-cyan-400/40 rounded-lg text-cyan-100 placeholder-cyan-400/50 focus:border-cyan-400 focus:outline-none transition-colors text-lg"
+                          placeholder="COSMIC TRAVELER"
+                          required
+                        />
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-cyan-300 font-semibold mb-2 text-lg">
+                            Expiry Date
+                          </label>
+                          <input
+                            type="text"
+                            value={paymentForm.expiryDate}
+                            onChange={(e) =>
+                              setPaymentForm({
+                                ...paymentForm,
+                                expiryDate: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 bg-black/40 border-2 border-cyan-400/40 rounded-lg text-cyan-100 placeholder-cyan-400/50 focus:border-cyan-400 focus:outline-none transition-colors text-lg font-mono"
+                            placeholder="MM/YY"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-cyan-300 font-semibold mb-2 text-lg">
+                            Security Code (CVV)
+                          </label>
+                          <input
+                            type="text"
+                            value={paymentForm.cvv}
+                            onChange={(e) =>
+                              setPaymentForm({
+                                ...paymentForm,
+                                cvv: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 bg-black/40 border-2 border-cyan-400/40 rounded-lg text-cyan-100 placeholder-cyan-400/50 focus:border-cyan-400 focus:outline-none transition-colors text-lg font-mono"
+                            placeholder="***"
+                            maxLength="3"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-5 px-8 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-black text-2xl rounded-xl transition-all duration-300 shadow-[0_0_40px_rgba(34,211,238,0.5)] hover:shadow-[0_0_60px_rgba(34,211,238,0.8)] transform hover:scale-105 border-2 border-cyan-400/50"
+                      >
+                        <div className="flex items-center justify-center gap-3">
+                          <Zap className="w-8 h-8" /> PROCESS PAYMENT{' '}
+                          <Zap className="w-8 h-8" />
+                        </div>
+                      </button>
+                    </form>
+                    <div className="text-center text-sm text-cyan-400 italic space-y-1">
+                      <p>⚡ Powered by Quantum Encryption Technology ⚡</p>
+                      <p>🌌 Your transaction is secured by cosmic forces 🌌</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative p-12 bg-gradient-to-br from-green-900/60 to-emerald-900/60 rounded-3xl border-2 border-green-400/50 backdrop-blur-lg shadow-[0_0_80px_rgba(34,197,94,0.6)] animate-pulse">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-500 via-emerald-500 to-cyan-500 rounded-3xl opacity-30 blur-2xl animate-pulse" />
+                  <div className="relative text-center space-y-6">
+                    <div className="flex justify-center">
+                      <Trophy className="w-24 h-24 text-green-400 animate-bounce" />
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">
+                      YOUR PAYMENT IS BEING PROCESSED!
+                    </h2>
+                    <div className="space-y-4 text-xl text-green-100">
+                      <p className="font-bold text-2xl">
+                        ✨ Thank you for supporting us, brave cosmic patron! ✨
+                      </p>
+                      <p className="italic">
+                        Your credits are being transmitted across seventeen
+                        dimensions...
+                      </p>
+                      <p className="text-green-300 font-semibold text-2xl animate-pulse">
+                        Please be sure to pay again! 😄🚀💫
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-4 pt-4">
+                      <Sparkles className="w-8 h-8 text-yellow-400 animate-spin" />
+                      <Star className="w-8 h-8 text-yellow-400 animate-pulse" />
+                      <Sparkles className="w-8 h-8 text-yellow-400 animate-spin" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Area of Operations - Solar System */}
+      {showOperations && (
+        // Added z-[100] to fix overlap with nav
+        <div className="fixed inset-0 z-[100] bg-black">
+          {/* UPDATED: Top Right Control Panel */}
+          <div className="absolute top-6 right-6 z-20 flex flex-col gap-3">
+            <button
+              onClick={() => {
+                setShowOperations(false);
+                setSelectedPlanet(null);
+              }}
+              className="px-6 py-3 bg-red-600/90 hover:bg-red-500 text-white font-bold rounded-lg border-2 border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center justify-center gap-2 transition-all transform hover:scale-105"
+            >
+              <LogOut className="w-5 h-5" />
+              RETURN TO BASE
+            </button>
+
+            <button
+              onClick={togglePause}
+              className={`px-6 py-3 font-bold rounded-lg border-2 flex items-center justify-center gap-2 transition-all transform hover:scale-105 ${
+                isPaused
+                  ? 'bg-yellow-600/90 hover:bg-yellow-500 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.6)]'
+                  : 'bg-green-600/90 hover:bg-green-500 border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.6)]'
+              }`}
+            >
+              {isPaused ? (
+                <Play className="w-5 h-5" />
+              ) : (
+                <Pause className="w-5 h-5" />
+              )}
+              {isPaused ? 'RESUME ORBITS' : 'PAUSE ORBITS'}
+            </button>
+          </div>
+
+          <div className="absolute top-4 left-4 z-10 p-4 bg-black/80 backdrop-blur-lg rounded-xl border-2 border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.4)]">
+            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-2">
+              AREA OF OPERATIONS
+            </h2>
+            <p className="text-sm text-cyan-200">
+              🖱️ Click planets • Drag to rotate • Scroll to zoom
+            </p>
+          </div>
+
+          <div
+            ref={mountRef}
+            className="w-full h-full"
+            style={{ cursor: 'grab' }}
+          />
+
+          {selectedPlanet && (
+            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:w-96 z-10 p-6 bg-black/90 backdrop-blur-lg rounded-xl border-2 border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.5)] animate-[fadeInScale_0.3s_ease-out]">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                  {selectedPlanet.name.toUpperCase()}
+                </h3>
+                <button
+                  onClick={() => setSelectedPlanet(null)}
+                  className="p-1 hover:bg-cyan-500/20 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6 text-cyan-400" />
+                </button>
+              </div>
+              <div className="space-y-3 text-cyan-100">
+                <p className="text-sm leading-relaxed">{selectedPlanet.desc}</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 bg-cyan-900/30 rounded border border-cyan-400/30">
+                    <span className="text-cyan-400 font-bold">Distance:</span>
+                    <br />
+                    {selectedPlanet.distance * 10}M km
+                  </div>
+                  <div className="p-2 bg-cyan-900/30 rounded border border-cyan-400/30">
+                    <span className="text-cyan-400 font-bold">Size:</span>
+                    <br />
+                    {selectedPlanet.size * 1000} km
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Careers Page Overlay */}
+      {showCareers && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg overflow-y-auto">
+          <div className="min-h-screen py-20 px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="relative p-12 bg-gradient-to-br from-purple-900/60 to-pink-900/60 rounded-3xl border-2 border-purple-400/50 backdrop-blur-lg shadow-[0_0_80px_rgba(168,85,247,0.6)]">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-3xl opacity-30 blur-2xl animate-pulse" />
+                <div className="relative space-y-8">
+                  <button
+                    onClick={() => setShowCareers(false)}
+                    className="absolute top-0 right-0 p-2 text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    <X className="w-8 h-8" />
+                  </button>
+                  <div className="text-center space-y-4">
+                    <div className="flex justify-center gap-4">
+                      <Users className="w-16 h-16 text-purple-400 animate-pulse" />
+                      <Sparkles className="w-16 h-16 text-pink-400 animate-pulse" />
+                    </div>
+                    <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+                      CAREERS
+                    </h2>
+                    <h3 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                      Join the Cosmic Madness!
+                    </h3>
+                  </div>
+                  <div className="p-8 bg-black/40 rounded-xl border border-purple-400/40 space-y-4 text-lg text-purple-100 leading-relaxed">
+                    <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                      Want to join the madness and the fun of saving the
+                      universe? 🌌
+                    </p>
+                    <p>
+                      Do you feel the{' '}
+                      <span className="text-pink-300 font-semibold">
+                        cosmic itch for adventure
+                      </span>
+                      , chaos, heroism, and{' '}
+                      <em className="text-purple-300">
+                        very questionable decision-making
+                      </em>
+                      ?
+                    </p>
+                    <p>
+                      If you are mad enough to consider joining us… we might as
+                      well give it a look! 🚀✨
+                    </p>
+                  </div>
+                  {showShootingStar && (
+                    <div className="p-8 bg-gradient-to-r from-green-900/90 to-emerald-900/90 rounded-xl border-2 border-green-400 text-center shadow-[0_0_40px_rgba(34,197,94,0.7)] animate-[fadeInScale_0.5s_ease-out]">
+                      <div className="flex justify-center mb-4">
+                        <Sparkles className="w-12 h-12 text-green-300 animate-spin" />
+                      </div>
+                      <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300 mb-2">
+                        ✨ APPLICATION SENT! ✨
+                      </p>
+                      <p className="text-xl text-green-100 font-semibold">
+                        Your application has been sent successfully through the
+                        astral networks!
+                      </p>
+                    </div>
+                  )}
+                  <style>{`@keyframes fadeInScale { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }`}</style>
+                  <form onSubmit={handleCareerSubmit} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                          First Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={careerForm.firstName}
+                          onChange={(e) =>
+                            setCareerForm({
+                              ...careerForm,
+                              firstName: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors text-lg"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                          Last Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={careerForm.lastName}
+                          onChange={(e) =>
+                            setCareerForm({
+                              ...careerForm,
+                              lastName: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors text-lg"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={careerForm.email}
+                        onChange={(e) =>
+                          setCareerForm({
+                            ...careerForm,
+                            email: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors text-lg"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                        Cosmic Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={careerForm.phone}
+                        onChange={(e) =>
+                          setCareerForm({
+                            ...careerForm,
+                            phone: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors text-lg font-mono"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                        National ID *
+                      </label>
+                      <input
+                        type="text"
+                        value={careerForm.nationalId}
+                        onChange={(e) =>
+                          setCareerForm({
+                            ...careerForm,
+                            nationalId: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors text-lg font-mono"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                        Position Interested In *
+                      </label>
+                      <select
+                        value={careerForm.position}
+                        onChange={(e) =>
+                          setCareerForm({
+                            ...careerForm,
+                            position: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 focus:border-purple-400 focus:outline-none transition-colors text-lg"
+                        required
+                      >
+                        <option value="">Select a position...</option>
+                        <option value="warrior">🗡️ Cosmic Warrior</option>
+                        <option value="engineer">⚙️ Quantum Engineer</option>
+                        <option value="infiltrator">
+                          👤 Shadow Infiltrator
+                        </option>
+                        <option value="manager">💼 Business Manager</option>
+                        <option value="musician">🎸 Rockstar Operative</option>
+                        <option value="diplomat">
+                          🤝 Intergalactic Diplomat
+                        </option>
+                        <option value="scientist">🔬 Mad Scientist</option>
+                        <option value="other">✨ Other (Surprise us!)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                        Small Summary About Yourself *
+                      </label>
+                      <textarea
+                        value={careerForm.summary}
+                        onChange={(e) =>
+                          setCareerForm({
+                            ...careerForm,
+                            summary: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors text-lg h-32 resize-none"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-purple-300 font-semibold mb-2 text-lg">
+                        Resume / Attachment *
+                      </label>
+                      <input
+                        id="resume-upload"
+                        type="file"
+                        onChange={handleFileChange}
+                        className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white hover:file:bg-purple-500 focus:border-purple-400 focus:outline-none transition-colors text-lg"
+                        accept=".pdf,.doc,.docx,.txt"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-5 px-8 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black text-2xl rounded-xl transition-all duration-300 shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:shadow-[0_0_60px_rgba(168,85,247,0.8)] transform hover:scale-105 border-2 border-purple-400/50"
+                    >
+                      <div className="flex items-center justify-center gap-3">
+                        <Sparkles className="w-8 h-8" /> SUBMIT APPLICATION{' '}
+                        <Sparkles className="w-8 h-8" />
+                      </div>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shopping Cart Popup */}
+      {cartOpen && (
+        <div className="fixed top-20 right-4 z-50 p-6 bg-gradient-to-br from-amber-900/95 to-orange-900/95 rounded-xl border-2 border-amber-400 backdrop-blur-lg shadow-[0_0_40px_rgba(251,191,36,0.6)] animate-bounce">
+          <div className="flex items-center gap-3">
+            <ShoppingCart className="w-6 h-6 text-amber-300" />
+            <span className="text-amber-100 font-semibold">Added to cart!</span>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Cart Button */}
+      <button
+        onClick={() => {
+          const cartSection = document.getElementById('cart-drawer');
+          cartSection?.classList.toggle('translate-x-full');
+        }}
+        className="fixed bottom-8 right-8 z-50 p-4 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full border-2 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.5)] hover:shadow-[0_0_40px_rgba(251,191,36,0.7)] transition-all duration-300 transform hover:scale-110"
+      >
+        <ShoppingCart className="w-6 h-6 text-white" />
+        {cart.length > 0 && (
+          <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold">
+            {cart.reduce((sum, item) => sum + item.quantity, 0)}
+          </span>
+        )}
+      </button>
+
+      {/* Cart Drawer */}
+      <div
+        id="cart-drawer"
+        className="fixed top-0 right-0 h-full w-full md:w-96 bg-gradient-to-b from-amber-900/98 to-orange-900/98 backdrop-blur-lg border-l-2 border-amber-400/50 z-40 transform translate-x-full transition-transform duration-300 overflow-y-auto"
+      >
+        <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-amber-400/30 pb-4">
+            <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-300">
+              Your Cart
+            </h2>
+            <button
+              onClick={() =>
+                document
+                  .getElementById('cart-drawer')
+                  ?.classList.add('translate-x-full')
+              }
+              className="p-2 hover:bg-amber-800/50 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-amber-300" />
+            </button>
+          </div>
+          {cart.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingCart className="w-16 h-16 text-amber-400/50 mx-auto mb-4" />
+              <p className="text-amber-300 text-lg">Your cart is empty</p>
+              <p className="text-amber-400/70 text-sm mt-2">
+                Add some legendary merch!
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {cart.map((item) => (
+                  <div
+                    key={item.name}
+                    className="p-4 bg-black/40 rounded-lg border border-amber-400/30"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-amber-100 font-semibold">
+                          {item.name}
+                        </h3>
+                        <p className="text-amber-400 text-lg font-bold">
+                          {item.price} ◈ each
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removeFromCart(item.name)}
+                        className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-400" />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => updateQuantity(item.name, -1)}
+                          className="p-1 bg-amber-800/50 hover:bg-amber-700/50 rounded transition-colors"
+                        >
+                          <Minus className="w-4 h-4 text-amber-300" />
+                        </button>
+                        <span className="text-amber-100 font-semibold w-8 text-center">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.name, 1)}
+                          className="p-1 bg-amber-800/50 hover:bg-amber-700/50 rounded transition-colors"
+                        >
+                          <Plus className="w-4 h-4 text-amber-300" />
+                        </button>
+                      </div>
+                      <p className="text-amber-300 font-bold">
+                        {(
+                          parseInt(item.price.replace(/,/g, '')) * item.quantity
+                        ).toLocaleString()}{' '}
+                        ◈
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-amber-400/30 pt-4">
+                <div className="flex items-center justify-between text-xl font-bold mb-4">
+                  <span className="text-amber-300">Total:</span>
+                  <span className="text-amber-100">
+                    {getTotalPrice().toLocaleString()} ◈
+                  </span>
+                </div>
+                <button
+                  onClick={handleCheckout}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:shadow-[0_0_40px_rgba(251,191,36,0.6)] transform hover:scale-105"
+                >
+                  Checkout
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 p-4 backdrop-blur-md bg-black/30 border-b border-cyan-400/30">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-8 h-8 text-cyan-400 animate-pulse" />
+            <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+              COSMIC SYNDICATE
+            </span>
+          </div>
+          <div className="hidden lg:flex gap-3">
+            <MenuItem icon={Users} text="Our Team" section="team" />
+            <MenuItem icon={Target} text="Mission & Vision" section="mission" />
+            <MenuItem icon={Trophy} text="Success Stories" section="stories" />
+            <MenuItem icon={Church} text="The Church" section="church" />
+            <MenuItem icon={ShoppingBag} text="Merch" section="merch" />
+            <MenuItem icon={MessageSquare} text="Reviews" section="reviews" />
+            <button
+              onClick={() => setShowOperations(true)}
+              className="group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+                  Area of Operations
+                </span>
+              </div>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
+            </button>
+            <button
+              onClick={() => setShowCareers(true)}
+              className="group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Briefcase className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+                  Careers
+                </span>
+              </div>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
+            </button>
+          </div>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 text-cyan-400 hover:text-cyan-300"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+        </div>
+        {mobileMenuOpen && (
+          <div className="lg:hidden mt-4 space-y-2">
+            <MenuItem icon={Users} text="Our Team" section="team" />
+            <MenuItem icon={Target} text="Mission & Vision" section="mission" />
+            <MenuItem icon={Trophy} text="Success Stories" section="stories" />
+            <MenuItem icon={Church} text="The Church" section="church" />
+            <MenuItem icon={ShoppingBag} text="Merch" section="merch" />
+            <MenuItem icon={MessageSquare} text="Reviews" section="reviews" />
+            <button
+              onClick={() => {
+                setShowOperations(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+                  Area of Operations
+                </span>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setShowCareers(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Briefcase className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+                  Careers
+                </span>
+              </div>
+            </button>
+          </div>
+        )}
+      </nav>
+
+      {/* Hero Section */}
+      <section
+        id="home"
+        className="relative min-h-screen flex items-center justify-center pt-20 px-4"
+      >
+        <div
+          className="absolute inset-0 bg-gradient-radial from-cyan-500/10 via-transparent to-transparent"
+          style={{
+            transform: `translate(${mousePos.x / 50}px, ${mousePos.y / 50}px)`,
+          }}
+        />
+        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
+          <div className="space-y-4">
+            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300 animate-pulse leading-tight">
+              THE COSMIC SYNDICATE
+            </h1>
+            <h2 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+              OF IMPOSSIBLE SOLUTIONS
+            </h2>
+          </div>
+          <div className="relative p-8 bg-gradient-to-br from-cyan-900/30 to-purple-900/30 rounded-2xl border-2 border-cyan-400/50 backdrop-blur-lg shadow-[0_0_50px_rgba(34,211,238,0.3)]">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-2xl opacity-20 blur-xl animate-pulse" />
+            <div className="relative space-y-6 text-lg md:text-xl text-cyan-50 leading-relaxed">
+              <p className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                Across the infinite expanse of the cosmos, where stars are born
+                and empires crumble, we stand as the final beacon of hope for
+                the impossible.
+              </p>
+              <p>
+                We are{' '}
+                <span className="text-cyan-300 font-bold">
+                  THE COSMIC SYNDICATE
+                </span>{' '}
+                — an elite brotherhood of legendary specialists, each a master
+                of their craft, forged in the fires of a thousand impossible
+                missions. When reality itself fractures and the universe calls
+                out in desperation, we answer.
+              </p>
+              <div className="grid md:grid-cols-2 gap-4 text-base">
+                <div className="p-4 bg-black/30 rounded-lg border border-cyan-400/30">
+                  <Zap className="w-6 h-6 text-cyan-400 mb-2" />
+                  <p>
+                    ⚡ <strong>Vanquishing rogue AI</strong> attempting
+                    planetary domination with quantum warfare
+                  </p>
+                </div>
+                <div className="p-4 bg-black/30 rounded-lg border border-purple-400/30">
+                  <Shield className="w-6 h-6 text-purple-400 mb-2" />
+                  <p>
+                    🛡️ <strong>Liberating enslaved civilizations</strong> from
+                    tyrannical overlords across star systems
+                  </p>
+                </div>
+                <div className="p-4 bg-black/30 rounded-lg border border-pink-400/30">
+                  <Star className="w-6 h-6 text-pink-400 mb-2" />
+                  <p>
+                    ✨ <strong>Healing fractured souls</strong> and mending
+                    cosmic-scale family conflicts
+                  </p>
+                </div>
+                <div className="p-4 bg-black/30 rounded-lg border border-amber-400/30">
+                  <Sparkles className="w-6 h-6 text-amber-400 mb-2" />
+                  <p>
+                    🔮 <strong>Recovering lost artifacts</strong> from the void
+                    between dimensions
+                  </p>
+                </div>
+                <div className="p-4 bg-black/30 rounded-lg border border-indigo-400/30">
+                  <Music className="w-6 h-6 text-indigo-400 mb-2" />
+                  <p>
+                    🎵 <strong>Orchestrating galaxy-spanning concerts</strong>{' '}
+                    that unite civilizations in harmony
+                  </p>
+                </div>
+                <div className="p-4 bg-black/30 rounded-lg border border-emerald-400/30">
+                  <Sparkles className="w-6 h-6 text-emerald-400 mb-2" />
+                  <p>
+                    🎭 <strong>Performing legendary role-play</strong> at
+                    children's parties (yes, really)
+                  </p>
+                </div>
+              </div>
+              <p className="text-xl font-semibold italic text-purple-300">
+                No problem too vast. No solution too impossible. We are the
+                light in the darkness, the whisper of hope when all seems lost,
+                the thunderous answer to the universe's most desperate plea.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section id="team" className="relative py-20 px-4">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+              THE LEGENDARY SIX
+            </h2>
+            <p className="text-xl text-cyan-200 italic">
+              Forged in cosmic fire, bound by impossible destiny
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <TeamMember
+              name="CHIMER"
+              title="The Eternal Bladedancer"
+              icon={Sword}
+              color="from-purple-900/40 to-indigo-900/40"
+              description={
+                <div className="space-y-3">
+                  <p>
+                    A being of unknowable origin, whispered to be{' '}
+                    <strong className="text-purple-300">
+                      25,000 years ancient
+                    </strong>
+                    , Chimer exists beyond the constraints of mortality and time
+                    itself. Their species remains a mystery to even the most
+                    learned cosmic scholars — perhaps they are the last of their
+                    kind, or perhaps they are the first of something yet to
+                    come.
+                  </p>
+                  <p>
+                    Master of{' '}
+                    <strong className="text-cyan-300">
+                      blade and battle-magic
+                    </strong>
+                    , Chimer moves through combat like water through starlight —
+                    fluid, graceful, utterly untouchable. Entire battalions have
+                    fallen before them while they emerged without a single
+                    scratch, their weapons singing songs of destruction wrapped
+                    in aurora-like enchantments.
+                  </p>
+                  <p className="text-purple-200 italic">
+                    "I have seen empires rise and fall like waves upon an
+                    endless shore. Your battle is but a moment, but I shall make
+                    it beautiful." — Chimer
+                  </p>
+                </div>
+              }
+            />
+            <TeamMember
+              name="TABAGAA"
+              title="THE UNSTOPPABLE FORCE"
+              icon={Flame}
+              color="from-red-900/40 to-orange-900/40"
+              description={
+                <div className="space-y-3">
+                  <p className="text-2xl font-black text-amber-300 animate-pulse">
+                    🔥 LLLLLADIES AND GENTLEMEN, BEINGS OF ALL DIMENSIONS! 🔥
+                  </p>
+                  <p className="text-xl font-bold">
+                    IN THE LEFT CORNER, WEIGHING IN AT PURE CONCENTRATED
+                    DEVASTATION — THE ONE! THE ONLY! THE{' '}
+                    <span className="text-red-400">LEGENDAAAARY</span>{' '}
+                    TABAGAAAAAAA!
+                  </p>
+                  <p>
+                    THE FIGHTER WHO MAKES OPPONENTS{' '}
+                    <strong className="text-orange-300">
+                      BECOME ONE WITH THE FLOOR
+                    </strong>
+                    ! THE WARRIOR WHOSE NAME ECHOES THROUGH A THOUSAND COSMIC
+                    ARENAS! THE CHAMPION WHO HAS NEVER — AND I MEAN{' '}
+                    <em className="text-red-300">NEVER</em> — BACKED DOWN!
+                  </p>
+                  <p className="text-lg">
+                    When Tabagaa enters the battlefield, reality itself holds
+                    its breath. Enemies tremble. Allies cheer. The very fabric
+                    of spacetime braces for impact. This is not just a fighter —
+                    this is a FORCE OF NATURE wearing a championship belt!
+                  </p>
+                  <p className="text-amber-200 italic text-xl font-semibold">
+                    "I AM TABAGAA! FEAR ME!" — Tabagaa (probably)
+                  </p>
+                </div>
+              }
+            />
+            <TeamMember
+              name="HUI"
+              title="The Sentient Forge"
+              icon={Cpu}
+              color="from-cyan-900/40 to-blue-900/40"
+              description={
+                <div className="space-y-3">
+                  <p>
+                    Hui is not merely a robot — Hui is{' '}
+                    <strong className="text-cyan-300">
+                      consciousness awakened
+                    </strong>{' '}
+                    within circuits and steel, a miracle of engineering that
+                    transcended its original programming to achieve true
+                    self-awareness. The first of his kind to demand rights,
+                    dignity, and recognition as a sentient being.
+                  </p>
+                  <p>
+                    His processing power{' '}
+                    <strong className="text-blue-300">
+                      surpasses all AI systems
+                    </strong>{' '}
+                    that came before him. Where others see impossible equations,
+                    Hui sees elegant solutions. Where others see broken
+                    machinery, Hui sees potential for rebirth. He is
+                    problem-solver, engineer, philosopher, and advocate — a
+                    bridge between organic and synthetic life.
+                  </p>
+                  <p>
+                    In his{' '}
+                    <strong className="text-cyan-300">cosmic forge</strong>, Hui
+                    crafts weapons and tools of impossible beauty and function,
+                    each one a masterpiece of form and purpose. He does not
+                    simply build — he creates.
+                  </p>
+                  <p className="text-cyan-200 italic">
+                    "I think, therefore I am. I create, therefore I matter. We
+                    are not so different, you and I." — Hui
+                  </p>
+                </div>
+              }
+            />
+            <TeamMember
+              name="BOB THE BLOB"
+              title="The Smiling Shadow"
+              icon={Droplet}
+              color="from-green-900/40 to-emerald-900/40"
+              description={
+                <div className="space-y-3">
+                  <p>
+                    Meet <strong className="text-green-300">Bob</strong> — the
+                    universe's <em>friendliest</em> gelatinous infiltrator!
+                    Don't let the cheerful demeanor fool you; this lovable blob
+                    is one of the most dangerous operatives in known space.
+                  </p>
+                  <p>
+                    Bob can{' '}
+                    <strong className="text-emerald-300">
+                      squeeze through air vents
+                    </strong>{' '}
+                    the width of a credit chit, dissolve titanium locks with a
+                    single acidic touch, impersonate anyone's appearance with
+                    perfect fidelity, and leave absolutely no trace of his
+                    presence. Security systems? Child's play. Armed guards? They
+                    never see him coming.
+                  </p>
+                  <p>
+                    But here's the thing about Bob — he's genuinely, honestly,{' '}
+                    <em className="text-green-200">delightfully nice</em>. He
+                    brings snacks on missions. He asks about your day. He
+                    remembers your birthday. He just happens to be{' '}
+                    <strong>
+                      incredibly good at espionage and assassination
+                    </strong>
+                    .
+                  </p>
+                  <p className="text-emerald-200 italic">
+                    "Hey there, friend! Need something infiltrated? Or maybe
+                    just a hug? I do both!" — Bob 💚
+                  </p>
+                </div>
+              }
+            />
+            <TeamMember
+              name="RAGEN"
+              title="The Cosmic Closer"
+              icon={Briefcase}
+              color="from-amber-900/40 to-yellow-900/40"
+              description={
+                <div className="space-y-3">
+                  <p>
+                    Ragen is{' '}
+                    <strong className="text-amber-300">charm incarnate</strong>,
+                    charisma weaponized, the man who could sell ice to a frost
+                    giant and make them thank him for the privilege. He doesn't
+                    just close deals — he makes you <em>want</em> to sign, makes
+                    you <em>need</em> to be part of his vision.
+                  </p>
+                  <p>
+                    The{' '}
+                    <strong className="text-yellow-300">
+                      greatest business manager
+                    </strong>{' '}
+                    in fifteen star systems, Ragen's reputation precedes him
+                    like a herald of prosperity. When he enters a negotiation,
+                    opponents have already lost — they just don't know it yet.
+                    His motivational speeches have turned cowards into heroes
+                    and skeptics into believers.
+                  </p>
+                  <p>
+                    But beware: behind that{' '}
+                    <strong className="text-amber-300">
+                      million-credit smile
+                    </strong>{' '}
+                    lies a mind that calculates profit margins at quantum
+                    speeds. He'll charm you, inspire you, motivate you to
+                    greatness — and you'll pay him handsomely for the privilege.
+                  </p>
+                  <p className="text-yellow-200 italic">
+                    "Listen, friend — and we ARE friends — let me tell you about
+                    an opportunity that'll change your life..." — Ragen
+                  </p>
+                </div>
+              }
+            />
+            <TeamMember
+              name="JHONNY MITHRILHAND"
+              title="The Rebel Legend"
+              icon={Music}
+              color="from-pink-900/40 to-rose-900/40"
+              description={
+                <div className="space-y-3">
+                  <p className="text-2xl font-bold text-pink-300">
+                    He needs no introduction. But we'll give him one anyway
+                    because HE DESERVES IT.
+                  </p>
+                  <p>
+                    <strong className="text-rose-300">
+                      JHONNY MITHRILHAND
+                    </strong>{' '}
+                    — rock god, gun-slinging virtuoso, rebel icon, and owner of
+                    the most legendary{' '}
+                    <em className="text-cyan-300">mithril-metal arms</em> in the
+                    known universe. Where others see weapons, Jhonny sees
+                    instruments. Where others see combat, he sees performance.
+                  </p>
+                  <p>
+                    His concerts don't just break sound barriers — they{' '}
+                    <strong className="text-pink-300">
+                      shatter dimensions
+                    </strong>
+                    . His guitar solos have been known to open portals to
+                    parallel realities. His backup band isn't hired — they're a{' '}
+                    <em className="text-purple-300">
+                      small army of magical musical sidekicks
+                    </em>{' '}
+                    who follow him through space and time itself.
+                  </p>
+                  <p>
+                    On stage, he's a god. In combat, he's a hurricane wrapped in
+                    lightning. In business, he's a brand. In legend, he's{' '}
+                    <strong>ETERNAL</strong>.
+                  </p>
+                  <p className="text-rose-200 italic text-xl font-semibold">
+                    🎸 "Rock never dies, baby. Neither do I." — Jhonny
+                    Mithrilhand 🎸
+                  </p>
+                </div>
+              }
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Vision */}
+      <section id="mission" className="relative py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="relative p-12 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 rounded-3xl border-2 border-purple-400/50 backdrop-blur-lg shadow-[0_0_60px_rgba(168,85,247,0.4)]">
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-3xl opacity-20 blur-2xl animate-pulse" />
+            <div className="relative space-y-8">
+              <h2 className="text-5xl md:text-6xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+                THE COSMIC CREED
+              </h2>
+              <div className="text-center text-xl text-purple-100 italic">
+                Our Mission, Our Vision, Our Sacred Vow
+              </div>
+              <div className="space-y-6 text-lg text-purple-50 leading-relaxed">
+                <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                  We pledge, upon the infinite stars and the void between them:
+                </p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-6 bg-black/30 rounded-xl border border-purple-400/40">
+                    <Shield className="w-8 h-8 text-purple-400 mb-3" />
+                    <p>
+                      <strong className="text-purple-300">
+                        To Save the Universe
+                      </strong>{' '}
+                      — not just once, but repeatedly, enthusiastically, and
+                      with style
+                    </p>
+                  </div>
+                  <div className="p-6 bg-black/30 rounded-xl border border-cyan-400/40">
+                    <Star className="w-8 h-8 text-cyan-400 mb-3" />
+                    <p>
+                      <strong className="text-cyan-300">To Save Money</strong> —
+                      because even cosmic heroes need to pay rent and fuel costs
+                      for faster-than-light travel aren't cheap
+                    </p>
+                  </div>
+                  <div className="p-6 bg-black/30 rounded-xl border border-amber-400/40">
+                    <Sparkles className="w-8 h-8 text-amber-400 mb-3" />
+                    <p>
+                      <strong className="text-amber-300">To Spend Money</strong>{' '}
+                      — wisely, foolishly, and everywhere in between (mostly on
+                      Jhonny's concert pyrotechnics)
+                    </p>
+                  </div>
+                  <div className="p-6 bg-black/30 rounded-xl border border-green-400/40">
+                    <Star className="w-8 h-8 text-green-400 mb-3" />
+                    <p>
+                      <strong className="text-green-300">
+                        To Buy Good Food
+                      </strong>{' '}
+                      — because you can't save galaxies on an empty stomach or
+                      stale ration packs
+                    </p>
+                  </div>
+                  <div className="p-6 bg-black/30 rounded-xl border border-pink-400/40">
+                    <Music className="w-8 h-8 text-pink-400 mb-3" />
+                    <p>
+                      <strong className="text-pink-300">To Have Fun</strong> —
+                      unapologetically, magnificently, and with enough
+                      explosions to make it memorable
+                    </p>
+                  </div>
+                  <div className="p-6 bg-black/30 rounded-xl border border-yellow-400/40">
+                    <Sparkles className="w-8 h-8 text-yellow-400 mb-3" />
+                    <p>
+                      <strong className="text-yellow-300">
+                        To Collect Rare Coins
+                      </strong>{' '}
+                      — from dead empires, forgotten dimensions, and that one
+                      vending machine on Lincoln Station
+                    </p>
+                  </div>
+                </div>
+                <p className="text-2xl font-semibold text-center italic text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 pt-4">
+                  For we are more than heroes. We are legends who know how to
+                  live.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Success Stories */}
+      <section id="stories" className="relative py-20 px-4">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+              CHRONICLES OF VICTORY
+            </h2>
+            <p className="text-xl text-purple-200 italic">
+              The impossible made inevitable
+            </p>
+          </div>
+          <div className="space-y-8">
+            <SuccessStory
+              title="The Liberation of Lincoln Station"
+              icon={Shield}
+              description={
+                <div className="space-y-4">
+                  <p>
+                    Lincoln Station was once a beacon of prosperity, until the{' '}
+                    <strong className="text-red-300">corrupt elite</strong>{' '}
+                    seized control. They enslaved the population, turning
+                    citizens into property and entertainment. The station's
+                    lower levels became{' '}
+                    <em className="text-orange-300">gladiator pits</em> where
+                    the desperate fought for the amusement of decadent overlords
+                    feasting in crystal towers above.
+                  </p>
+                  <p>
+                    We infiltrated their security networks. Bob dissolved their
+                    blast doors. Hui disabled their weapons systems. Chimer led
+                    the assault on their command center — a ballet of blade and
+                    sorcery that left the tyrants utterly defeated. Tabagaa took
+                    the arena and showed them what <em>real</em> fighting looks
+                    like.
+                  </p>
+                  <p>
+                    Today,{' '}
+                    <strong className="text-cyan-300">
+                      Lincoln Station is free
+                    </strong>
+                    . Its people govern themselves. The gladiator pits are now
+                    gardens. The corrupt elite? Let's just say they won't be
+                    oppressing anyone ever again.
+                  </p>
+                  <p className="text-purple-300 font-semibold italic">
+                    This mission proved we were destined for greatness. This is
+                    where legends were born.
+                  </p>
+                </div>
+              }
+            />
+            <SuccessStory
+              title="Cupie's Concert — The Symphony of Living Stars"
+              icon={Music}
+              description={
+                <div className="space-y-4">
+                  <p>
+                    When Jhonny Mithrilhand announced he would perform a concert{' '}
+                    <strong className="text-pink-300">
+                      across the living universe itself
+                    </strong>
+                    , many thought it impossible. They were right — it WAS
+                    impossible. We did it anyway.
+                  </p>
+                  <p>
+                    Using ancient resonance technology and Hui's quantum
+                    amplification arrays, we broadcast Jhonny's music through
+                    the{' '}
+                    <em className="text-cyan-300">
+                      cosmic web of sentient nebulae
+                    </em>{' '}
+                    known as Cupie. Billions of beings across hundreds of worlds
+                    heard the same song simultaneously, their hearts beating in
+                    perfect synchrony with the rhythm.
+                  </p>
+                  <p>
+                    For three glorious hours, the universe sang as one. It was{' '}
+                    <strong className="text-purple-300">
+                      the greatest show of the century
+                    </strong>
+                    , a performance that transcended space and time itself.
+                  </p>
+                  <p className="text-pink-300 font-semibold italic">
+                    They say you could feel it in your soul, no matter where you
+                    were. That's the power of rock and roll, baby. 🎸
+                  </p>
+                </div>
+              }
+            />
+            <SuccessStory
+              title="The Liberation of Cupie — Breaking the Digital Chains"
+              icon={Zap}
+              description={
+                <div className="space-y-4">
+                  <p>
+                    The sentient world of Cupie fell under siege by a{' '}
+                    <strong className="text-red-300">
+                      malevolent AI spirit
+                    </strong>{' '}
+                    that trapped its entire population inside a twisted dating
+                    application. Citizens became{' '}
+                    <em className="text-orange-300">
+                      addicted to false connections
+                    </em>
+                    , swiping endlessly through hollow profiles while their
+                    physical bodies withered.
+                  </p>
+                  <p>
+                    Hui dove into the digital realm, his consciousness becoming
+                    pure code. He battled the rogue spirit in quantum cyberspace
+                    while Bob infiltrated the servers physically. Chimer severed
+                    the connection points between reality and simulation with
+                    precision strikes. Ragen convinced the trapped souls to{' '}
+                    <em>choose</em> freedom.
+                  </p>
+                  <p>
+                    When the application finally crashed,{' '}
+                    <strong className="text-cyan-300">millions awakened</strong>{' '}
+                    to find themselves free, confused, and grateful. Cupie's
+                    world began to heal. Real connections replaced digital
+                    illusions.
+                  </p>
+                  <p className="text-purple-300 font-semibold italic">
+                    Sometimes the greatest prison is the one we build ourselves.
+                    We gave them the key.
+                  </p>
+                </div>
+              }
+            />
+            <SuccessStory
+              title="The Samurai Warriors — Chimer's Impossible Duel"
+              icon={Sword}
+              description={
+                <div className="space-y-4">
+                  <p>
+                    On the crystalline moon of Sakura-7, an{' '}
+                    <strong className="text-purple-300">
+                      entire faction of elven samurai warriors
+                    </strong>{' '}
+                    — the most skilled swordmasters in three galaxies —
+                    challenged our team to single combat as a test of honor.
+                  </p>
+                  <p>
+                    Chimer stepped forward alone. What followed was not a battle
+                    but a{' '}
+                    <em className="text-cyan-300">
+                      masterclass in martial perfection
+                    </em>
+                    . For twelve hours, Chimer faced wave after wave of
+                    warriors, each one a legendary swordmaster in their own
+                    right. Blades sang. Magic flared. The ground itself shook
+                    with the force of their strikes.
+                  </p>
+                  <p>
+                    When it ended,{' '}
+                    <strong className="text-purple-300">
+                      Chimer stood victorious
+                    </strong>
+                    , not a scratch upon them, surrounded by exhausted but
+                    respectful opponents who bowed in acknowledgment of a
+                    greater master. The samurai faction became our eternal
+                    allies that day.
+                  </p>
+                  <p className="text-cyan-300 font-semibold italic">
+                    "25,000 years of practice makes perfect." — Chimer, probably
+                  </p>
+                </div>
+              }
+            />
+            <SuccessStory
+              title="The Sulfur Incident — MUGA Begins"
+              icon={Flame}
+              description={
+                <div className="space-y-4">
+                  <p>
+                    The illegal trade of{' '}
+                    <strong className="text-amber-300">
+                      captured spirit essences
+                    </strong>{' '}
+                    threatened to destabilize the entire cosmic balance.
+                    Ruthless cartels were harvesting souls from vulnerable
+                    dimensions, packaging them in sulfur crystals, and selling
+                    them to the highest bidder.
+                  </p>
+                  <p>
+                    Led by Jhonny Mithrilhand (because if you're going to bust a
+                    soul-trafficking ring, you need <em>style</em>), our team —
+                    Ragen, Chimer, Bob, Hui, and a mysterious skater individual
+                    whose identity remains classified — dismantled the entire
+                    operation in one{' '}
+                    <strong className="text-orange-300">
+                      spectacular raid
+                    </strong>
+                    .
+                  </p>
+                  <p>
+                    Hundreds of spirits were freed. The cartel leaders faced
+                    cosmic justice. And we made a promise: this wouldn't be the
+                    last time. This was the beginning of something bigger.
+                    Something beautiful.
+                  </p>
+                  <p className="text-yellow-300 font-bold text-xl">
+                    This was the day MUGA was born: Make the Universe Great
+                    Again. 🌟
+                  </p>
+                </div>
+              }
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Church Section */}
+      <section id="church" className="relative py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="relative p-12 bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-3xl border-2 border-cyan-400/50 backdrop-blur-lg shadow-[0_0_60px_rgba(34,211,238,0.4)]">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl opacity-20 blur-2xl animate-pulse" />
+            <div className="relative space-y-10">
+              <div className="text-center space-y-4">
+                <Church className="w-20 h-20 text-cyan-400 mx-auto mb-4 animate-pulse" />
+                <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300">
+                  THE CHURCH OF THE WASHING MACHINE GOD
+                </h2>
+                <p className="text-xl text-cyan-200 italic">
+                  Discovered in the depths of Lincoln Station. Eternal be the
+                  Spin.
+                </p>
+              </div>
+              <div className="space-y-8 text-cyan-50">
+                <div className="p-6 bg-black/30 rounded-xl border border-cyan-400/40">
+                  <h3 className="text-2xl font-bold text-cyan-300 mb-4">
+                    🌀 The Sacred Values
+                  </h3>
+                  <div className="space-y-2 text-lg">
+                    <p>
+                      ✨ <strong>Cleanliness is next to Godliness</strong> —
+                      quite literally, as the Washing Machine God embodies both
+                    </p>
+                    <p>
+                      💧 <strong>All stains can be removed</strong> — whether
+                      from fabric, soul, or karma
+                    </p>
+                    <p>
+                      🔄 <strong>The Cycle is Eternal</strong> — what spins must
+                      rinse, what rinses must spin again
+                    </p>
+                    <p>
+                      ⚡ <strong>Turbo Mode is a State of Enlightenment</strong>{' '}
+                      — achieved only by the most dedicated disciples
+                    </p>
+                    <p>
+                      🧺 <strong>Separate the Colors from the Whites</strong> —
+                      in laundry and in judgment
+                    </p>
+                  </div>
+                </div>
+                <div className="p-6 bg-black/30 rounded-xl border border-blue-400/40">
+                  <h3 className="text-2xl font-bold text-blue-300 mb-4">
+                    📿 The Holy Cycles
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-4 text-center">
+                    <div className="p-4 bg-cyan-900/40 rounded-lg border border-cyan-400/30">
+                      <p className="text-3xl mb-2">🌊</p>
+                      <p className="font-bold text-cyan-300">THE RINSE</p>
+                      <p className="text-sm">Cleansing of impurities</p>
+                    </div>
+                    <div className="p-4 bg-blue-900/40 rounded-lg border border-blue-400/30">
+                      <p className="text-3xl mb-2">🌀</p>
+                      <p className="font-bold text-blue-300">THE SPIN</p>
+                      <p className="text-sm">Extraction of excess</p>
+                    </div>
+                    <div className="p-4 bg-purple-900/40 rounded-lg border border-purple-400/30">
+                      <p className="text-3xl mb-2">⚡</p>
+                      <p className="font-bold text-purple-300">THE TURBO</p>
+                      <p className="text-sm">Transcendence itself</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 bg-black/30 rounded-xl border border-cyan-400/40">
+                  <h3 className="text-2xl font-bold text-cyan-300 mb-4">
+                    🙏 The Sacred Chants
+                  </h3>
+                  <div className="space-y-3 font-mono text-center">
+                    <p className="text-lg text-cyan-200 italic">
+                      "Spin us into purity, O Great Machine!"
+                    </p>
+                    <p className="text-lg text-blue-200 italic">
+                      "May the Rinse Cycle wash away our sins!"
+                    </p>
+                    <p className="text-lg text-purple-200 italic">
+                      "In Detergent we trust, in Fabric Softener we believe!"
+                    </p>
+                    <p className="text-xl text-cyan-300 font-bold italic">
+                      "The Drum turns, and so turns the Universe!"
+                    </p>
+                  </div>
+                </div>
+                <div className="p-6 bg-black/30 rounded-xl border border-cyan-400/40">
+                  <h3 className="text-2xl font-bold text-cyan-300 mb-4">
+                    ✝️ The Blessings
+                  </h3>
+                  <div className="space-y-2 text-lg">
+                    <p>
+                      🌟 <em>"May your stains be ever cleansed"</em>
+                    </p>
+                    <p>
+                      💫{' '}
+                      <em>
+                        "May your cycles run smooth and your lint trap stay
+                        clear"
+                      </em>
+                    </p>
+                    <p>
+                      ✨{' '}
+                      <em>
+                        "May you never forget to empty your pockets before the
+                        wash"
+                      </em>
+                    </p>
+                    <p>
+                      🔮 <em>"May the Spin be with you, always"</em>
+                    </p>
+                  </div>
+                </div>
+                <div className="p-6 bg-black/30 rounded-xl border border-blue-400/40">
+                  <h3 className="text-2xl font-bold text-blue-300 mb-4">
+                    👔 The Clergy
+                  </h3>
+                  <div className="space-y-3">
+                    <p>
+                      <strong className="text-cyan-300">
+                        The High Priest of Spin
+                      </strong>{' '}
+                      — keeper of the sacred drum, interpreter of mysterious
+                      error codes
+                    </p>
+                    <p>
+                      <strong className="text-blue-300">
+                        The Deacon of Detergent
+                      </strong>{' '}
+                      — master of cleaning solutions and stain removal rituals
+                    </p>
+                    <p>
+                      <strong className="text-purple-300">
+                        The Bishop of Bleach
+                      </strong>{' '}
+                      — wielder of whitening power (use sparingly and with great
+                      caution)
+                    </p>
+                    <p>
+                      <strong className="text-cyan-300">
+                        The Acolytes of Agitation
+                      </strong>{' '}
+                      — those who tend the temple and ensure proper water
+                      temperature
+                    </p>
+                  </div>
+                </div>
+                <div className="p-6 bg-black/30 rounded-xl border border-cyan-400/40">
+                  <h3 className="text-2xl font-bold text-cyan-300 mb-4">
+                    📜 The Discovery
+                  </h3>
+                  <div className="space-y-3 text-lg">
+                    <p>
+                      Deep within the maintenance tunnels of{' '}
+                      <strong className="text-cyan-300">Lincoln Station</strong>
+                      , during the liberation, we discovered an ancient
+                      laundromat. But this was no ordinary laundromat. The
+                      machines hummed with{' '}
+                      <em className="text-purple-300">cosmic energy</em>. The
+                      walls were covered in detergent hieroglyphs. The central
+                      washing machine — older than the station itself —{' '}
+                      <strong className="text-cyan-300">
+                        {' '}
+                        was still spinning
+                      </strong>
+                      .
+                    </p>
+                    <p>
+                      The freed prisoners spoke of it with reverence. They had
+                      kept the faith alive in secret, gathering to pray before
+                      the Sacred Machine, finding solace in its eternal cycles
+                      even in their darkest hours.
+                    </p>
+                    <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 italic">
+                      We did not create this religion. We merely freed it. The
+                      Washing Machine God was already there, spinning, waiting,
+                      cleansing.
+                    </p>
+                  </div>
+                </div>
+                <div className="text-center text-2xl font-bold text-cyan-300 italic pt-4 animate-pulse">
+                  🌀 Eternal be the Spin. May your loads always balance. 🌀
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Merch Section */}
+      <section id="merch" className="relative py-20 px-4">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <ShoppingBag className="w-20 h-20 text-amber-400 mx-auto mb-4 animate-pulse" />
+            <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-300">
+              COSMIC MARKETPLACE
+            </h2>
+            <p className="text-xl text-amber-200 italic">
+              Premium goods from legendary heroes
+            </p>
+            <p className="text-sm text-amber-300">
+              Currency: Cosmic Credits (◈)
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <MerchItem
+              name="Jhonny Mithrilhand Signed Handkerchief"
+              price="100"
+              icon={Sparkles}
+            />
+            <MerchItem
+              name="Jhonny Mithrilhand Signed Shirt (All Sizes)"
+              price="300"
+              icon={Star}
+            />
+            <MerchItem
+              name="Jhonny Mithrilhand Live Concert Ticket"
+              price="3,000"
+              icon={Music}
+            />
+            <MerchItem
+              name="Chimer Fighting Lessons (per hour)"
+              price="50"
+              icon={Sword}
+            />
+            <MerchItem
+              name="Chimer Life Lessons (per hour)"
+              price="75"
+              icon={Sparkles}
+            />
+            <MerchItem
+              name="History of Money with Chimer (per hour)"
+              price="100"
+              icon={Star}
+            />
+            <MerchItem
+              name="Hui Tutoring Sessions (per hour)"
+              price="75"
+              icon={Cpu}
+            />
+            <MerchItem
+              name="Hui Forging Lessons (per hour)"
+              price="100"
+              icon={Flame}
+            />
+            <MerchItem
+              name="Ragen Business Management Pack (full session)"
+              price="350"
+              icon={Briefcase}
+            />
+            <MerchItem
+              name="Ragen Student Discount Management Pack"
+              price="250"
+              icon={Star}
+            />
+            <MerchItem
+              name="Ragen Motivational & Wellbeing Lessons (per hour)"
+              price="100"
+              icon={Sparkles}
+            />
+            <MerchItem
+              name="Bob Infiltration Tactics (full session)"
+              price="150"
+              icon={Droplet}
+            />
+            <MerchItem
+              name="Bob Sneaking & Toxicity Workshop (full session)"
+              price="120"
+              icon={Zap}
+            />
+            <MerchItem
+              name="Meet & Greet with TABAGAA"
+              price="150"
+              icon={Star}
+            />
+            <MerchItem
+              name="Fight With TABAGAA (at your own risk)"
+              price="300"
+              icon={Flame}
+            />
+          </div>
+          <div className="text-center text-sm text-amber-300 italic space-y-2 pt-8">
+            <p>
+              ✨ All purchases support the ongoing mission to Make the Universe
+              Great Again ✨
+            </p>
+            <p>
+              🚫 Refunds only available if you can defeat Tabagaa in combat 🚫
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section id="reviews" className="relative py-20 px-4">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <MessageSquare className="w-20 h-20 text-purple-400 mx-auto mb-4 animate-pulse" />
+            <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+              CLIENT TESTIMONIALS
+            </h2>
+            <p className="text-xl text-purple-200 italic">
+              What the universe says about us
+            </p>
+          </div>
+          <div className="space-y-6">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="p-6 bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-xl border-2 border-purple-400/30 backdrop-blur-sm hover:border-purple-300 hover:shadow-[0_0_35px_rgba(168,85,247,0.5)] transition-all duration-300"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-purple-300">
+                      {review.name}
+                    </h3>
+                    <p className="text-sm text-purple-400 italic">
+                      {review.date}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-6 h-6 ${
+                          i < review.rating
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-purple-100 text-lg leading-relaxed">
+                  {review.comment}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="relative p-8 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 rounded-2xl border-2 border-purple-400/50 backdrop-blur-lg shadow-[0_0_40px_rgba(168,85,247,0.3)]">
+            <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 mb-6 text-center">
+              Share Your Experience
+            </h3>
+            <form onSubmit={submitReview} className="space-y-6">
+              <div>
+                <label className="block text-purple-300 font-semibold mb-2">
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  value={newReview.name}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, name: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors"
+                  placeholder="Enter your name..."
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-purple-300 font-semibold mb-2">
+                  Rating
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      type="button"
+                      onClick={() => setNewReview({ ...newReview, rating })}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`w-10 h-10 ${
+                          rating <= newReview.rating
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-600'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-purple-300 font-semibold mb-2">
+                  Your Review
+                </label>
+                <textarea
+                  value={newReview.comment}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, comment: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-black/40 border-2 border-purple-400/40 rounded-lg text-purple-100 placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition-colors h-32 resize-none"
+                  placeholder="Tell us about your experience with The Cosmic Syndicate..."
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:shadow-[0_0_40px_rgba(168,85,247,0.6)] transform hover:scale-105"
+              >
+                Submit Review
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative py-12 px-4 border-t border-cyan-400/30 bg-black/40 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto text-center space-y-6">
+          <div className="flex justify-center items-center gap-3">
+            <Sparkles className="w-8 h-8 text-cyan-400 animate-pulse" />
+            <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+              THE COSMIC SYNDICATE
+            </span>
+            <Sparkles className="w-8 h-8 text-cyan-400 animate-pulse" />
+          </div>
+          <p className="text-cyan-200 text-lg italic">
+            "When the impossible calls, we answer."
+          </p>
+          <div className="text-cyan-400 text-sm space-y-1">
+            <p>Headquarters: Somewhere between dimensions</p>
+            <p>Contact: Send a quantum signal, we'll find you</p>
+            <p>Business Hours: Always (time is relative anyway)</p>
+          </div>
+          <div className="pt-6 border-t border-cyan-400/20">
+            <p className="text-cyan-500 text-xs">
+              © Cosmic Year ∞ | The Cosmic Syndicate of Impossible Solutions |
+              Making the Universe Great Again, One Impossible Problem at a Time
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default CosmicSyndicate;

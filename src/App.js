@@ -361,8 +361,7 @@ const DiceRoller = ({ onClose }) => {
   const containerId = 'dice-box-canvas';
   
   // We use a ref to keep the Box instance alive across renders
-const boxRef = new DiceBox("#dice-box", {
-  assetPath: "/assets/dice-box", // required
+const boxRef = useRef(null);
 });
   useEffect(() => {
     let isMounted = true;
@@ -375,7 +374,7 @@ const boxRef = new DiceBox("#dice-box", {
         container: "#" + containerId,
         // CRITICAL FOR VERCEL: We use the CDN for assets (wasm/workers) 
         // so you don't have to manually copy files to your public folder.
-        assetPath: "https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/",
+        assetPath:"/assets/dice-box",
         theme: "default", // You can change this to "rust", "gemstone", etc.
         themeColor: "#06b6d4", // Cyan to match theme
         offscreen: true, // Use worker for performance

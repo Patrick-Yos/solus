@@ -361,8 +361,9 @@ const DiceRoller = ({ onClose }) => {
   const containerId = 'dice-box-canvas';
   
   // We use a ref to keep the Box instance alive across renders
-  const boxRef = useRef(null);
-
+const boxRef = new DiceBox("#dice-box", {
+  assetPath: "/assets/dice-box", // required
+});
   useEffect(() => {
     let isMounted = true;
 

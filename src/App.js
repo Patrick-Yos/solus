@@ -30,6 +30,8 @@ import {
   Ghost,    // Added for Game
   Brain,    // Added for Game
   Timer,    // Added for Game
+  XCircle, // Added for dice
+  Dices, // Added for dice
 } from 'lucide-react';
 
 // --- NEW COMPONENT: WARP SPEED BACKGROUND ---
@@ -345,6 +347,285 @@ const ArcadeOverlay = ({ onClose }) => {
     </div>
   );
 };
+//--Dice COMPONENT---
+// --- NEW COMPONENT: 3D DICE ROLLER ---
+const DiceRoller = ({ onClose }) => {
+  const [mode, setMode] = useState('menu'); // menu, rolling, result
+  const [selection, setSelection] = useState([]); // Array of { type: 'd20', id: 1 }
+  const [results, setResults] = useState([]);
+  const [total, setTotal] = useState(0);
+  const mountRef = useRef(null);
+
+  // Dice Configuration
+  const diceTypes = [
+    { type: 'd4', max: 4, color: 0xff4444, shape: 'tetra' },
+    { type: 'd6', max: 6, color: 0x4444ff, shape: 'box' },
+    { type: 'd8', max: 8, color: 0x44ff44, shape: 'octa' },
+    { type: 'd10', max: 10, color: 0xff44ff, shape: 'deca' }, // Approx with Octa scaled
+    { type: 'd12', max: 12, color: 0xff8800, shape: 'dodeca' },
+    { type: 'd20', max: 20, color: 0xffff00, shape: 'ico' },
+    { type: 'd100', max: 100, color: 0x00ffff, shape: 'ico' }, // High value special
+    { type: 'd1000', max: 1000, color: 0xffffff, shape: 'sphere' }, // Chaos
+  ];
+
+  const addDie = (type) => {
+    setSelection([...selection, { type, id: Date.now() + Math.random() }]);
+  };
+
+  const removeDie = (index) => {
+    const newSel = [...selection];
+    newSel.splice(index, 1);
+    setSelection(newSel);
+  };
+
+  const rollDice = () => {
+    if (selection.length === 0) return;
+    setMode('rolling');
+    
+    // Calculate results immediately for display purposes, though physics is visual
+    const newResults = selection.map(die => {
+      const config = diceTypes.find(d => d.type === die.type);
+      return {
+        ...die,
+        value: Math.floor(Math.random() * config.max) + 1,
+        color: config.color
+      };
+    });
+    
+    setResults(newResults);
+    setTotal(newResults.reduce((acc, curr) => acc + curr.value, 0));
+
+    // Auto close logic
+    setTimeout(() => {
+        // Wait 5 seconds after physics settles (approx 2s physics + 5s wait)
+        onClose(); 
+    }, 7000); 
+  };
+
+  // 3D Physics Effect
+  useEffect(() => {
+    if (mode !== 'rolling' || !mountRef.current) return;
+
+    let scene, camera, renderer, animationId;
+    let diceMeshes = [];
+
+    const init = () => {
+        const THREE = window.THREE;
+        if (!THREE) return; // Guard in case Three isn't loaded yet
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.z = 50;
+
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(width, height);
+        mountRef.current.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        // Create Geometries
+        selection.forEach((die, index) => {
+            const config = diceTypes.find(d => d.type === die.type);
+            let geometry;
+            
+            switch(config.shape) {
+                case 'tetra': geometry = new THREE.TetrahedronGeometry(1.5); break;
+                case 'box': geometry = new THREE.BoxGeometry(2, 2, 2); break;
+                case 'octa': geometry = new THREE.OctahedronGeometry(1.5); break;
+                case 'deca': geometry = new THREE.OctahedronGeometry(1.5); geometry.scale(1, 1.5, 1); break;
+                case 'dodeca': geometry = new THREE.DodecahedronGeometry(1.5); break;
+                case 'ico': geometry = new THREE.IcosahedronGeometry(1.5); break;
+                case 'sphere': geometry = new THREE.SphereGeometry(1.5, 16, 16); break;
+                default: geometry = new THREE.BoxGeometry(2, 2, 2);
+            }
+
+            const material = new THREE.MeshStandardMaterial({ 
+                color: config.color, 
+                roughness: 0.2,
+                metalness: 0.5 
+            });
+            
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Initial Random Position (off screen or scattered)
+            mesh.position.set(
+                (Math.random() - 0.5) * 20,
+                20 + Math.random() * 10, // Start high
+                (Math.random() - 0.5) * 10
+            );
+
+            // Physics Data attached to mesh
+            mesh.userData = {
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 1, // X Spread
+                    -0.5 - Math.random(),      // Initial Drop Speed
+                    (Math.random() - 0.5) * 1  // Z Depth
+                ),
+                rotationSpeed: new THREE.Vector3(
+                    Math.random() * 0.5,
+                    Math.random() * 0.5,
+                    Math.random() * 0.5
+                ),
+                floor: -15,
+                stopped: false
+            };
+
+            scene.add(mesh);
+            diceMeshes.push(mesh);
+        });
+
+        // Animation Loop
+        const animate = () => {
+            animationId = requestAnimationFrame(animate);
+
+            diceMeshes.forEach(mesh => {
+                if (mesh.userData.stopped) return;
+
+                // Position Update
+                mesh.position.add(mesh.userData.velocity);
+                
+                // Rotation Update
+                mesh.rotation.x += mesh.userData.rotationSpeed.x;
+                mesh.rotation.y += mesh.userData.rotationSpeed.y;
+                mesh.rotation.z += mesh.userData.rotationSpeed.z;
+
+                // Gravity
+                mesh.userData.velocity.y -= 0.05;
+
+                // Floor Bounce
+                if (mesh.position.y < mesh.userData.floor) {
+                    mesh.position.y = mesh.userData.floor;
+                    mesh.userData.velocity.y *= -0.6; // Bounce dampening
+                    mesh.userData.velocity.x *= 0.9; // Friction
+                    mesh.userData.velocity.z *= 0.9; // Friction
+
+                    // Stop logic
+                    if (Math.abs(mesh.userData.velocity.y) < 0.1) {
+                        mesh.userData.stopped = true;
+                    }
+                }
+
+                // Wall Bounce (Keep in view)
+                if (Math.abs(mesh.position.x) > 30) {
+                    mesh.userData.velocity.x *= -0.8;
+                }
+            });
+
+            renderer.render(scene, camera);
+        };
+        animate();
+    };
+
+    // Ensure ThreeJS is loaded (reusing the logic from your Solar System)
+    if (window.THREE) {
+        init();
+    } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.onload = init;
+        document.body.appendChild(script);
+    }
+
+    return () => {
+        cancelAnimationFrame(animationId);
+        if (mountRef.current && renderer) {
+            mountRef.current.removeChild(renderer.domElement);
+            renderer.dispose();
+        }
+    };
+  }, [mode, selection]);
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      
+      {/* MENU MODE */}
+      {mode === 'menu' && (
+        <div className="bg-gradient-to-b from-slate-900 to-purple-900 border-2 border-cyan-500 rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_50px_rgba(34,211,238,0.5)] relative">
+            <button onClick={onClose} className="absolute top-4 right-4 text-cyan-400 hover:text-white"><XCircle /></button>
+            
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-6 text-center flex items-center justify-center gap-3">
+                <Dices className="w-8 h-8" /> QUANTUM DICE ROLLER
+            </h2>
+
+            {/* Selection Area */}
+            <div className="flex flex-wrap gap-4 justify-center mb-8">
+                {diceTypes.map((d) => (
+                    <button 
+                        key={d.type}
+                        onClick={() => addDie(d.type)}
+                        className="w-16 h-16 rounded-xl bg-black/40 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/40 hover:scale-110 transition-all flex flex-col items-center justify-center gap-1 group"
+                    >
+                        <span className="text-xl font-bold text-cyan-100 group-hover:text-white">{d.type}</span>
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#' + d.color.toString(16) }}></div>
+                    </button>
+                ))}
+            </div>
+
+            {/* Current Selection */}
+            <div className="bg-black/50 rounded-xl p-4 min-h-[100px] mb-8 border border-white/10">
+                <div className="text-sm text-gray-400 mb-2">Selected Dice ({selection.length}):</div>
+                <div className="flex flex-wrap gap-2">
+                    {selection.length === 0 && <span className="text-gray-600 italic">No dice selected...</span>}
+                    {selection.map((die, idx) => (
+                        <div key={idx} className="px-3 py-1 bg-cyan-900/50 rounded-full border border-cyan-500/30 flex items-center gap-2 animate-in fade-in zoom-in duration-200">
+                            <span className="font-mono text-cyan-300">{die.type}</span>
+                            <button onClick={() => removeDie(idx)} className="hover:text-red-400"><X size={14} /></button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <button 
+                onClick={rollDice}
+                disabled={selection.length === 0}
+                className="w-full py-4 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-black text-xl hover:from-cyan-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+            >
+                INITIATE ROLL
+            </button>
+        </div>
+      )}
+
+      {/* ROLLING/RESULT MODE OVERLAY */}
+      {mode === 'rolling' && (
+        <div className="fixed inset-0 pointer-events-none">
+            {/* 3D Container */}
+            <div ref={mountRef} className="absolute inset-0 z-0" />
+            
+            {/* Results Sidebar */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-md p-6 rounded-l-2xl border-l-2 border-y-2 border-cyan-500 transform transition-transform duration-500 min-w-[200px] animate-[slideInRight_0.5s_ease-out]">
+                <h3 className="text-cyan-400 font-bold mb-4 border-b border-cyan-500/30 pb-2">RESULTS</h3>
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                    {results.map((res, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-lg">
+                            <span className="text-gray-400 uppercase text-sm">{res.type}</span>
+                            <span className="font-bold font-mono text-2xl" style={{ color: '#' + res.color.toString(16) }}>{res.value}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-6 pt-4 border-t border-cyan-500/50">
+                    <div className="flex justify-between items-center">
+                        <span className="text-purple-300 font-bold">TOTAL</span>
+                        <span className="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{total}</span>
+                    </div>
+                </div>
+                <div className="mt-2 text-center text-xs text-gray-500 animate-pulse">
+                    Closing in 5 seconds...
+                </div>
+            </div>
+            <style>{`@keyframes slideInRight { from { transform: translate(100%, -50%); } to { transform: translate(0, -50%); } }`}</style>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // --- MAIN COMPONENT ---
 const CosmicSyndicate = () => {
@@ -371,6 +652,7 @@ const CosmicSyndicate = () => {
   const [showCareers, setShowCareers] = useState(false);
   const [showOperations, setShowOperations] = useState(false);
   const [showArcade, setShowArcade] = useState(false); // NEW ARCADE STATE
+  const [showDiceRoller, setShowDiceRoller] = useState(false); // NEW DICE STATE
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [paymentForm, setPaymentForm] = useState({
     cardNumber: '',
@@ -879,6 +1161,10 @@ const CosmicSyndicate = () => {
 
       {/* ARCADE OVERLAY */}
       {showArcade && <ArcadeOverlay onClose={() => setShowArcade(false)} />}
+      {/* --- PASTE THIS HERE --- */}
+      {/* DICE ROLLER OVERLAY */}
+      {showDiceRoller && <DiceRoller onClose={() => setShowDiceRoller(false)} />}
+      {/* ----------------------- */}
 
       {/* Checkout Page Overlay */}
       {showCheckout && (
@@ -1507,7 +1793,13 @@ const CosmicSyndicate = () => {
               </div>
               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
             </button>
-
+{/* DICE ROLLER BUTTON */}
+            <button
+              onClick={() => setShowDiceRoller(true)}
+              className="p-3 bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-cyan-500/30 rounded-lg hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform hover:scale-105"
+              title="Roll Dice">
+              <Dices className="w-6 h-6 text-cyan-300" />
+            </button>
             <button
               onClick={() => setShowOperations(true)}
               className="group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
@@ -1568,7 +1860,23 @@ const CosmicSyndicate = () => {
                 </span>
               </div>
             </button>
-
+{/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}
+            <button
+              onClick={() => {
+                setShowDiceRoller(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Dices className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+                  Quantum Dice
+                </span>
+              </div>
+            </button>
+{/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}     
+         
             <button
               onClick={() => {
                 setShowOperations(true);

@@ -349,104 +349,98 @@ const ArcadeOverlay = ({ onClose }) => {
 };
 //--Dice COMPONENT---
 // --- NEW COMPONENT: FANTASTIC DICE ROLLER (ROBUST LOADER) ---
+// --- NEW COMPONENT: VERCEL-READY DICE ROLLER ---
 const DiceRoller = ({ onClose }) => {
   const [status, setStatus] = useState('loading'); // loading, ready, error
   const [pool, setPool] = useState([]); 
   const [rolling, setRolling] = useState(false);
   const [results, setResults] = useState(null);
   const [total, setTotal] = useState(0);
-  const containerId = 'dice-box-container';
   const boxRef = useRef(null);
+  const containerId = 'dice-box-canvas';
 
-  // --- 1. SCRIPT INJECTION ---
+  // --- 1. BYPASS BUNDLER LOADING ---
   useEffect(() => {
-    // If already loaded globally, skip injection
+    // If we already loaded the script globally, just init
     if (window.DiceBox) {
-      initDiceBox();
+      initBox();
       return;
     }
 
-    // Create a Blob script to bypass bundler restrictions
-    // We use version 1.0.18 which is very stable
-    const moduleCode = `
-      import DiceBox from 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.0.18/dist/dice-box.es.min.js';
+    // We create a "Virtual File" (Blob) to import the library.
+    // This tricks React/Webpack into ignoring the 'import' statement so it doesn't crash.
+    const scriptContent = `
+      import DiceBox from 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.3/dist/dice-box.es.min.js';
       window.DiceBox = DiceBox;
       window.dispatchEvent(new Event('dicebox-ready'));
     `;
 
-    const blob = new Blob([moduleCode], { type: 'application/javascript' });
-    const scriptUrl = URL.createObjectURL(blob);
+    const blob = new Blob([scriptContent], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
     const script = document.createElement('script');
     script.type = 'module';
-    script.src = scriptUrl;
+    script.src = url;
     document.body.appendChild(script);
 
-    const handleReady = () => initDiceBox();
+    const handleReady = () => initBox();
     window.addEventListener('dicebox-ready', handleReady);
 
     return () => {
       window.removeEventListener('dicebox-ready', handleReady);
-      URL.revokeObjectURL(scriptUrl);
+      URL.revokeObjectURL(url);
     };
   }, []);
 
-  // --- 2. INITIALIZATION LOGIC ---
-  const initDiceBox = async () => {
-    // Safety check: Ensure the container div exists in the DOM
+  // --- 2. INITIALIZE PHYSICS ---
+  const initBox = async () => {
+    if (boxRef.current) return;
+    
+    // Wait for the DIV to exist in the DOM
     const container = document.getElementById(containerId);
     if (!container) {
-        setTimeout(initDiceBox, 100); // Retry if React hasn't rendered div yet
+        setTimeout(initBox, 200);
         return;
     }
 
-    if (boxRef.current) return;
-
     try {
-      // Initialize with JSDELIVR assets (Faster & CORS friendly)
+      // Initialize pointing to the CDN assets
       const Box = new window.DiceBox("#" + containerId, {
-        assetPath: "https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.0.18/dist/assets/",
+        assetPath: "https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.3/dist/assets/",
         theme: "default",
         themeColor: "#06b6d4", // Cyan
         scale: 6,
-        offscreen: true // Important for performance
+        offscreen: true,
+        gravity: 3,
+        mass: 5,
+        friction: 0.8
       });
 
       await Box.init();
       boxRef.current = Box;
       setStatus('ready');
 
-      // Setup Results Handler
+      // Results Handler
       Box.onRollComplete = (rollResults) => {
         let sum = 0;
         const resArray = [];
-        
-        // Handle differences in result format between versions
-        const rolls = Array.isArray(rollResults) ? rollResults : [rollResults];
-        
-        rolls.forEach(r => {
-           // r.value is the result, r.groupId is the dice type usually
-           // We fallback to checking the inputs if type is missing
-           let val = r.value;
-           sum += val;
-           // Attempt to guess type from sides if explicit type is missing
-           let type = r.sides ? `d${r.sides}` : 'die';
-           resArray.push({ type: type, value: val });
+        rollResults.forEach(r => {
+           sum += r.value;
+           resArray.push({ type: r.type, value: r.value });
         });
-
         setResults(resArray);
         setTotal(sum);
         
-        // Auto vanish results after 6s
+        // Auto Clear
         setTimeout(() => {
-            if (boxRef.current) boxRef.current.clear();
-            setResults(null);
-            setTotal(0);
-            setRolling(false);
+          if (boxRef.current) boxRef.current.clear();
+          setResults(null);
+          setTotal(0);
+          setRolling(false);
         }, 6000);
       };
 
-    } catch (error) {
-      console.error("DiceBox Init Error:", error);
+    } catch (e) {
+      console.error("Physics Load Error:", e);
       setStatus('error');
     }
   };
@@ -468,21 +462,16 @@ const DiceRoller = ({ onClose }) => {
     setResults(null);
     setTotal(0);
 
-    // Format: Array of strings ["d20", "d6", "d10"]
-    // d1000 is simulated as 3d10
-    const finalPool = [];
-    pool.forEach(die => {
-        if (die === 'd1000') {
-            finalPool.push('d10', 'd10', 'd10');
-        } else {
-            finalPool.push(die);
-        }
+    // Visual hack: Roll 3d10 for D1000
+    const notation = pool.map(die => {
+        if (die === 'd1000') return '3d10'; 
+        return '1' + die;
     });
 
     try {
-        await boxRef.current.roll(finalPool);
+        await boxRef.current.roll(notation);
     } catch (e) {
-        console.error("Roll failed", e);
+        console.error("Roll Error", e);
         setRolling(false);
     }
   };
@@ -501,25 +490,25 @@ const DiceRoller = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-end justify-center pointer-events-none">
         
-        {/* CLICK TO CLOSE (Background) */}
+        {/* CLICK TO CLOSE */}
         <div className="absolute inset-0 z-0 pointer-events-auto" onClick={(e) => {
             if (e.target === e.currentTarget && !rolling) onClose();
         }}></div>
 
-        {/* 3D CANVAS LAYER */}
+        {/* 3D CANVAS */}
         <div 
             id={containerId} 
             className="absolute inset-0 z-10 pointer-events-none"
             style={{ width: '100%', height: '100%' }}
         />
 
-        {/* UI CONTROLS LAYER */}
+        {/* CONTROLS */}
         <div className="relative z-20 mb-8 pointer-events-auto flex flex-col items-center gap-4 animate-in slide-in-from-bottom-10 duration-500">
             
-            {/* RESULTS DISPLAY */}
+            {/* RESULTS */}
             {results && (
                 <div className="bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.6)] flex flex-col items-center gap-2 min-w-[300px] animate-in zoom-in duration-300">
-                    <h3 className="text-cyan-400 font-bold tracking-widest text-sm">TOTAL RESULT</h3>
+                    <h3 className="text-cyan-400 font-bold tracking-widest text-sm">TOTAL</h3>
                     <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 drop-shadow-sm">
                         {total}
                     </div>
@@ -533,10 +522,9 @@ const DiceRoller = ({ onClose }) => {
                 </div>
             )}
 
-            {/* SELECTION WIDGET */}
+            {/* INTERFACE */}
             <div className="bg-slate-900/90 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 max-w-3xl mx-4">
                 
-                {/* Header */}
                 <div className="flex justify-between items-center border-b border-white/10 pb-2">
                     <div className="flex items-center gap-2">
                          <Dices className="text-cyan-400 w-5 h-5" />
@@ -545,7 +533,6 @@ const DiceRoller = ({ onClose }) => {
                     <button onClick={onClose} className="text-gray-400 hover:text-white"><XCircle /></button>
                 </div>
 
-                {/* DICE GRID */}
                 <div className="flex flex-wrap justify-center gap-3">
                     {diceOptions.map((opt) => (
                         <button
@@ -566,7 +553,6 @@ const DiceRoller = ({ onClose }) => {
                     ))}
                 </div>
 
-                {/* ACTION BAR */}
                 <div className="flex gap-3">
                     <button 
                         onClick={clearPool}
@@ -591,16 +577,15 @@ const DiceRoller = ({ onClose }) => {
                     </button>
                 </div>
                 
-                {/* STATUS INDICATOR */}
                 {status === 'loading' && (
                     <div className="text-center text-xs text-yellow-500 animate-pulse">
                         <span className="inline-block animate-spin mr-2">⚙️</span>
-                        Initializing Physics...
+                        Initializing 3D Physics...
                     </div>
                 )}
                 {status === 'error' && (
                     <div className="text-center text-xs text-red-400">
-                        Failed to load Physics Engine. Please refresh.
+                        Error loading physics. Please refresh page.
                     </div>
                 )}
             </div>

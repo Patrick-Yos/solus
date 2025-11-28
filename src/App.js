@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DiceBox from "@3d-dice/dice-box";
-import "./styles.css";
+import "./style.css";
 import DisplayResults from "@3d-dice/dice-ui/src/displayResults";
 import AdvancedRoller from "@3d-dice/dice-ui/src/advancedRoller";
 import BoxControls from "@3d-dice/dice-ui/src/boxControls";

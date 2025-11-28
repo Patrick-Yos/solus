@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DiceBox from "@3d-dice/dice-box";
+import "./styles.css";
+import DisplayResults from "@3d-dice/dice-ui/src/displayResults";
+import AdvancedRoller from "@3d-dice/dice-ui/src/advancedRoller";
+import BoxControls from "@3d-dice/dice-ui/src/boxControls";
 import {
   Sparkles,
   Zap,
@@ -349,11 +353,7 @@ const ArcadeOverlay = ({ onClose }) => {
   );
 };
 //--Dice COMPONENT---
-import "./styles.css";
-import DiceBox from "@3d-dice/dice-box";
-import DisplayResults from "@3d-dice/dice-ui/src/displayResults";
-import AdvancedRoller from "@3d-dice/dice-ui/src/advancedRoller";
-import BoxControls from "@3d-dice/dice-ui/src/boxControls";
+
 
 let Box = new DiceBox("#dice-box", {
   assetPath: "/public/assets/dice-box/",

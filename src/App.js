@@ -26,8 +26,327 @@ import {
   LogOut,
   Play,
   Pause,
+  Gamepad2, // Added for Arcade
+  Ghost,    // Added for Game
+  Brain,    // Added for Game
+  Timer,    // Added for Game
 } from 'lucide-react';
 
+// --- NEW COMPONENT: WARP SPEED BACKGROUND ---
+const WarpSpeedBackground = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    // Star properties
+    const stars = [];
+    const starCount = 400;
+    
+    class Star {
+      constructor() {
+        this.x = Math.random() * width - width / 2;
+        this.y = Math.random() * height - height / 2;
+        this.z = Math.random() * width; // Depth
+        this.pz = this.z; // Previous z
+      }
+
+      update() {
+        this.z = this.z - 15; // Speed of warp
+        if (this.z < 1) {
+          this.z = width;
+          this.x = Math.random() * width - width / 2;
+          this.y = Math.random() * height - height / 2;
+          this.pz = this.z;
+        }
+      }
+
+      draw() {
+        const sx = (this.x / this.z) * width + width / 2;
+        const sy = (this.y / this.z) * height + height / 2;
+
+        const r = (width - this.z) / width * 2; // Radius based on depth
+
+        // Previous position for trail effect (Anime.js style streaks)
+        const px = (this.x / this.pz) * width + width / 2;
+        const py = (this.y / this.pz) * height + height / 2;
+
+        this.pz = this.z;
+
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(sx, sy);
+        ctx.lineWidth = Math.min(r, 3);
+        // Cyan to Purple gradient stroke depending on depth
+        const alpha = 1 - this.z / width;
+        ctx.strokeStyle = `rgba(${100 + (255 - this.z / 4)}, ${200}, ${255}, ${alpha})`;
+        ctx.stroke();
+      }
+    }
+
+    // Init stars
+    for (let i = 0; i < starCount; i++) {
+      stars.push(new Star());
+    }
+
+    const render = () => {
+      // Create trails by not clearing completely (motion blur effect)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; 
+      ctx.fillRect(0, 0, width, height);
+      
+      stars.forEach(star => {
+        star.update();
+        star.draw();
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" />;
+};
+
+// --- NEW COMPONENT: ARCADE OVERLAY ---
+const ArcadeOverlay = ({ onClose }) => {
+  const [activeGame, setActiveGame] = useState('menu'); // menu, whack, memory
+  
+  // -- WHACK A MOLE STATE --
+  const [whackScore, setWhackScore] = useState(0);
+  const [activeHole, setActiveHole] = useState(null);
+  const [whackTime, setWhackTime] = useState(30);
+  const [isWhackPlaying, setIsWhackPlaying] = useState(false);
+
+  // -- MEMORY GAME STATE --
+  const [cards, setCards] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [solved, setSolved] = useState([]);
+  const [memoryMoves, setMemoryMoves] = useState(0);
+
+  // WHACK LOGIC
+  useEffect(() => {
+    let interval;
+    let timerInterval;
+    if (activeGame === 'whack' && isWhackPlaying) {
+      interval = setInterval(() => {
+        const randomHole = Math.floor(Math.random() * 9);
+        setActiveHole(randomHole);
+      }, 700);
+
+      timerInterval = setInterval(() => {
+        setWhackTime((prev) => {
+          if (prev <= 1) {
+            setIsWhackPlaying(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      clearInterval(interval);
+      clearInterval(timerInterval);
+    };
+  }, [activeGame, isWhackPlaying]);
+
+  const startWhack = () => {
+    setWhackScore(0);
+    setWhackTime(30);
+    setIsWhackPlaying(true);
+  };
+
+  const handleWhack = (index) => {
+    if (index === activeHole && isWhackPlaying) {
+      setWhackScore(s => s + 10);
+      setActiveHole(null); // Hide immediately
+    }
+  };
+
+  // MEMORY LOGIC
+  const initializeMemory = () => {
+    const icons = [Zap, Star, Flame, Shield, Sword, Cpu, Ghost, Music];
+    // Create pairs
+    const deck = [...icons, ...icons]
+      .sort(() => Math.random() - 0.5)
+      .map((Icon, index) => ({ id: index, Icon }));
+    setCards(deck);
+    setFlipped([]);
+    setSolved([]);
+    setMemoryMoves(0);
+  };
+
+  const handleCardClick = (id) => {
+    if (flipped.length === 2 || flipped.includes(id) || solved.includes(id)) return;
+    
+    const newFlipped = [...flipped, id];
+    setFlipped(newFlipped);
+
+    if (newFlipped.length === 2) {
+      setMemoryMoves(m => m + 1);
+      const [first, second] = newFlipped;
+      if (cards[first].Icon === cards[second].Icon) {
+        setSolved([...solved, first, second]);
+        setFlipped([]);
+      } else {
+        setTimeout(() => setFlipped([]), 1000);
+      }
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
+      <div className="relative w-full max-w-4xl h-[80vh] bg-gradient-to-b from-indigo-900/50 to-purple-900/50 rounded-3xl border-4 border-cyan-500 shadow-[0_0_50px_rgba(34,211,238,0.5)] overflow-hidden flex flex-col">
+        
+        {/* Arcade Header */}
+        <div className="p-6 border-b border-cyan-500/30 flex justify-between items-center bg-black/40">
+          <div className="flex items-center gap-3">
+            <Gamepad2 className="w-8 h-8 text-cyan-400 animate-pulse" />
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-wider">
+              COSMIC ARCADE
+            </h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <X className="w-8 h-8 text-cyan-400" />
+          </button>
+        </div>
+
+        {/* Game Area */}
+        <div className="flex-1 p-8 overflow-y-auto">
+          
+          {/* MENU */}
+          {activeGame === 'menu' && (
+            <div className="grid md:grid-cols-2 gap-8 h-full place-items-center">
+              <button 
+                onClick={() => { setActiveGame('whack'); startWhack(); }}
+                className="group relative w-full h-64 bg-black/40 border-2 border-green-500/50 rounded-2xl hover:border-green-400 hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-4"
+              >
+                <Ghost className="w-20 h-20 text-green-400 group-hover:animate-bounce" />
+                <h3 className="text-2xl font-bold text-green-300">WHACK-A-ALIEN</h3>
+                <p className="text-green-500/70">Reflex Training</p>
+              </button>
+
+              <button 
+                onClick={() => { setActiveGame('memory'); initializeMemory(); }}
+                className="group relative w-full h-64 bg-black/40 border-2 border-pink-500/50 rounded-2xl hover:border-pink-400 hover:shadow-[0_0_30px_rgba(236,72,153,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-4"
+              >
+                <Brain className="w-20 h-20 text-pink-400 group-hover:animate-spin" />
+                <h3 className="text-2xl font-bold text-pink-300">MEMORY HACK</h3>
+                <p className="text-pink-500/70">Neural Calibration</p>
+              </button>
+            </div>
+          )}
+
+          {/* WHACK GAME */}
+          {activeGame === 'whack' && (
+            <div className="h-full flex flex-col items-center">
+              <div className="flex justify-between w-full mb-8 text-2xl font-mono">
+                <div className="text-green-400">SCORE: {whackScore}</div>
+                <div className="text-red-400 flex items-center gap-2"><Timer /> {whackTime}s</div>
+              </div>
+              
+              {!isWhackPlaying && whackTime === 0 ? (
+                <div className="text-center space-y-6">
+                  <h3 className="text-4xl font-bold text-white">GAME OVER</h3>
+                  <p className="text-2xl text-cyan-300">Final Score: {whackScore}</p>
+                  <div className="flex gap-4 justify-center">
+                    <button onClick={startWhack} className="px-6 py-3 bg-green-600 rounded-lg font-bold hover:bg-green-500">PLAY AGAIN</button>
+                    <button onClick={() => setActiveGame('menu')} className="px-6 py-3 bg-gray-600 rounded-lg font-bold hover:bg-gray-500">MENU</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4">
+                  {[...Array(9)].map((_, i) => (
+                    <div 
+                      key={i}
+                      onClick={() => handleWhack(i)}
+                      className={`w-24 h-24 md:w-32 md:h-32 bg-gray-800 rounded-full border-4 border-gray-600 flex items-center justify-center cursor-pointer relative overflow-hidden`}
+                    >
+                      <div className="absolute inset-0 bg-black/50 rounded-full shadow-inner"></div>
+                      {activeHole === i && (
+                        <Ghost className="w-16 h-16 text-green-400 animate-bounce relative z-10" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {isWhackPlaying && <button onClick={() => setActiveGame('menu')} className="mt-8 text-sm text-gray-400 hover:text-white">Back to Menu</button>}
+            </div>
+          )}
+
+          {/* MEMORY GAME */}
+          {activeGame === 'memory' && (
+            <div className="h-full flex flex-col items-center">
+              <div className="flex justify-between w-full mb-6 text-2xl font-mono">
+                <div className="text-pink-400">MOVES: {memoryMoves}</div>
+                <div className="text-cyan-400">PAIRS: {solved.length / 2}/8</div>
+              </div>
+
+              {solved.length === cards.length && cards.length > 0 ? (
+                 <div className="text-center space-y-6 mt-10">
+                 <h3 className="text-4xl font-bold text-white">SYSTEM HACKED!</h3>
+                 <p className="text-2xl text-cyan-300">Great Job Agent!</p>
+                 <div className="flex gap-4 justify-center">
+                   <button onClick={initializeMemory} className="px-6 py-3 bg-pink-600 rounded-lg font-bold hover:bg-pink-500">RETRY</button>
+                   <button onClick={() => setActiveGame('menu')} className="px-6 py-3 bg-gray-600 rounded-lg font-bold hover:bg-gray-500">MENU</button>
+                 </div>
+               </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-3 md:gap-4">
+                  {cards.map((card, index) => {
+                    const isFlipped = flipped.includes(index) || solved.includes(index);
+                    const CardIcon = card.Icon;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleCardClick(index)}
+                        className={`w-16 h-16 md:w-24 md:h-24 rounded-xl transition-all duration-300 transform ${
+                          isFlipped 
+                            ? 'bg-gradient-to-br from-pink-600 to-purple-600 rotate-y-180' 
+                            : 'bg-indigo-900/80 border-2 border-indigo-500/50 hover:border-indigo-400'
+                        } flex items-center justify-center`}
+                      >
+                        {isFlipped ? (
+                          <CardIcon className="w-8 h-8 md:w-12 md:h-12 text-white" />
+                        ) : (
+                          <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+               <button onClick={() => setActiveGame('menu')} className="mt-8 text-sm text-gray-400 hover:text-white">Back to Menu</button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
 const CosmicSyndicate = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,6 +370,7 @@ const CosmicSyndicate = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCareers, setShowCareers] = useState(false);
   const [showOperations, setShowOperations] = useState(false);
+  const [showArcade, setShowArcade] = useState(false); // NEW ARCADE STATE
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [paymentForm, setPaymentForm] = useState({
     cardNumber: '',
@@ -73,7 +393,7 @@ const CosmicSyndicate = () => {
 
   // PAUSE STATE
   const [isPaused, setIsPaused] = useState(false);
-  const isPausedRef = useRef(false); // Ref needed for animation loop access
+  const isPausedRef = useRef(false);
 
   const mountRef = useRef(null);
 
@@ -99,7 +419,7 @@ const CosmicSyndicate = () => {
     let scene, camera, renderer, controls, animationId;
     let planets = [];
     let raycaster, mouse;
-    let targetCameraPos = null; // For zooming
+    let targetCameraPos = null; 
     let targetLookAt = null;
 
     setIsPaused(false);
@@ -461,24 +781,6 @@ const CosmicSyndicate = () => {
     }
   };
 
-  // --- COMPONENTS ---
-  const StarField = () => (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {[...Array(100)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            opacity: Math.random() * 0.7 + 0.3,
-          }}
-        />
-      ))}
-    </div>
-  );
-
   const ShootingStar = () => (
     <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
       <div
@@ -570,9 +872,13 @@ const CosmicSyndicate = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-indigo-950 to-purple-950 text-white overflow-x-hidden">
-      <StarField />
+    <div className="min-h-screen bg-gradient-to-b from-black via-indigo-950 to-purple-950 text-white overflow-x-hidden relative">
+      {/* REPLACED STATIC STARFIELD WITH WARP SPEED BACKGROUND */}
+      <WarpSpeedBackground />
       {showShootingStar && <ShootingStar />}
+
+      {/* ARCADE OVERLAY */}
+      {showArcade && <ArcadeOverlay onClose={() => setShowArcade(false)} />}
 
       {/* Checkout Page Overlay */}
       {showCheckout && (
@@ -1187,6 +1493,21 @@ const CosmicSyndicate = () => {
             <MenuItem icon={Church} text="The Church" section="church" />
             <MenuItem icon={ShoppingBag} text="Merch" section="merch" />
             <MenuItem icon={MessageSquare} text="Reviews" section="reviews" />
+            
+            {/* ARCADE BUTTON DESKTOP */}
+            <button
+              onClick={() => setShowArcade(true)}
+              className="group relative px-6 py-3 bg-gradient-to-r from-pink-900/30 to-purple-900/30 border-2 border-pink-400/50 rounded-lg backdrop-blur-sm hover:border-pink-300 hover:shadow-[0_0_30px_rgba(236,72,153,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Gamepad2 className="w-5 h-5 text-pink-400 group-hover:text-pink-300 transition-colors" />
+                <span className="text-pink-100 font-semibold group-hover:text-white transition-colors">
+                  ARCADE
+                </span>
+              </div>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
+            </button>
+
             <button
               onClick={() => setShowOperations(true)}
               className="group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
@@ -1231,6 +1552,23 @@ const CosmicSyndicate = () => {
             <MenuItem icon={Church} text="The Church" section="church" />
             <MenuItem icon={ShoppingBag} text="Merch" section="merch" />
             <MenuItem icon={MessageSquare} text="Reviews" section="reviews" />
+            
+            {/* ARCADE BUTTON MOBILE */}
+            <button
+              onClick={() => {
+                setShowArcade(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-pink-900/30 to-purple-900/30 border-2 border-pink-400/50 rounded-lg backdrop-blur-sm hover:border-pink-300 hover:shadow-[0_0_30px_rgba(236,72,153,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Gamepad2 className="w-5 h-5 text-pink-400 group-hover:text-pink-300 transition-colors" />
+                <span className="text-pink-100 font-semibold group-hover:text-white transition-colors">
+                  ARCADE
+                </span>
+              </div>
+            </button>
+
             <button
               onClick={() => {
                 setShowOperations(true);
@@ -1269,7 +1607,7 @@ const CosmicSyndicate = () => {
         className="relative min-h-screen flex items-center justify-center pt-20 px-4"
       >
         <div
-          className="absolute inset-0 bg-gradient-radial from-cyan-500/10 via-transparent to-transparent"
+          className="absolute inset-0 bg-gradient-radial from-cyan-500/10 via-transparent to-transparent pointer-events-none"
           style={{
             transform: `translate(${mousePos.x / 50}px, ${mousePos.y / 50}px)`,
           }}

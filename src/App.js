@@ -348,24 +348,25 @@ const ArcadeOverlay = ({ onClose }) => {
   );
 };
 //--Dice COMPONENT---
-// --- NEW COMPONENT: 3D DICE ROLLER ---
+// --- NEW COMPONENT: 3D DICE ROLLER (UPDATED) ---
 const DiceRoller = ({ onClose }) => {
-  const [mode, setMode] = useState('menu'); // menu, rolling, result
-  const [selection, setSelection] = useState([]); // Array of { type: 'd20', id: 1 }
+  const [mode, setMode] = useState('menu'); // menu, rolling, result, vanishing
+  const [selection, setSelection] = useState([]); 
   const [results, setResults] = useState([]);
   const [total, setTotal] = useState(0);
   const mountRef = useRef(null);
+  const diceRefs = useRef([]); // To track meshes for animation
 
   // Dice Configuration
   const diceTypes = [
-    { type: 'd4', max: 4, color: 0xff4444, shape: 'tetra' },
-    { type: 'd6', max: 6, color: 0x4444ff, shape: 'box' },
-    { type: 'd8', max: 8, color: 0x44ff44, shape: 'octa' },
-    { type: 'd10', max: 10, color: 0xff44ff, shape: 'deca' }, // Approx with Octa scaled
-    { type: 'd12', max: 12, color: 0xff8800, shape: 'dodeca' },
-    { type: 'd20', max: 20, color: 0xffff00, shape: 'ico' },
-    { type: 'd100', max: 100, color: 0x00ffff, shape: 'ico' }, // High value special
-    { type: 'd1000', max: 1000, color: 0xffffff, shape: 'sphere' }, // Chaos
+    { type: 'd4', max: 4, color: '#ef4444', shape: 'tetra' },   // Red
+    { type: 'd6', max: 6, color: '#3b82f6', shape: 'box' },     // Blue
+    { type: 'd8', max: 8, color: '#22c55e', shape: 'octa' },    // Green
+    { type: 'd10', max: 10, color: '#d946ef', shape: 'deca' },  // Fuschia
+    { type: 'd12', max: 12, color: '#f97316', shape: 'dodeca' },// Orange
+    { type: 'd20', max: 20, color: '#eab308', shape: 'ico' },   // Yellow
+    { type: 'd100', max: 100, color: '#06b6d4', shape: 'ico' }, // Cyan
+    { type: 'd1000', max: 1000, color: '#ffffff', shape: 'sphere' }, // White
   ];
 
   const addDie = (type) => {
@@ -378,28 +379,56 @@ const DiceRoller = ({ onClose }) => {
     setSelection(newSel);
   };
 
+  // Helper: Create a texture with the number drawn on it
+  const createNumberTexture = (text, colorHex, shape) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    
+    // Background color
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Borders/Texture detail
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(0, 0, 256, 256);
+
+    // Text
+    ctx.fillStyle = '#000000'; // Black text
+    if (shape === 'd1000') ctx.fillStyle = '#000000'; // Specific contrast
+    
+    ctx.font = 'bold 120px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw text multiple times for primitive wrapping
+    ctx.fillText(text, 128, 128);
+    
+    // Add some noise/texture so it looks solid
+    const texture = new window.THREE.CanvasTexture(canvas);
+    return texture;
+  };
+
   const rollDice = () => {
     if (selection.length === 0) return;
     setMode('rolling');
     
-    // Calculate results immediately for display purposes, though physics is visual
+    // Pre-calculate results
     const newResults = selection.map(die => {
       const config = diceTypes.find(d => d.type === die.type);
       return {
         ...die,
         value: Math.floor(Math.random() * config.max) + 1,
-        color: config.color
+        config: config
       };
     });
     
     setResults(newResults);
     setTotal(newResults.reduce((acc, curr) => acc + curr.value, 0));
 
-    // Auto close logic
-    setTimeout(() => {
-        // Wait 5 seconds after physics settles (approx 2s physics + 5s wait)
-        onClose(); 
-    }, 7000); 
+    // Time handling handles in animation loop now
   };
 
   // 3D Physics Effect
@@ -407,87 +436,133 @@ const DiceRoller = ({ onClose }) => {
     if (mode !== 'rolling' || !mountRef.current) return;
 
     let scene, camera, renderer, animationId;
-    let diceMeshes = [];
+    diceRefs.current = [];
 
     const init = () => {
         const THREE = window.THREE;
-        if (!THREE) return; // Guard in case Three isn't loaded yet
+        if (!THREE) return;
 
         const width = window.innerWidth;
         const height = window.innerHeight;
 
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-        camera.position.z = 50;
+        // Camera positioned further back for larger dice
+        camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 2000);
+        camera.position.z = 120; 
 
         renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(width, height);
         mountRef.current.appendChild(renderer.domElement);
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-        dirLight.position.set(10, 20, 10);
-        scene.add(dirLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(50, 50, 50);
+        scene.add(pointLight);
+
+        // Calculate Screen Boundaries in 3D Space at z=0
+        // Tan(FOV/2) * Distance = Height/2
+        const vFOV = camera.fov * Math.PI / 180;
+        const visibleHeight = 2 * Math.tan(vFOV / 2) * Math.abs(camera.position.z);
+        const visibleWidth = visibleHeight * camera.aspect;
+        
+        const bounds = {
+            xMin: -visibleWidth / 2 + 5,
+            xMax: visibleWidth / 2 - 5,
+            yMin: -visibleHeight / 2 + 5, // Floor
+            yMax: visibleHeight / 2 - 5,
+        };
 
         // Create Geometries
-        selection.forEach((die, index) => {
-            const config = diceTypes.find(d => d.type === die.type);
+        results.forEach((dieResult, index) => {
             let geometry;
-            
-            switch(config.shape) {
-                case 'tetra': geometry = new THREE.TetrahedronGeometry(1.5); break;
-                case 'box': geometry = new THREE.BoxGeometry(2, 2, 2); break;
-                case 'octa': geometry = new THREE.OctahedronGeometry(1.5); break;
-                case 'deca': geometry = new THREE.OctahedronGeometry(1.5); geometry.scale(1, 1.5, 1); break;
-                case 'dodeca': geometry = new THREE.DodecahedronGeometry(1.5); break;
-                case 'ico': geometry = new THREE.IcosahedronGeometry(1.5); break;
-                case 'sphere': geometry = new THREE.SphereGeometry(1.5, 16, 16); break;
-                default: geometry = new THREE.BoxGeometry(2, 2, 2);
+            // SIZE INCREASED: Base size 6-8 units (prev was 1.5)
+            switch(dieResult.config.shape) {
+                case 'tetra': geometry = new THREE.TetrahedronGeometry(7); break;
+                case 'box': geometry = new THREE.BoxGeometry(9, 9, 9); break;
+                case 'octa': geometry = new THREE.OctahedronGeometry(6); break;
+                case 'deca': geometry = new THREE.OctahedronGeometry(6); geometry.scale(1, 1.4, 1); break;
+                case 'dodeca': geometry = new THREE.DodecahedronGeometry(6.5); break;
+                case 'ico': geometry = new THREE.IcosahedronGeometry(6.5); break;
+                case 'sphere': geometry = new THREE.SphereGeometry(7, 32, 32); break;
+                default: geometry = new THREE.BoxGeometry(8, 8, 8);
             }
 
+            // Create Texture with the Result Number
+            const texture = createNumberTexture(
+                dieResult.config.shape === 'd1000' ? '?' : dieResult.value.toString(), 
+                dieResult.config.color,
+                dieResult.config.shape
+            );
+
             const material = new THREE.MeshStandardMaterial({ 
-                color: config.color, 
-                roughness: 0.2,
-                metalness: 0.5 
+                map: texture,
+                roughness: 0.1,
+                metalness: 0.1,
             });
             
             const mesh = new THREE.Mesh(geometry, material);
             
-            // Initial Random Position (off screen or scattered)
+            // Initial Random Position (Centerish burst)
             mesh.position.set(
                 (Math.random() - 0.5) * 20,
-                20 + Math.random() * 10, // Start high
-                (Math.random() - 0.5) * 10
+                (Math.random() - 0.5) * 20,
+                0
             );
 
-            // Physics Data attached to mesh
+            // Physics Data
             mesh.userData = {
                 velocity: new THREE.Vector3(
-                    (Math.random() - 0.5) * 1, // X Spread
-                    -0.5 - Math.random(),      // Initial Drop Speed
-                    (Math.random() - 0.5) * 1  // Z Depth
+                    (Math.random() - 0.5) * 4, // X Burst
+                    (Math.random() - 0.5) * 4, // Y Burst
+                    (Math.random() - 0.5) * 2  // Z Depth
                 ),
                 rotationSpeed: new THREE.Vector3(
-                    Math.random() * 0.5,
-                    Math.random() * 0.5,
-                    Math.random() * 0.5
+                    Math.random() * 0.4,
+                    Math.random() * 0.4,
+                    Math.random() * 0.4
                 ),
-                floor: -15,
-                stopped: false
+                stopped: false,
+                restingFrames: 0
             };
 
             scene.add(mesh);
-            diceMeshes.push(mesh);
+            diceRefs.current.push(mesh);
         });
 
         // Animation Loop
+        let frameCount = 0;
+        let vanishing = false;
+
         const animate = () => {
             animationId = requestAnimationFrame(animate);
+            frameCount++;
 
-            diceMeshes.forEach(mesh => {
+            // Vanish Animation Logic
+            if (vanishing) {
+                let allGone = true;
+                diceRefs.current.forEach(mesh => {
+                    // Shrink
+                    mesh.scale.multiplyScalar(0.9);
+                    mesh.rotation.y += 0.2;
+                    if (mesh.scale.x > 0.01) allGone = false;
+                });
+                renderer.render(scene, camera);
+                if (allGone) {
+                    cancelAnimationFrame(animationId);
+                    onClose();
+                }
+                return;
+            }
+
+            // Physics Loop
+            let allStopped = true;
+
+            diceRefs.current.forEach(mesh => {
                 if (mesh.userData.stopped) return;
+
+                allStopped = false;
 
                 // Position Update
                 mesh.position.add(mesh.userData.velocity);
@@ -497,34 +572,65 @@ const DiceRoller = ({ onClose }) => {
                 mesh.rotation.y += mesh.userData.rotationSpeed.y;
                 mesh.rotation.z += mesh.userData.rotationSpeed.z;
 
-                // Gravity
-                mesh.userData.velocity.y -= 0.05;
+                // Friction / Air Resistance
+                mesh.userData.velocity.multiplyScalar(0.98);
+                mesh.userData.rotationSpeed.multiplyScalar(0.98);
 
-                // Floor Bounce
-                if (mesh.position.y < mesh.userData.floor) {
-                    mesh.position.y = mesh.userData.floor;
-                    mesh.userData.velocity.y *= -0.6; // Bounce dampening
-                    mesh.userData.velocity.x *= 0.9; // Friction
-                    mesh.userData.velocity.z *= 0.9; // Friction
-
-                    // Stop logic
-                    if (Math.abs(mesh.userData.velocity.y) < 0.1) {
-                        mesh.userData.stopped = true;
-                    }
+                // Wall Collisions (Dynamic Borders)
+                // Left/Right
+                if (mesh.position.x < bounds.xMin || mesh.position.x > bounds.xMax) {
+                    mesh.userData.velocity.x *= -0.7; // Bounce
+                    // Push back inside
+                    mesh.position.x = mesh.position.x < bounds.xMin ? bounds.xMin : bounds.xMax;
+                    // Add spin on hit
+                    mesh.userData.rotationSpeed.z += (Math.random()-0.5) * 0.2;
                 }
 
-                // Wall Bounce (Keep in view)
-                if (Math.abs(mesh.position.x) > 30) {
-                    mesh.userData.velocity.x *= -0.8;
+                // Top/Bottom (Floor)
+                if (mesh.position.y < bounds.yMin || mesh.position.y > bounds.yMax) {
+                    mesh.userData.velocity.y *= -0.7;
+                    mesh.position.y = mesh.position.y < bounds.yMin ? bounds.yMin : bounds.yMax;
+                    mesh.userData.rotationSpeed.x += (Math.random()-0.5) * 0.2;
+                }
+
+                // Z-Depth collisions (Keep them in a box)
+                if (mesh.position.z < -20 || mesh.position.z > 20) {
+                     mesh.userData.velocity.z *= -0.7;
+                     mesh.position.z = mesh.position.z < -20 ? -20 : 20;
+                }
+
+                // Stop Logic (Threshold)
+                if (mesh.userData.velocity.length() < 0.1 && 
+                    mesh.userData.rotationSpeed.length() < 0.1) {
+                    mesh.userData.restingFrames++;
+                } else {
+                    mesh.userData.restingFrames = 0;
+                }
+
+                // If resting for 20 frames, snap to stop
+                if (mesh.userData.restingFrames > 20) {
+                    mesh.userData.stopped = true;
+                    // Align slightly to camera? No, physics is cooler chaotic
                 }
             });
 
             renderer.render(scene, camera);
+
+            // Auto-Vanish Trigger
+            // If all stopped, wait 8 seconds (roughly 480 frames) then vanish
+            if (allStopped) {
+                if (!window.vanishTimerStart) window.vanishTimerStart = Date.now();
+                if (Date.now() - window.vanishTimerStart > 8000) {
+                    vanishing = true;
+                    setMode('vanishing');
+                }
+            } else {
+                window.vanishTimerStart = null;
+            }
         };
         animate();
     };
 
-    // Ensure ThreeJS is loaded (reusing the logic from your Solar System)
     if (window.THREE) {
         init();
     } else {
@@ -536,12 +642,13 @@ const DiceRoller = ({ onClose }) => {
 
     return () => {
         cancelAnimationFrame(animationId);
+        window.vanishTimerStart = null;
         if (mountRef.current && renderer) {
-            mountRef.current.removeChild(renderer.domElement);
+            mountRef.current.innerHTML = ''; // Clean cleanup
             renderer.dispose();
         }
     };
-  }, [mode, selection]);
+  }, [mode, results]);
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -564,7 +671,7 @@ const DiceRoller = ({ onClose }) => {
                         className="w-16 h-16 rounded-xl bg-black/40 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/40 hover:scale-110 transition-all flex flex-col items-center justify-center gap-1 group"
                     >
                         <span className="text-xl font-bold text-cyan-100 group-hover:text-white">{d.type}</span>
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#' + d.color.toString(16) }}></div>
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }}></div>
                     </button>
                 ))}
             </div>
@@ -594,19 +701,19 @@ const DiceRoller = ({ onClose }) => {
       )}
 
       {/* ROLLING/RESULT MODE OVERLAY */}
-      {mode === 'rolling' && (
+      {(mode === 'rolling' || mode === 'vanishing') && (
         <div className="fixed inset-0 pointer-events-none">
             {/* 3D Container */}
             <div ref={mountRef} className="absolute inset-0 z-0" />
             
             {/* Results Sidebar */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-md p-6 rounded-l-2xl border-l-2 border-y-2 border-cyan-500 transform transition-transform duration-500 min-w-[200px] animate-[slideInRight_0.5s_ease-out]">
+            <div className={`absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-md p-6 rounded-l-2xl border-l-2 border-y-2 border-cyan-500 transform transition-all duration-500 min-w-[200px] ${mode === 'vanishing' ? 'opacity-0 translate-x-full' : 'animate-[slideInRight_0.5s_ease-out]'}`}>
                 <h3 className="text-cyan-400 font-bold mb-4 border-b border-cyan-500/30 pb-2">RESULTS</h3>
                 <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                     {results.map((res, idx) => (
                         <div key={idx} className="flex justify-between items-center text-lg">
                             <span className="text-gray-400 uppercase text-sm">{res.type}</span>
-                            <span className="font-bold font-mono text-2xl" style={{ color: '#' + res.color.toString(16) }}>{res.value}</span>
+                            <span className="font-bold font-mono text-2xl" style={{ color: res.config.color }}>{res.value}</span>
                         </div>
                     ))}
                 </div>
@@ -616,9 +723,6 @@ const DiceRoller = ({ onClose }) => {
                         <span className="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{total}</span>
                     </div>
                 </div>
-                <div className="mt-2 text-center text-xs text-gray-500 animate-pulse">
-                    Closing in 5 seconds...
-                </div>
             </div>
             <style>{`@keyframes slideInRight { from { transform: translate(100%, -50%); } to { transform: translate(0, -50%); } }`}</style>
         </div>
@@ -626,6 +730,7 @@ const DiceRoller = ({ onClose }) => {
     </div>
   );
 };
+// --- DICE COMPONENT ---
 
 // --- MAIN COMPONENT ---
 const CosmicSyndicate = () => {

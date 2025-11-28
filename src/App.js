@@ -368,7 +368,6 @@ const DiceRoller = ({ onClose }) => {
 
     const initDiceBox = async () => {
       if (boxRef.current) return; // Prevent double init
-const diceBox 
 });
       // 1. Create the Box Instance using your working logic
       const Box = new DiceBox({

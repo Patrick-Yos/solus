@@ -348,9 +348,6 @@ const ArcadeOverlay = ({ onClose }) => {
   );
 };
 //--Dice COMPONENT---
-import React, { useState, useEffect, useRef } from 'react';
-import { Dices, XCircle, X, Trash2 } from 'lucide-react';
-
 // --- NEW COMPONENT: FANTASTIC DICE ROLLER (BLOB LOADER) ---
 const DiceRoller = ({ onClose }) => {
   const [isLoaded, setIsLoaded] = useState(false);

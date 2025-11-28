@@ -349,7 +349,7 @@ const ArcadeOverlay = ({ onClose }) => {
 };
 //--Dice COMPONENT---
 // --- NEW COMPONENT: FANTASTIC DICE ROLLER (ROBUST LOADER) ---
-// --- NEW COMPONENT: VERCEL-READY DICE ROLLER ---
+// --- NEW COMPONENT: VERCEL-READY DICE ROLLER (FIXED) ---
 const DiceRoller = ({ onClose }) => {
   const [status, setStatus] = useState('loading'); // loading, ready, error
   const [pool, setPool] = useState([]); 
@@ -359,91 +359,80 @@ const DiceRoller = ({ onClose }) => {
   const boxRef = useRef(null);
   const containerId = 'dice-box-canvas';
 
-  // --- 1. BYPASS BUNDLER LOADING ---
+  // --- INITIALIZE PHYSICS & DICE BOX ---
   useEffect(() => {
-    // If we already loaded the script globally, just init
-    if (window.DiceBox) {
-      initBox();
-      return;
-    }
+    let isMounted = true;
 
-    // We create a "Virtual File" (Blob) to import the library.
-    // This tricks React/Webpack into ignoring the 'import' statement so it doesn't crash.
-    const scriptContent = `
-      import DiceBox from 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.3/dist/dice-box.es.min.js';
-      window.DiceBox = DiceBox;
-      window.dispatchEvent(new Event('dicebox-ready'));
-    `;
+    const initBox = async () => {
+      // 1. Wait for element to exist in DOM
+      const container = document.getElementById(containerId);
+      if (!container) {
+          setTimeout(initBox, 200);
+          return;
+      }
 
-    const blob = new Blob([scriptContent], { type: 'application/javascript' });
-    const url = URL.createObjectURL(blob);
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.src = url;
-    document.body.appendChild(script);
+      // 2. Prevent double init
+      if (boxRef.current) return;
 
-    const handleReady = () => initBox();
-    window.addEventListener('dicebox-ready', handleReady);
+      try {
+        // 3. Dynamic Import with Webpack Ignore (Crucial for Vercel)
+        // This tells the bundler "Don't touch this, let the browser handle it"
+        const module = await import(/* webpackIgnore: true */ 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/dice-box.es.min.js');
+        const DiceBox = module.default;
+
+        // 4. Initialize with UNPKG assets
+        // We use unpkg here because it handles WASM mime-types better for this library
+        const Box = new DiceBox("#" + containerId, {
+          assetPath: "https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/",
+          theme: "default",
+          themeColor: "#06b6d4", // Cyan
+          scale: 6,
+          offscreen: true, // Use Web Worker for physics
+          gravity: 3,
+          mass: 5,
+          friction: 0.8
+        });
+
+        await Box.init();
+        
+        if (isMounted) {
+            boxRef.current = Box;
+            setStatus('ready');
+
+            // Results Handler
+            Box.onRollComplete = (rollResults) => {
+              let sum = 0;
+              const resArray = [];
+              rollResults.forEach(r => {
+                 sum += r.value;
+                 resArray.push({ type: r.type, value: r.value });
+              });
+              setResults(resArray);
+              setTotal(sum);
+              
+              // Auto Clear
+              setTimeout(() => {
+                if (boxRef.current) boxRef.current.clear();
+                setResults(null);
+                setTotal(0);
+                setRolling(false);
+              }, 6000);
+            };
+        }
+
+      } catch (e) {
+        console.error("Physics Load Error:", e);
+        if (isMounted) setStatus('error');
+      }
+    };
+
+    initBox();
 
     return () => {
-      window.removeEventListener('dicebox-ready', handleReady);
-      URL.revokeObjectURL(url);
+        isMounted = false;
+        // Optional cleanup if the library supports it, currently just clearing ref
     };
   }, []);
-
-  // --- 2. INITIALIZE PHYSICS ---
-  const initBox = async () => {
-    if (boxRef.current) return;
-    
-    // Wait for the DIV to exist in the DOM
-    const container = document.getElementById(containerId);
-    if (!container) {
-        setTimeout(initBox, 200);
-        return;
-    }
-
-    try {
-      // Initialize pointing to the CDN assets
-      const Box = new window.DiceBox("#" + containerId, {
-        assetPath: "https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@1.1.3/dist/assets/",
-        theme: "default",
-        themeColor: "#06b6d4", // Cyan
-        scale: 6,
-        offscreen: true,
-        gravity: 3,
-        mass: 5,
-        friction: 0.8
-      });
-
-      await Box.init();
-      boxRef.current = Box;
-      setStatus('ready');
-
-      // Results Handler
-      Box.onRollComplete = (rollResults) => {
-        let sum = 0;
-        const resArray = [];
-        rollResults.forEach(r => {
-           sum += r.value;
-           resArray.push({ type: r.type, value: r.value });
-        });
-        setResults(resArray);
-        setTotal(sum);
-        
-        // Auto Clear
-        setTimeout(() => {
-          if (boxRef.current) boxRef.current.clear();
-          setResults(null);
-          setTotal(0);
-          setRolling(false);
-        }, 6000);
-      };
-
-    } catch (e) {
-      console.error("Physics Load Error:", e);
-      setStatus('error');
-    }
-  };
 
   const addToPool = (type) => {
     if (rolling) return;
@@ -585,7 +574,7 @@ const DiceRoller = ({ onClose }) => {
                 )}
                 {status === 'error' && (
                     <div className="text-center text-xs text-red-400">
-                        Error loading physics. Please refresh page.
+                        Error loading physics. Check your connection.
                     </div>
                 )}
             </div>

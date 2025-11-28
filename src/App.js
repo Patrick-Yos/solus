@@ -362,7 +362,6 @@ const DiceRoller = ({ onClose }) => {
   
   // We use a ref to keep the Box instance alive across renders
 const boxRef = useRef(null);
-});
   useEffect(() => {
     let isMounted = true;
 

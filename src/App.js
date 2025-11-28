@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DiceBox from "@3d-dice/dice-box";
 import {
   Sparkles,
   Zap,
@@ -348,89 +349,90 @@ const ArcadeOverlay = ({ onClose }) => {
   );
 };
 //--Dice COMPONENT---
-// --- NEW COMPONENT: FANTASTIC DICE ROLLER (ROBUST LOADER) ---
-// --- NEW COMPONENT: VERCEL-READY DICE ROLLER (FIXED) ---
+// --- IMPORT THE LIBRARY DIRECTLY ---
+// Make sure to run: npm install @3d-dice/dice-box
 const DiceRoller = ({ onClose }) => {
   const [status, setStatus] = useState('loading'); // loading, ready, error
   const [pool, setPool] = useState([]); 
   const [rolling, setRolling] = useState(false);
   const [results, setResults] = useState(null);
   const [total, setTotal] = useState(0);
-  const boxRef = useRef(null);
   const containerId = 'dice-box-canvas';
+  
+  // We use a ref to keep the Box instance alive across renders
+  const boxRef = useRef(null);
 
-  // --- INITIALIZE PHYSICS & DICE BOX ---
   useEffect(() => {
     let isMounted = true;
 
-    const initBox = async () => {
-      // 1. Wait for element to exist in DOM
-      const container = document.getElementById(containerId);
-      if (!container) {
-          setTimeout(initBox, 200);
-          return;
-      }
+    const initDiceBox = async () => {
+      if (boxRef.current) return; // Prevent double init
 
-      // 2. Prevent double init
-      if (boxRef.current) return;
+      // 1. Create the Box Instance using your working logic
+      const Box = new DiceBox({
+        container: "#" + containerId,
+        // CRITICAL FOR VERCEL: We use the CDN for assets (wasm/workers) 
+        // so you don't have to manually copy files to your public folder.
+        assetPath: "https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/",
+        theme: "default",
+        themeColor: "#06b6d4", // Cyan to match theme
+        offscreen: true, // Use worker for performance
+        scale: 6,
+        gravity: 3,
+        mass: 5,
+        friction: 0.8
+      });
 
       try {
-        // 3. Dynamic Import with Webpack Ignore (Crucial for Vercel)
-        // This tells the bundler "Don't touch this, let the browser handle it"
-        const module = await import(/* webpackIgnore: true */ 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/dice-box.es.min.js');
-        const DiceBox = module.default;
-
-        // 4. Initialize with UNPKG assets
-        // We use unpkg here because it handles WASM mime-types better for this library
-        const Box = new DiceBox("#" + containerId, {
-          assetPath: "https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/",
-          theme: "default",
-          themeColor: "#06b6d4", // Cyan
-          scale: 6,
-          offscreen: true, // Use Web Worker for physics
-          gravity: 3,
-          mass: 5,
-          friction: 0.8
-        });
-
+        // 2. Initialize
         await Box.init();
         
         if (isMounted) {
-            boxRef.current = Box;
-            setStatus('ready');
+          boxRef.current = Box;
+          setStatus('ready');
 
-            // Results Handler
-            Box.onRollComplete = (rollResults) => {
-              let sum = 0;
-              const resArray = [];
-              rollResults.forEach(r => {
-                 sum += r.value;
-                 resArray.push({ type: r.type, value: r.value });
-              });
-              setResults(resArray);
-              setTotal(sum);
-              
-              // Auto Clear
-              setTimeout(() => {
-                if (boxRef.current) boxRef.current.clear();
-                setResults(null);
-                setTotal(0);
-                setRolling(false);
-              }, 6000);
-            };
+          // 3. Set up the event listener for results
+          Box.onRollComplete = (rollResults) => {
+            // Calculate totals for our Custom UI
+            let sum = 0;
+            const resArray = [];
+            
+            // Handle different result formats (single vs multiple)
+            const rolls = Array.isArray(rollResults) ? rollResults : [rollResults];
+            
+            rolls.forEach(r => {
+               // Depending on version, result might be r.value or r.total
+               const val = r.value || r.total || 0; 
+               sum += val;
+               // Map type (d20, d6) and value
+               // Some versions return 'sides' or 'type'
+               resArray.push({ type: r.type || `d${r.sides}`, value: val });
+            });
+
+            setResults(resArray);
+            setTotal(sum);
+            
+            // Auto Clear logic to keep the board clean
+            setTimeout(() => {
+              if (boxRef.current) boxRef.current.clear();
+              setResults(null);
+              setTotal(0);
+              setRolling(false);
+            }, 6000);
+          };
         }
-
       } catch (e) {
-        console.error("Physics Load Error:", e);
+        console.error("Dice Init Error:", e);
         if (isMounted) setStatus('error');
       }
     };
 
-    initBox();
+    // Small timeout to ensure DOM is ready
+    setTimeout(initDiceBox, 100);
 
     return () => {
-        isMounted = false;
-        // Optional cleanup if the library supports it, currently just clearing ref
+      isMounted = false;
+      // If the library had a destroy method, we'd call it here
     };
   }, []);
 
@@ -451,9 +453,10 @@ const DiceRoller = ({ onClose }) => {
     setResults(null);
     setTotal(0);
 
-    // Visual hack: Roll 3d10 for D1000
+    // Convert our pool array ['d20', 'd6'] into notation ["1d20", "1d6"]
+    // The library prefers notation arrays
     const notation = pool.map(die => {
-        if (die === 'd1000') return '3d10'; 
+        if (die === 'd1000') return '3d10'; // Visual hack for d1000
         return '1' + die;
     });
 
@@ -473,7 +476,7 @@ const DiceRoller = ({ onClose }) => {
     { type: 'd12', label: 'D12' },
     { type: 'd20', label: 'D20' },
     { type: 'd100', label: 'D100' },
-    { type: 'd1000', label: 'D1K' }, 
+    // { type: 'd1000', label: 'D1K' }, // Removed D1K for stability with standard library
   ];
 
   return (
@@ -484,7 +487,7 @@ const DiceRoller = ({ onClose }) => {
             if (e.target === e.currentTarget && !rolling) onClose();
         }}></div>
 
-        {/* 3D CANVAS */}
+        {/* 3D CANVAS CONTAINER - THIS IS WHERE THE DICE APPEAR */}
         <div 
             id={containerId} 
             className="absolute inset-0 z-10 pointer-events-none"
@@ -494,7 +497,7 @@ const DiceRoller = ({ onClose }) => {
         {/* CONTROLS */}
         <div className="relative z-20 mb-8 pointer-events-auto flex flex-col items-center gap-4 animate-in slide-in-from-bottom-10 duration-500">
             
-            {/* RESULTS */}
+            {/* RESULTS OVERLAY */}
             {results && (
                 <div className="bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.6)] flex flex-col items-center gap-2 min-w-[300px] animate-in zoom-in duration-300">
                     <h3 className="text-cyan-400 font-bold tracking-widest text-sm">TOTAL</h3>
@@ -504,14 +507,14 @@ const DiceRoller = ({ onClose }) => {
                     <div className="flex flex-wrap gap-2 justify-center mt-2 max-w-md">
                         {results.map((r, i) => (
                             <span key={i} className="px-2 py-1 bg-white/10 rounded text-sm text-cyan-200 font-mono">
-                                {r.type}: {r.value}
+                                {r.value}
                             </span>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* INTERFACE */}
+            {/* CONTROL PANEL */}
             <div className="bg-slate-900/90 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 max-w-3xl mx-4">
                 
                 <div className="flex justify-between items-center border-b border-white/10 pb-2">
@@ -522,6 +525,7 @@ const DiceRoller = ({ onClose }) => {
                     <button onClick={onClose} className="text-gray-400 hover:text-white"><XCircle /></button>
                 </div>
 
+                {/* DICE BUTTONS */}
                 <div className="flex flex-wrap justify-center gap-3">
                     {diceOptions.map((opt) => (
                         <button
@@ -542,6 +546,7 @@ const DiceRoller = ({ onClose }) => {
                     ))}
                 </div>
 
+                {/* ACTION BUTTONS */}
                 <div className="flex gap-3">
                     <button 
                         onClick={clearPool}
@@ -569,12 +574,12 @@ const DiceRoller = ({ onClose }) => {
                 {status === 'loading' && (
                     <div className="text-center text-xs text-yellow-500 animate-pulse">
                         <span className="inline-block animate-spin mr-2">⚙️</span>
-                        Initializing 3D Physics...
+                        Initializing Physics Engine...
                     </div>
                 )}
                 {status === 'error' && (
                     <div className="text-center text-xs text-red-400">
-                        Error loading physics. Check your connection.
+                        Error loading physics. Please check your internet connection.
                     </div>
                 )}
             </div>

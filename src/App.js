@@ -1210,31 +1210,44 @@ const CosmicSyndicate = () => {
 
 const submitReview = async (e) => {
   e.preventDefault();
-  if (newReview.name && newReview.comment) {
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+  if (!newReview.name || !newReview.comment) return;
+
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  // Send data WITHOUT id
+  const reviewData = {
+    name: newReview.name,
+    rating: newReview.rating,
+    comment: newReview.comment,
+    date: `Cosmic Year ${formattedDate}`
+  };
+
+  try {
+    const response = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reviewData),
     });
-    
-    const reviewToSave = {
-      ...newReview,
-      date: `Cosmic Year ${formattedDate}`
-    };
-    
-    const success = await saveReview(reviewToSave);
-    if (success) {
-      setReviews((prev) => [...prev, { ...reviewToSave, id: Date.now() }]);
-      setNewReview({ name: '', rating: 5, comment: '' });
-      setTimeout(
-        () =>
-          document
-            .getElementById('reviews')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-        100
-      );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || 'Failed to save');
+      return;
     }
+
+    // Use the ID returned from database
+    setReviews(prev => [...prev, { ...reviewData, id: result.id }]);
+    setNewReview({ name: '', rating: 5, comment: '' });
+
+  } catch (error) {
+    console.error('Network error:', error);
+    alert('Network error. Please try again.');
   }
 };
   const handleCheckout = () => {

@@ -352,58 +352,58 @@ const ArcadeOverlay = ({ onClose }) => {
 //--Dice COMPONENT---
 // --- DICE COMPONENT ---
 const DiceRoller = ({ onClose }) => {
-  const [status, setStatus] = useState('loading'); // loading, ready, error
+  const [status, setStatus] = useState('Initializing...'); 
   const [pool, setPool] = useState([]); 
-  const [customSides, setCustomSides] = useState(''); // For custom user input
+  const [customSides, setCustomSides] = useState('');
+  
   const [rolling, setRolling] = useState(false);
   const [results, setResults] = useState(null);
   const [total, setTotal] = useState(0);
-  const containerId = '#dice-box';
   
   const boxRef = useRef(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
+    if (initialized.current) return;
+    initialized.current = true;
 
     const initDiceBox = async () => {
-      if (boxRef.current) return; 
-
-      // Initialize from CDN
+      // 1. EXACT CONFIGURATION FROM YOUR REFERENCE CODE
       const Box = new DiceBox({
-        id: containerId,
-        assetPath: 'assets/',
-        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/',
+        id: '#dice-box', // Must match the div ID below
+        assetPath: '/assets/', 
+        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/', // CDN is crucial for physics
         theme: 'default',
+        themeColor: '#22d3ee', // Cyan color
         scale: 6,
-        themeColor: '#0A0A12',
-        debug: false, // Turn off debug to see real dice
+        offscreen: true,
       });
 
-
       try {
+        setStatus('Loading Physics...');
         await Box.init();
-        if (isMounted) {
-          boxRef.current = Box;
-          setStatus('ready');
-          Box.clear();
-        }
+        
+        // Force resize to ensure it sees the full screen
+        Box.resizeWorld();
+        
+        boxRef.current = Box;
+        setStatus('Ready');
       } catch (e) {
         console.error("Dice Init Error:", e);
-        if (isMounted) setStatus('error');
+        setStatus('Error: ' + e.message);
       }
     };
 
     setTimeout(initDiceBox, 100);
-    return () => { isMounted = false; };
+    
+    return () => { initialized.current = false; };
   }, []);
 
-  // --- 1. ADD TO POOL ---
   const addToPool = (type) => {
     if (rolling) return;
     setPool((prev) => [...prev, type]);
   };
 
-  // --- 2. CUSTOM DIE INPUT ---
   const addCustomDie = (e) => {
     e.preventDefault();
     if (!customSides || isNaN(customSides)) return;
@@ -419,26 +419,24 @@ const DiceRoller = ({ onClose }) => {
     if (boxRef.current) boxRef.current.clear();
   };
 
-  // --- 3. PARSING LOGIC & ROLL ---
   const handleRoll = async () => {
     if (!boxRef.current || pool.length === 0 || rolling) return;
     
     setRolling(true);
     setResults(null);
     setTotal(0);
+    
+    // Clear previous dice before rolling new ones
     if (boxRef.current) boxRef.current.clear();
 
-    // PARSING: Convert ['d20', 'd20', 'd6'] -> ["2d20", "1d6"]
+    // Convert pool ['d20', 'd20'] -> "2d20"
     const counts = {};
-    pool.forEach(die => {
-      counts[die] = (counts[die] || 0) + 1;
-    });
+    pool.forEach(die => { counts[die] = (counts[die] || 0) + 1; });
     const notationArray = Object.keys(counts).map(key => `${counts[key]}${key}`);
 
     try {
       const result = await boxRef.current.roll(notationArray);
       
-      // Calculate Totals
       let sum = 0;
       let resArray = [];
       const rolls = Array.isArray(result) ? result : [result];
@@ -473,24 +471,45 @@ const DiceRoller = ({ onClose }) => {
     { type: 'd12', label: 'D12' },
     { type: 'd20', label: 'D20' },
     { type: 'd100', label: 'D100' },
-    { type: 'd1000', label: 'D1000' }, 
+    { type: 'd1000', label: 'D1000' },
   ];
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-end pointer-events-none">
       
-      {/* BACKGROUND CLICK TO CLOSE */}
-      <div className="absolute inset-0 z-0 pointer-events-auto bg-black/20" onClick={(e) => {
+      {/* 1. BACKGROUND CLOSER (Clicking anywhere empty closes it) */}
+      <div className="absolute inset-0 z-10 pointer-events-auto bg-black/40 backdrop-blur-sm" onClick={(e) => {
           if (!rolling) onClose();
       }}></div>
 
-      {/* 3D CANVAS (Behind UI) */}
-      <div id={containerId} className="absolute inset-0 z-0 pointer-events-none" style={{ width: '100%', height: '100%' }} />
+      {/* 2. THE DICE BOX CONTAINER */}
+      {/* CRITICAL FIX: 
+         1. ID matches the code: "dice-box"
+         2. Z-Index is 20, sitting ON TOP of your background (z-0) but BELOW controls (z-50)
+      */}
+      <div 
+        id="dice-box" 
+        className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none"
+      ></div>
 
-      {/* UI FOREGROUND */}
+      {/* 3. STYLE OVERRIDE TO FORCE CANVAS VISIBILITY */}
+      <style>{`
+        #dice-box canvas {
+            display: block !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 20 !important; /* Forces dice above the star background */
+            pointer-events: none !important;
+        }
+      `}</style>
+
+      {/* 4. UI FOREGROUND (Z-Index 50 to sit above dice) */}
       <div className="relative z-50 w-full max-w-4xl p-4 mb-4 pointer-events-auto animate-in slide-in-from-bottom-10 duration-500">
         
-        {/* RESULT */}
+        {/* RESULT BUBBLE */}
         <div className="flex justify-center mb-6">
            <div className={`bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.5)] flex flex-col items-center min-w-[200px] transition-all duration-300 ${rolling ? 'scale-90 opacity-80' : 'scale-100 opacity-100'}`}>
               <div className="text-cyan-400 font-bold tracking-widest text-xs mb-1">TOTAL RESULT</div>
@@ -511,6 +530,7 @@ const DiceRoller = ({ onClose }) => {
 
         {/* CONTROLS */}
         <div className="bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4">
+            
             <div className="flex justify-between items-center border-b border-white/10 pb-2">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[80%]">
                    <Dices className="text-cyan-400 w-5 h-5 flex-shrink-0" />
@@ -518,7 +538,6 @@ const DiceRoller = ({ onClose }) => {
                      <span className="text-gray-500 italic text-sm">Select dice...</span>
                    ) : (
                      <div className="flex gap-1">
-                        {/* Display condensed pool */}
                         {Object.entries(pool.reduce((acc, curr) => { acc[curr] = (acc[curr] || 0) + 1; return acc; }, {})).map(([die, count]) => (
                             <span key={die} className="px-2 py-0.5 bg-purple-900/50 border border-purple-500/50 rounded text-xs text-purple-200 font-mono whitespace-nowrap">
                                 {count}{die}
@@ -530,16 +549,16 @@ const DiceRoller = ({ onClose }) => {
                 <button onClick={onClose} className="text-gray-400 hover:text-white"><XCircle /></button>
             </div>
 
-            {/* BUTTONS GRID */}
+            {/* BUTTONS */}
             <div className="flex flex-wrap justify-center gap-2 md:gap-3">
                 {diceOptions.map((opt) => (
                     <button
                         key={opt.type}
                         onClick={() => addToPool(opt.type)}
-                        disabled={status !== 'ready' || rolling}
-                        className="w-12 h-12 md:w-16 md:h-16 bg-black/50 rounded-xl border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/50 transition-all active:scale-95 disabled:opacity-50 flex flex-col items-center justify-center"
+                        disabled={status !== 'Ready' || rolling}
+                        className="w-12 h-12 md:w-16 md:h-16 bg-black/50 rounded-xl border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex flex-col items-center justify-center group"
                     >
-                        <span className="text-xs md:text-sm font-bold text-cyan-100">{opt.label}</span>
+                        <span className="text-xs md:text-sm font-bold text-cyan-100 group-hover:text-white">{opt.label}</span>
                     </button>
                 ))}
                 
@@ -562,18 +581,19 @@ const DiceRoller = ({ onClose }) => {
                 </form>
             </div>
 
+            {/* ACTIONS */}
             <div className="grid grid-cols-4 gap-3 mt-2">
                 <button 
                     onClick={handleClear}
-                    className="col-span-1 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-400 hover:bg-red-900/40 transition-all font-bold tracking-wider"
+                    className="col-span-1 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-400 hover:bg-red-900/40 hover:border-red-400 transition-all font-bold tracking-wider disabled:opacity-50"
                     disabled={rolling}
                 >
                     CLEAR
                 </button>
                 <button
                     onClick={handleRoll}
-                    disabled={pool.length === 0 || rolling || status !== 'ready'}
-                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
+                    disabled={pool.length === 0 || rolling || status !== 'Ready'}
+                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {rolling ? (
                         <>ROLLING <Sparkles className="w-5 h-5 animate-spin" /></>
@@ -581,6 +601,11 @@ const DiceRoller = ({ onClose }) => {
                         <>ROLL DICE <Dices className="w-5 h-5" /></>
                     )}
                 </button>
+            </div>
+            
+            {/* DEBUG STATUS */}
+            <div className="text-center text-xs text-cyan-500/70 mt-2 font-mono">
+                System: {status}
             </div>
         </div>
       </div>

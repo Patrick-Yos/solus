@@ -1833,6 +1833,12 @@ const CosmicSyndicate = () => {
     setShowDiceRoller(true);
     setMobileMenuOpen(false);
   }}
+{/* ... inside mobile menu ... */}
+<button
+  onClick={() => {
+    setShowDiceRoller(true);
+    setMobileMenuOpen(false);
+  }}
   className="w-full group relative px-6 py-3 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105"
 >
   <div className="flex items-center gap-3">
@@ -1841,7 +1847,6 @@ const CosmicSyndicate = () => {
       Quantum Dice
     </span>
   </div>
-</button>
 </button>
 {/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}     
          

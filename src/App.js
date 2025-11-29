@@ -1124,7 +1124,8 @@ const CosmicSyndicate = () => {
       {showArcade && <ArcadeOverlay onClose={() => setShowArcade(false)} />}
       {/* --- PASTE THIS HERE --- */}
       {/* DICE ROLLER OVERLAY */}
-      {showDiceRoller && <DiceRoller onClose={() => setShowDiceRoller(false)} />}      {/* ----------------------- */}
+      {showDiceRoller && <DiceRoller onClose={() => setShowDiceRoller(false)} />}
+      {/* ----------------------- */}
 
       {/* Checkout Page Overlay */}
       {showCheckout && (
@@ -1754,19 +1755,12 @@ const CosmicSyndicate = () => {
               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
             </button>
 {/* DICE ROLLER BUTTON */}
-
             <button
               onClick={() => setShowDiceRoller(true)}
-              className="group relative px-6 py-3 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
-            >
-              <div className="flex items-center gap-3">
-              <Dices className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-              <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
-                Quantum Dice
-              </span>
-              </div>
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
-          </button>
+              className="p-3 bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-cyan-500/30 rounded-lg hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform hover:scale-105"
+              title="Roll Dice">
+              <Dices className="w-6 h-6 text-cyan-300" />
+            </button>
             <button
               onClick={() => setShowOperations(true)}
               className="group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
@@ -1828,26 +1822,20 @@ const CosmicSyndicate = () => {
               </div>
             </button>
 {/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}
-<button
-  onClick={() => {
-    setShowDiceRoller(true);
-    setMobileMenuOpen(false);
-  }}
-{/* ... inside mobile menu ... */}
-<button
-  onClick={() => {
-    setShowDiceRoller(true);
-    setMobileMenuOpen(false);
-  }}
-  className="w-full group relative px-6 py-3 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105"
->
-  <div className="flex items-center gap-3">
-    <Dices className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-    <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
-      Quantum Dice
-    </span>
-  </div>
-</button>
+            <button
+              onClick={() => {
+                setShowDiceRoller(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-2 border-cyan-400/50 rounded-lg backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-3">
+                <Dices className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
+                  Quantum Dice
+                </span>
+              </div>
+            </button>
 {/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}     
          
             <button

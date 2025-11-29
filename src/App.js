@@ -32,8 +32,8 @@ import {
   Ghost,    // Added for Game
   Brain,    // Added for Game
   Timer,    // Added for Game
-  XCircle, // Added for dice
-  Dices, // Added for dice
+  XCircle, // Added for 
+  s, // Added for 
 } from 'lucide-react';
 
 // --- NEW COMPONENT: WARP SPEED BACKGROUND ---
@@ -353,12 +353,10 @@ const ArcadeOverlay = ({ onClose }) => {
 // --- DICE COMPONENT ---
 const DiceRoller = ({ onClose }) => {
   const [status, setStatus] = useState('Initializing...');
-  const [pool, setPool] = useState([]); // Stores clicks: ['d20', 'd20']
+  const [pool, setPool] = useState([]); 
   const [customSides, setCustomSides] = useState('');
-  
   const [rolling, setRolling] = useState(false);
-  const [lastResult, setLastResult] = useState(0); // Changed from 'results' to match your style
-  const [resultDetails, setResultDetails] = useState([]); // To show individual dice values
+  const [totalResult, setTotalResult] = useState(null); // Changed to match your needs
   
   const diceBoxRef = useRef(null);
   const initialized = useRef(false);
@@ -367,241 +365,145 @@ const DiceRoller = ({ onClose }) => {
     if (initialized.current) return;
     initialized.current = true;
 
-    const initBox = async () => {
-      // 1. Create Box (Using your exact config)
-      const Box = new DiceBox({
-        id: '#dice-box',
-        assetPath: '/assets/', 
-        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/',
-        theme: 'default',
-        scale: 6,
-        themeColor: '#22d3ee', // Cyan to match your theme
-        debug: false,
-      });
+    // 1. YOUR ORIGINAL CONFIGURATION
+    const Box = new DiceBox({
+      id: '#dice-box', 
+      assetPath: 'assets/',
+      origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/',
+      theme: 'default',
+      scale: 6,
+      themeColor: '#0A0A12',
+    });
 
-      diceBoxRef.current = Box;
+    diceBoxRef.current = Box;
 
-      try {
-        setStatus('Loading Physics...');
-        await Box.init();
-        Box.resizeWorld();
+    Box.init().then(() => {
         setStatus('Ready');
-      } catch (e) {
+        // Force resize to fit screen
+        Box.resizeWorld(); 
+    }).catch(e => {
         console.error(e);
-        setStatus('Error: ' + e.message);
-      }
-    };
+        setStatus('Error');
+    });
 
-    initDiceBox();
-    
-    // Cleanup
     return () => { initialized.current = false; };
   }, []);
-
-  const addToPool = (type) => {
-    if (rolling) return;
-    setPool((prev) => [...prev, type]);
-  };
-
-  const addCustomDie = (e) => {
-    e.preventDefault();
-    if (!customSides || isNaN(customSides)) return;
-    addToPool(`d${customSides}`);
-    setCustomSides('');
-  };
-
-  const handleClear = () => {
-    if (diceBoxRef.current && !rolling) {
-      diceBoxRef.current.clear();
-      setPool([]);
-      setLastResult(0);
-      setResultDetails([]);
-      setStatus('Ready');
-    }
-  };
 
   const handleRoll = () => {
     if (!diceBoxRef.current || pool.length === 0 || rolling) return;
 
-    // 1. Clear previous
-    diceBoxRef.current.clear();
     setRolling(true);
     setStatus('Rolling...');
-    setLastResult(0);
+    diceBoxRef.current.clear();
 
-    // 2. PARSE THE POOL (Your requested logic)
-    // Convert ['d20', 'd20', 'd6'] -> ['2d20', '1d6']
+    // 2. PARSE THE POOL (The logic you requested)
+    // Turns ['d20', 'd20', 'd6'] into ['2d20', '1d6']
     const counts = {};
     pool.forEach(die => { counts[die] = (counts[die] || 0) + 1; });
-    const notationArray = Object.keys(counts).map(key => `${counts[key]}${key}`);
+    const notation = Object.keys(counts).map(key => `${counts[key]}${key}`);
 
-    // 3. ROLL using .then() as requested
-    diceBoxRef.current.roll(notationArray).then((result) => {
-      let total = 0;
-      let details = [];
-
-      // Handle library result structure (array of objects)
-      // We iterate to sum them up and store details
-      const rolls = Array.isArray(result) ? result : [result];
-      
-      rolls.forEach(r => {
-        // Handle groups (e.g. 2d20) or single dice
-        if (r.rolls) {
-             r.rolls.forEach(sub => {
-                 total += sub.value;
-                 details.push({ type: `d${r.sides}`, value: sub.value });
-             });
-        } else {
-             const val = r.value || r.total || 0;
-             total += val;
-             details.push({ type: `d${r.sides}`, value: val });
-        }
-      });
-
-      setLastResult(total);
-      setResultDetails(details);
-      setStatus('Ready');
-      setRolling(false);
-    }).catch(e => {
-        setStatus('Error');
-        console.error(e);
+    // 3. ROLL
+    diceBoxRef.current.roll(notation).then(result => {
+        let sum = 0;
+        // Handle result (can be array or single object)
+        const rolls = Array.isArray(result) ? result : [result];
+        rolls.forEach(r => {
+            if(r.value) sum += r.value; // Single die
+            if(r.total) sum += r.total; // Multi die group
+        });
+        setTotalResult(sum);
+        setStatus('Ready');
         setRolling(false);
     });
   };
 
-  const diceOptions = [
-    { type: 'd4', label: 'D4' },
-    { type: 'd6', label: 'D6' },
-    { type: 'd8', label: 'D8' },
-    { type: 'd10', label: 'D10' },
-    { type: 'd12', label: 'D12' },
-    { type: 'd20', label: 'D20' },
-    { type: 'd100', label: 'D100' },
-    { type: 'd1000', label: 'D1000' },
-  ];
+  const handleClear = () => {
+      setPool([]);
+      setTotalResult(null);
+      if(diceBoxRef.current) diceBoxRef.current.clear();
+  };
+
+  // Helper to add dice
+  const addDie = (type) => setPool([...pool, type]);
+  
+  // Helper for custom die
+  const addCustom = (e) => {
+      e.preventDefault();
+      if(customSides) {
+          addDie(`d${customSides}`);
+          setCustomSides('');
+      }
+  };
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 200, pointerEvents: 'none' }}>
       
-      {/* 1. CLICK TO CLOSE BG */}
+      {/* 1. CLICK BACKGROUND TO CLOSE */}
       <div 
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.3)', pointerEvents: 'auto' }}
-        onClick={(e) => { if (!rolling) onClose(); }}
+        onClick={() => !rolling && onClose()}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', pointerEvents: 'auto', zIndex: 1 }}
       ></div>
 
-      {/* 2. DICE CONTAINER - ID matches init */}
-      <div 
-        id="dice-box" 
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}
-      ></div>
-
-      {/* 3. YOUR CSS TO FORCE CANVAS TO BACK */}
+      {/* 2. THE DICE CANVAS (Hidden in background) */}
+      <div id="dice-box" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}></div>
       <style>{`
-        canvas {
-            display: block !important;
-            position: fixed !important;
-            top: 0;
-            left: 0;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 0 !important; /* Force canvas to back */
-            pointer-events: none !important; /* Allow clicks to pass through */
+        #dice-box canvas { 
+            position: fixed; 
+            top: 0; left: 0; 
+            z-index: 0 !important; 
+            pointer-events: none;
         }
       `}</style>
 
-      {/* 4. UI FOREGROUND */}
-      <div className="absolute bottom-0 w-full flex flex-col items-center justify-end p-4 pb-8 pointer-events-auto" style={{ zIndex: 9999 }}>
+      {/* 3. THE UI (Foreground) */}
+      <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: '90%', maxWidth: '600px', pointerEvents: 'auto' }}>
         
-        {/* RESULT DISPLAY */}
-        <div className="mb-6 bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.5)] flex flex-col items-center min-w-[200px]">
-            <div className="text-cyan-400 font-bold text-xs mb-1">TOTAL</div>
-            <div className="text-7xl font-black text-white drop-shadow-sm">
-                {rolling ? '...' : lastResult}
-            </div>
-            {/* Show individual numbers if available */}
-            {resultDetails.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center mt-2 max-w-md">
-                    {resultDetails.map((d, i) => (
-                        <span key={i} className="text-xs bg-white/20 px-2 py-1 rounded text-cyan-100">
-                            {d.type}: {d.value}
-                        </span>
-                    ))}
-                </div>
-            )}
+        {/* RESULT BOX */}
+        <div className="bg-slate-900/90 border-2 border-cyan-500 p-6 rounded-2xl mb-4 text-center">
+            <div className="text-cyan-400 text-sm font-bold">TOTAL</div>
+            <div className="text-6xl font-black text-white">{rolling ? '...' : (totalResult || 0)}</div>
         </div>
 
         {/* CONTROLS */}
-        <div className="bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 w-full max-w-3xl">
-            
-            {/* Header / Pool */}
-            <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                <div className="flex items-center gap-2 overflow-x-auto">
-                   <Dices className="text-cyan-400 w-5 h-5 flex-shrink-0" />
-                   {pool.length === 0 ? (
-                     <span className="text-gray-500 italic text-sm">Tap dice to add...</span>
-                   ) : (
-                     <div className="flex gap-1">
-                        {/* Display condensed pool */}
-                        {Object.entries(pool.reduce((acc, curr) => { acc[curr] = (acc[curr] || 0) + 1; return acc; }, {})).map(([die, count]) => (
-                            <span key={die} className="px-2 py-0.5 bg-purple-900/50 border border-purple-500/50 rounded text-xs text-purple-200 font-mono whitespace-nowrap">
-                                {count}{die}
-                            </span>
-                        ))}
-                     </div>
-                   )}
-                </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-white"><XCircle /></button>
+        <div className="bg-slate-900/90 border border-cyan-500/50 p-4 rounded-2xl">
+            {/* Status & Pool */}
+            <div className="flex justify-between items-center mb-4 text-white">
+                <div className="text-sm">Pool: {pool.join(', ') || 'Empty'}</div>
+                <button onClick={onClose}><XCircle className="text-gray-400 hover:text-white" /></button>
             </div>
 
-            {/* BUTTONS */}
-            <div className="flex flex-wrap justify-center gap-2">
-                {diceOptions.map((opt) => (
-                    <button
-                        key={opt.type}
-                        onClick={() => addToPool(opt.type)}
-                        disabled={status !== 'Ready' || rolling}
-                        className="w-14 h-14 bg-black/50 rounded-xl border border-cyan-500/30 hover:bg-cyan-900/50 hover:border-cyan-400 transition-all font-bold text-cyan-100 text-sm"
-                    >
-                        {opt.label}
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-2 justify-center mb-4">
+                {['d4','d6','d8','d10','d12','d20','d100','d1000'].map(d => (
+                    <button key={d} onClick={() => addDie(d)} className="px-3 py-2 bg-black/50 border border-cyan-500/30 rounded text-cyan-100 font-bold hover:bg-cyan-900/50">
+                        {d.toUpperCase()}
                     </button>
                 ))}
-                
-                {/* Custom Input */}
-                <form onSubmit={addCustomDie} className="flex items-center h-14 bg-black/50 rounded-xl border border-cyan-500/30 overflow-hidden">
-                    <span className="pl-3 text-cyan-500 font-mono text-sm">d</span>
+                {/* Custom */}
+                <form onSubmit={addCustom} className="flex bg-black/50 border border-cyan-500/30 rounded overflow-hidden">
                     <input 
                         type="number" 
-                        min="1"
-                        placeholder="?"
-                        value={customSides}
-                        onChange={(e) => setCustomSides(e.target.value)}
-                        className="w-12 h-full bg-transparent text-white p-2 outline-none font-bold text-center"
+                        placeholder="?" 
+                        value={customSides} 
+                        onChange={e => setCustomSides(e.target.value)}
+                        className="w-12 bg-transparent text-white text-center outline-none" 
                     />
-                    <button type="submit" className="h-full px-3 hover:bg-cyan-900/50 text-cyan-400 border-l border-cyan-500/30">
-                        <Plus className="w-4 h-4" />
-                    </button>
+                    <button type="submit" className="px-2 text-cyan-400 border-l border-cyan-500/30"><Plus size={16}/></button>
                 </form>
             </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="grid grid-cols-4 gap-3 mt-2">
+            {/* Roll/Clear */}
+            <div className="grid grid-cols-4 gap-2">
+                <button onClick={handleClear} className="col-span-1 bg-red-900/50 text-red-200 rounded font-bold py-3">CLR</button>
                 <button 
-                    onClick={handleClear}
-                    disabled={rolling}
-                    className="col-span-1 py-3 rounded-xl bg-red-900/30 border border-red-500/30 text-red-400 hover:bg-red-900/50 font-bold"
+                    onClick={handleRoll} 
+                    disabled={rolling || pool.length === 0}
+                    className="col-span-3 bg-gradient-to-r from-cyan-600 to-purple-600 text-white rounded font-bold py-3 disabled:opacity-50"
                 >
-                    CLEAR
-                </button>
-                <button
-                    onClick={handleRoll}
-                    disabled={pool.length === 0 || rolling || status !== 'Ready'}
-                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                    {rolling ? 'ROLLING...' : 'ROLL DICE'}
+                    {rolling ? 'ROLLING...' : 'ROLL'}
                 </button>
             </div>
-            
-            <div className="text-center text-xs text-cyan-500/50 mt-1">Status: {status}</div>
+            <div className="text-center text-xs text-cyan-500/50 mt-2">{status}</div>
         </div>
       </div>
     </div>

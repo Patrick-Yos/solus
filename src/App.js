@@ -352,50 +352,49 @@ const ArcadeOverlay = ({ onClose }) => {
 //--Dice COMPONENT---
 // --- DICE COMPONENT ---
 const DiceRoller = ({ onClose }) => {
-  const [status, setStatus] = useState('Initializing...'); 
-  const [pool, setPool] = useState([]); 
+  const [status, setStatus] = useState('Initializing...');
+  const [pool, setPool] = useState([]); // Stores clicks: ['d20', 'd20']
   const [customSides, setCustomSides] = useState('');
   
   const [rolling, setRolling] = useState(false);
-  const [results, setResults] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [lastResult, setLastResult] = useState(0); // Changed from 'results' to match your style
+  const [resultDetails, setResultDetails] = useState([]); // To show individual dice values
   
-  const boxRef = useRef(null);
+  const diceBoxRef = useRef(null);
   const initialized = useRef(false);
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
-    const initDiceBox = async () => {
-      // 1. EXACT CONFIGURATION FROM YOUR REFERENCE CODE
+    const initBox = async () => {
+      // 1. Create Box (Using your exact config)
       const Box = new DiceBox({
-        id: '#dice-box', // Must match the div ID below
+        id: '#dice-box',
         assetPath: '/assets/', 
-        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/', // CDN is crucial for physics
+        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/',
         theme: 'default',
-        themeColor: '#22d3ee', // Cyan color
         scale: 6,
-        offscreen: true,
+        themeColor: '#22d3ee', // Cyan to match your theme
+        debug: false,
       });
+
+      diceBoxRef.current = Box;
 
       try {
         setStatus('Loading Physics...');
         await Box.init();
-        
-        // Force resize to ensure it sees the full screen
         Box.resizeWorld();
-        
-        boxRef.current = Box;
         setStatus('Ready');
       } catch (e) {
-        console.error("Dice Init Error:", e);
+        console.error(e);
         setStatus('Error: ' + e.message);
       }
     };
 
-    setTimeout(initDiceBox, 100);
+    initDiceBox();
     
+    // Cleanup
     return () => { initialized.current = false; };
   }, []);
 
@@ -412,55 +411,62 @@ const DiceRoller = ({ onClose }) => {
   };
 
   const handleClear = () => {
-    if (rolling) return;
-    setPool([]);
-    setResults(null);
-    setTotal(0);
-    if (boxRef.current) boxRef.current.clear();
+    if (diceBoxRef.current && !rolling) {
+      diceBoxRef.current.clear();
+      setPool([]);
+      setLastResult(0);
+      setResultDetails([]);
+      setStatus('Ready');
+    }
   };
 
-  const handleRoll = async () => {
-    if (!boxRef.current || pool.length === 0 || rolling) return;
-    
-    setRolling(true);
-    setResults(null);
-    setTotal(0);
-    
-    // Clear previous dice before rolling new ones
-    if (boxRef.current) boxRef.current.clear();
+  const handleRoll = () => {
+    if (!diceBoxRef.current || pool.length === 0 || rolling) return;
 
-    // Convert pool ['d20', 'd20'] -> "2d20"
+    // 1. Clear previous
+    diceBoxRef.current.clear();
+    setRolling(true);
+    setStatus('Rolling...');
+    setLastResult(0);
+
+    // 2. PARSE THE POOL (Your requested logic)
+    // Convert ['d20', 'd20', 'd6'] -> ['2d20', '1d6']
     const counts = {};
     pool.forEach(die => { counts[die] = (counts[die] || 0) + 1; });
     const notationArray = Object.keys(counts).map(key => `${counts[key]}${key}`);
 
-    try {
-      const result = await boxRef.current.roll(notationArray);
-      
-      let sum = 0;
-      let resArray = [];
+    // 3. ROLL using .then() as requested
+    diceBoxRef.current.roll(notationArray).then((result) => {
+      let total = 0;
+      let details = [];
+
+      // Handle library result structure (array of objects)
+      // We iterate to sum them up and store details
       const rolls = Array.isArray(result) ? result : [result];
       
       rolls.forEach(r => {
-        const val = r.value !== undefined ? r.value : (r.total || 0);
-        if (r.rolls && r.rolls.length > 0) {
-           r.rolls.forEach(subRoll => {
-             sum += subRoll.value;
-             resArray.push({ type: `d${r.sides}`, value: subRoll.value });
-           });
+        // Handle groups (e.g. 2d20) or single dice
+        if (r.rolls) {
+             r.rolls.forEach(sub => {
+                 total += sub.value;
+                 details.push({ type: `d${r.sides}`, value: sub.value });
+             });
         } else {
-           sum += val;
-           resArray.push({ type: `d${r.sides}`, value: val });
+             const val = r.value || r.total || 0;
+             total += val;
+             details.push({ type: `d${r.sides}`, value: val });
         }
       });
 
-      setTotal(sum);
-      setResults(resArray);
-    } catch (e) {
-      console.error("Roll Error", e);
-    } finally {
+      setLastResult(total);
+      setResultDetails(details);
+      setStatus('Ready');
       setRolling(false);
-    }
+    }).catch(e => {
+        setStatus('Error');
+        console.error(e);
+        setRolling(false);
+    });
   };
 
   const diceOptions = [
@@ -475,69 +481,67 @@ const DiceRoller = ({ onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-end pointer-events-none">
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 200, pointerEvents: 'none' }}>
       
-      {/* 1. BACKGROUND CLOSER (Clicking anywhere empty closes it) */}
-      <div className="absolute inset-0 z-10 pointer-events-auto bg-black/40 backdrop-blur-sm" onClick={(e) => {
-          if (!rolling) onClose();
-      }}></div>
-
-      {/* 2. THE DICE BOX CONTAINER */}
-      {/* CRITICAL FIX: 
-         1. ID matches the code: "dice-box"
-         2. Z-Index is 20, sitting ON TOP of your background (z-0) but BELOW controls (z-50)
-      */}
+      {/* 1. CLICK TO CLOSE BG */}
       <div 
-        id="dice-box" 
-        className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none"
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.3)', pointerEvents: 'auto' }}
+        onClick={(e) => { if (!rolling) onClose(); }}
       ></div>
 
-      {/* 3. STYLE OVERRIDE TO FORCE CANVAS VISIBILITY */}
+      {/* 2. DICE CONTAINER - ID matches init */}
+      <div 
+        id="dice-box" 
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}
+      ></div>
+
+      {/* 3. YOUR CSS TO FORCE CANVAS TO BACK */}
       <style>{`
-        #dice-box canvas {
+        canvas {
             display: block !important;
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
+            top: 0;
+            left: 0;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 20 !important; /* Forces dice above the star background */
-            pointer-events: none !important;
+            z-index: 0 !important; /* Force canvas to back */
+            pointer-events: none !important; /* Allow clicks to pass through */
         }
       `}</style>
 
-      {/* 4. UI FOREGROUND (Z-Index 50 to sit above dice) */}
-      <div className="relative z-50 w-full max-w-4xl p-4 mb-4 pointer-events-auto animate-in slide-in-from-bottom-10 duration-500">
+      {/* 4. UI FOREGROUND */}
+      <div className="absolute bottom-0 w-full flex flex-col items-center justify-end p-4 pb-8 pointer-events-auto" style={{ zIndex: 9999 }}>
         
-        {/* RESULT BUBBLE */}
-        <div className="flex justify-center mb-6">
-           <div className={`bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.5)] flex flex-col items-center min-w-[200px] transition-all duration-300 ${rolling ? 'scale-90 opacity-80' : 'scale-100 opacity-100'}`}>
-              <div className="text-cyan-400 font-bold tracking-widest text-xs mb-1">TOTAL RESULT</div>
-              <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 drop-shadow-sm">
-                {rolling ? '...' : total}
-              </div>
-              {results && (
-                <div className="flex flex-wrap gap-2 justify-center mt-3 max-w-lg">
-                  {results.map((r, i) => (
-                    <span key={i} className="px-2 py-1 bg-white/10 border border-white/20 rounded text-xs text-cyan-100 font-mono">
-                      {r.type}: <strong>{r.value}</strong>
-                    </span>
-                  ))}
+        {/* RESULT DISPLAY */}
+        <div className="mb-6 bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.5)] flex flex-col items-center min-w-[200px]">
+            <div className="text-cyan-400 font-bold text-xs mb-1">TOTAL</div>
+            <div className="text-7xl font-black text-white drop-shadow-sm">
+                {rolling ? '...' : lastResult}
+            </div>
+            {/* Show individual numbers if available */}
+            {resultDetails.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center mt-2 max-w-md">
+                    {resultDetails.map((d, i) => (
+                        <span key={i} className="text-xs bg-white/20 px-2 py-1 rounded text-cyan-100">
+                            {d.type}: {d.value}
+                        </span>
+                    ))}
                 </div>
-              )}
-           </div>
+            )}
         </div>
 
         {/* CONTROLS */}
-        <div className="bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4">
+        <div className="bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 w-full max-w-3xl">
             
+            {/* Header / Pool */}
             <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[80%]">
+                <div className="flex items-center gap-2 overflow-x-auto">
                    <Dices className="text-cyan-400 w-5 h-5 flex-shrink-0" />
                    {pool.length === 0 ? (
-                     <span className="text-gray-500 italic text-sm">Select dice...</span>
+                     <span className="text-gray-500 italic text-sm">Tap dice to add...</span>
                    ) : (
                      <div className="flex gap-1">
+                        {/* Display condensed pool */}
                         {Object.entries(pool.reduce((acc, curr) => { acc[curr] = (acc[curr] || 0) + 1; return acc; }, {})).map(([die, count]) => (
                             <span key={die} className="px-2 py-0.5 bg-purple-900/50 border border-purple-500/50 rounded text-xs text-purple-200 font-mono whitespace-nowrap">
                                 {count}{die}
@@ -550,63 +554,54 @@ const DiceRoller = ({ onClose }) => {
             </div>
 
             {/* BUTTONS */}
-            <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+            <div className="flex flex-wrap justify-center gap-2">
                 {diceOptions.map((opt) => (
                     <button
                         key={opt.type}
                         onClick={() => addToPool(opt.type)}
                         disabled={status !== 'Ready' || rolling}
-                        className="w-12 h-12 md:w-16 md:h-16 bg-black/50 rounded-xl border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex flex-col items-center justify-center group"
+                        className="w-14 h-14 bg-black/50 rounded-xl border border-cyan-500/30 hover:bg-cyan-900/50 hover:border-cyan-400 transition-all font-bold text-cyan-100 text-sm"
                     >
-                        <span className="text-xs md:text-sm font-bold text-cyan-100 group-hover:text-white">{opt.label}</span>
+                        {opt.label}
                     </button>
                 ))}
                 
-                {/* CUSTOM INPUT */}
-                <form onSubmit={addCustomDie} className="flex items-center">
-                    <div className="relative flex items-center h-12 md:h-16 bg-black/50 rounded-xl border border-cyan-500/30 overflow-hidden focus-within:border-cyan-400 transition-all">
-                        <span className="pl-3 text-cyan-500 font-mono text-sm">d</span>
-                        <input 
-                            type="number" 
-                            min="1"
-                            placeholder="?"
-                            value={customSides}
-                            onChange={(e) => setCustomSides(e.target.value)}
-                            className="w-12 h-full bg-transparent text-white p-2 outline-none font-bold text-center"
-                        />
-                        <button type="submit" className="h-full px-2 hover:bg-cyan-900/50 text-cyan-400 border-l border-cyan-500/30">
-                            <Plus className="w-4 h-4" />
-                        </button>
-                    </div>
+                {/* Custom Input */}
+                <form onSubmit={addCustomDie} className="flex items-center h-14 bg-black/50 rounded-xl border border-cyan-500/30 overflow-hidden">
+                    <span className="pl-3 text-cyan-500 font-mono text-sm">d</span>
+                    <input 
+                        type="number" 
+                        min="1"
+                        placeholder="?"
+                        value={customSides}
+                        onChange={(e) => setCustomSides(e.target.value)}
+                        className="w-12 h-full bg-transparent text-white p-2 outline-none font-bold text-center"
+                    />
+                    <button type="submit" className="h-full px-3 hover:bg-cyan-900/50 text-cyan-400 border-l border-cyan-500/30">
+                        <Plus className="w-4 h-4" />
+                    </button>
                 </form>
             </div>
 
-            {/* ACTIONS */}
+            {/* ACTION BUTTONS */}
             <div className="grid grid-cols-4 gap-3 mt-2">
                 <button 
                     onClick={handleClear}
-                    className="col-span-1 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-400 hover:bg-red-900/40 hover:border-red-400 transition-all font-bold tracking-wider disabled:opacity-50"
                     disabled={rolling}
+                    className="col-span-1 py-3 rounded-xl bg-red-900/30 border border-red-500/30 text-red-400 hover:bg-red-900/50 font-bold"
                 >
                     CLEAR
                 </button>
                 <button
                     onClick={handleRoll}
                     disabled={pool.length === 0 || rolling || status !== 'Ready'}
-                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                    {rolling ? (
-                        <>ROLLING <Sparkles className="w-5 h-5 animate-spin" /></>
-                    ) : (
-                        <>ROLL DICE <Dices className="w-5 h-5" /></>
-                    )}
+                    {rolling ? 'ROLLING...' : 'ROLL DICE'}
                 </button>
             </div>
             
-            {/* DEBUG STATUS */}
-            <div className="text-center text-xs text-cyan-500/70 mt-2 font-mono">
-                System: {status}
-            </div>
+            <div className="text-center text-xs text-cyan-500/50 mt-1">Status: {status}</div>
         </div>
       </div>
     </div>

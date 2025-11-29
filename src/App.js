@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import DiceBox from "@3d-dice/dice-box";
-import "./style.css";
+import DiceBox from '@3d-dice/dice-box';
+// Ensure you have a style.css file or remove this line if styling is handled via Tailwind
+import './style.css'; 
 import {
   Sparkles,
   Zap,
@@ -28,12 +29,12 @@ import {
   LogOut,
   Play,
   Pause,
-  Gamepad2, // Added for Arcade
-  Ghost,    // Added for Game
-  Brain,    // Added for Game
-  Timer,    // Added for Game
-  XCircle, // Added for dice
-  Dices, // Added for dice
+  Gamepad2,
+  Ghost,
+  Brain,
+  Timer,
+  XCircle,
+  Dices,
 } from 'lucide-react';
 
 // --- NEW COMPONENT: WARP SPEED BACKGROUND ---
@@ -53,7 +54,7 @@ const WarpSpeedBackground = () => {
     // Star properties
     const stars = [];
     const starCount = 400;
-    
+
     class Star {
       constructor() {
         this.x = Math.random() * width - width / 2;
@@ -76,7 +77,7 @@ const WarpSpeedBackground = () => {
         const sx = (this.x / this.z) * width + width / 2;
         const sy = (this.y / this.z) * height + height / 2;
 
-        const r = (width - this.z) / width * 2; // Radius based on depth
+        const r = ((width - this.z) / width) * 2; // Radius based on depth
 
         // Previous position for trail effect (Anime.js style streaks)
         const px = (this.x / this.pz) * width + width / 2;
@@ -90,7 +91,9 @@ const WarpSpeedBackground = () => {
         ctx.lineWidth = Math.min(r, 3);
         // Cyan to Purple gradient stroke depending on depth
         const alpha = 1 - this.z / width;
-        ctx.strokeStyle = `rgba(${100 + (255 - this.z / 4)}, ${200}, ${255}, ${alpha})`;
+        ctx.strokeStyle = `rgba(${
+          100 + (255 - this.z / 4)
+        }, ${200}, ${255}, ${alpha})`;
         ctx.stroke();
       }
     }
@@ -102,10 +105,10 @@ const WarpSpeedBackground = () => {
 
     const render = () => {
       // Create trails by not clearing completely (motion blur effect)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; 
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       ctx.fillRect(0, 0, width, height);
-      
-      stars.forEach(star => {
+
+      stars.forEach((star) => {
         star.update();
         star.draw();
       });
@@ -129,13 +132,15 @@ const WarpSpeedBackground = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" />;
+  return (
+    <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" />
+  );
 };
 
 // --- NEW COMPONENT: ARCADE OVERLAY ---
 const ArcadeOverlay = ({ onClose }) => {
   const [activeGame, setActiveGame] = useState('menu'); // menu, whack, memory
-  
+
   // -- WHACK A MOLE STATE --
   const [whackScore, setWhackScore] = useState(0);
   const [activeHole, setActiveHole] = useState(null);
@@ -182,7 +187,7 @@ const ArcadeOverlay = ({ onClose }) => {
 
   const handleWhack = (index) => {
     if (index === activeHole && isWhackPlaying) {
-      setWhackScore(s => s + 10);
+      setWhackScore((s) => s + 10);
       setActiveHole(null); // Hide immediately
     }
   };
@@ -201,13 +206,14 @@ const ArcadeOverlay = ({ onClose }) => {
   };
 
   const handleCardClick = (id) => {
-    if (flipped.length === 2 || flipped.includes(id) || solved.includes(id)) return;
-    
+    if (flipped.length === 2 || flipped.includes(id) || solved.includes(id))
+      return;
+
     const newFlipped = [...flipped, id];
     setFlipped(newFlipped);
 
     if (newFlipped.length === 2) {
-      setMemoryMoves(m => m + 1);
+      setMemoryMoves((m) => m + 1);
       const [first, second] = newFlipped;
       if (cards[first].Icon === cards[second].Icon) {
         setSolved([...solved, first, second]);
@@ -221,7 +227,6 @@ const ArcadeOverlay = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
       <div className="relative w-full max-w-4xl h-[80vh] bg-gradient-to-b from-indigo-900/50 to-purple-900/50 rounded-3xl border-4 border-cyan-500 shadow-[0_0_50px_rgba(34,211,238,0.5)] overflow-hidden flex flex-col">
-        
         {/* Arcade Header */}
         <div className="p-6 border-b border-cyan-500/30 flex justify-between items-center bg-black/40">
           <div className="flex items-center gap-3">
@@ -230,32 +235,44 @@ const ArcadeOverlay = ({ onClose }) => {
               COSMIC ARCADE
             </h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+          >
             <X className="w-8 h-8 text-cyan-400" />
           </button>
         </div>
 
         {/* Game Area */}
         <div className="flex-1 p-8 overflow-y-auto">
-          
           {/* MENU */}
           {activeGame === 'menu' && (
             <div className="grid md:grid-cols-2 gap-8 h-full place-items-center">
-              <button 
-                onClick={() => { setActiveGame('whack'); startWhack(); }}
+              <button
+                onClick={() => {
+                  setActiveGame('whack');
+                  startWhack();
+                }}
                 className="group relative w-full h-64 bg-black/40 border-2 border-green-500/50 rounded-2xl hover:border-green-400 hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-4"
               >
                 <Ghost className="w-20 h-20 text-green-400 group-hover:animate-bounce" />
-                <h3 className="text-2xl font-bold text-green-300">WHACK-A-ALIEN</h3>
+                <h3 className="text-2xl font-bold text-green-300">
+                  WHACK-A-ALIEN
+                </h3>
                 <p className="text-green-500/70">Reflex Training</p>
               </button>
 
-              <button 
-                onClick={() => { setActiveGame('memory'); initializeMemory(); }}
+              <button
+                onClick={() => {
+                  setActiveGame('memory');
+                  initializeMemory();
+                }}
                 className="group relative w-full h-64 bg-black/40 border-2 border-pink-500/50 rounded-2xl hover:border-pink-400 hover:shadow-[0_0_30px_rgba(236,72,153,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-4"
               >
                 <Brain className="w-20 h-20 text-pink-400 group-hover:animate-spin" />
-                <h3 className="text-2xl font-bold text-pink-300">MEMORY HACK</h3>
+                <h3 className="text-2xl font-bold text-pink-300">
+                  MEMORY HACK
+                </h3>
                 <p className="text-pink-500/70">Neural Calibration</p>
               </button>
             </div>
@@ -266,22 +283,36 @@ const ArcadeOverlay = ({ onClose }) => {
             <div className="h-full flex flex-col items-center">
               <div className="flex justify-between w-full mb-8 text-2xl font-mono">
                 <div className="text-green-400">SCORE: {whackScore}</div>
-                <div className="text-red-400 flex items-center gap-2"><Timer /> {whackTime}s</div>
+                <div className="text-red-400 flex items-center gap-2">
+                  <Timer /> {whackTime}s
+                </div>
               </div>
-              
+
               {!isWhackPlaying && whackTime === 0 ? (
                 <div className="text-center space-y-6">
                   <h3 className="text-4xl font-bold text-white">GAME OVER</h3>
-                  <p className="text-2xl text-cyan-300">Final Score: {whackScore}</p>
+                  <p className="text-2xl text-cyan-300">
+                    Final Score: {whackScore}
+                  </p>
                   <div className="flex gap-4 justify-center">
-                    <button onClick={startWhack} className="px-6 py-3 bg-green-600 rounded-lg font-bold hover:bg-green-500">PLAY AGAIN</button>
-                    <button onClick={() => setActiveGame('menu')} className="px-6 py-3 bg-gray-600 rounded-lg font-bold hover:bg-gray-500">MENU</button>
+                    <button
+                      onClick={startWhack}
+                      className="px-6 py-3 bg-green-600 rounded-lg font-bold hover:bg-green-500"
+                    >
+                      PLAY AGAIN
+                    </button>
+                    <button
+                      onClick={() => setActiveGame('menu')}
+                      className="px-6 py-3 bg-gray-600 rounded-lg font-bold hover:bg-gray-500"
+                    >
+                      MENU
+                    </button>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-4">
                   {[...Array(9)].map((_, i) => (
-                    <div 
+                    <div
                       key={i}
                       onClick={() => handleWhack(i)}
                       className={`w-24 h-24 md:w-32 md:h-32 bg-gray-800 rounded-full border-4 border-gray-600 flex items-center justify-center cursor-pointer relative overflow-hidden`}
@@ -294,7 +325,14 @@ const ArcadeOverlay = ({ onClose }) => {
                   ))}
                 </div>
               )}
-              {isWhackPlaying && <button onClick={() => setActiveGame('menu')} className="mt-8 text-sm text-gray-400 hover:text-white">Back to Menu</button>}
+              {isWhackPlaying && (
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="mt-8 text-sm text-gray-400 hover:text-white"
+                >
+                  Back to Menu
+                </button>
+              )}
             </div>
           )}
 
@@ -303,30 +341,45 @@ const ArcadeOverlay = ({ onClose }) => {
             <div className="h-full flex flex-col items-center">
               <div className="flex justify-between w-full mb-6 text-2xl font-mono">
                 <div className="text-pink-400">MOVES: {memoryMoves}</div>
-                <div className="text-cyan-400">PAIRS: {solved.length / 2}/8</div>
+                <div className="text-cyan-400">
+                  PAIRS: {solved.length / 2}/8
+                </div>
               </div>
 
               {solved.length === cards.length && cards.length > 0 ? (
-                 <div className="text-center space-y-6 mt-10">
-                 <h3 className="text-4xl font-bold text-white">SYSTEM HACKED!</h3>
-                 <p className="text-2xl text-cyan-300">Great Job Agent!</p>
-                 <div className="flex gap-4 justify-center">
-                   <button onClick={initializeMemory} className="px-6 py-3 bg-pink-600 rounded-lg font-bold hover:bg-pink-500">RETRY</button>
-                   <button onClick={() => setActiveGame('menu')} className="px-6 py-3 bg-gray-600 rounded-lg font-bold hover:bg-gray-500">MENU</button>
-                 </div>
-               </div>
+                <div className="text-center space-y-6 mt-10">
+                  <h3 className="text-4xl font-bold text-white">
+                    SYSTEM HACKED!
+                  </h3>
+                  <p className="text-2xl text-cyan-300">Great Job Agent!</p>
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      onClick={initializeMemory}
+                      className="px-6 py-3 bg-pink-600 rounded-lg font-bold hover:bg-pink-500"
+                    >
+                      RETRY
+                    </button>
+                    <button
+                      onClick={() => setActiveGame('menu')}
+                      className="px-6 py-3 bg-gray-600 rounded-lg font-bold hover:bg-gray-500"
+                    >
+                      MENU
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="grid grid-cols-4 gap-3 md:gap-4">
                   {cards.map((card, index) => {
-                    const isFlipped = flipped.includes(index) || solved.includes(index);
+                    const isFlipped =
+                      flipped.includes(index) || solved.includes(index);
                     const CardIcon = card.Icon;
                     return (
                       <button
                         key={index}
                         onClick={() => handleCardClick(index)}
                         className={`w-16 h-16 md:w-24 md:h-24 rounded-xl transition-all duration-300 transform ${
-                          isFlipped 
-                            ? 'bg-gradient-to-br from-pink-600 to-purple-600 rotate-y-180' 
+                          isFlipped
+                            ? 'bg-gradient-to-br from-pink-600 to-purple-600 rotate-y-180'
                             : 'bg-indigo-900/80 border-2 border-indigo-500/50 hover:border-indigo-400'
                         } flex items-center justify-center`}
                       >
@@ -340,63 +393,70 @@ const ArcadeOverlay = ({ onClose }) => {
                   })}
                 </div>
               )}
-               <button onClick={() => setActiveGame('menu')} className="mt-8 text-sm text-gray-400 hover:text-white">Back to Menu</button>
+              <button
+                onClick={() => setActiveGame('menu')}
+                className="mt-8 text-sm text-gray-400 hover:text-white"
+              >
+                Back to Menu
+              </button>
             </div>
           )}
-
         </div>
       </div>
     </div>
   );
 };
-//--Dice COMPONENT---
+
 // --- DICE COMPONENT ---
 const DiceRoller = ({ onClose }) => {
-  const [status, setStatus] = useState('loading'); 
+  const [status, setStatus] = useState('Initializing...');
   const [pool, setPool] = useState([]); 
   const [customSides, setCustomSides] = useState('');
-  
   const [rolling, setRolling] = useState(false);
-  const [results, setResults] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [totalResult, setTotalResult] = useState(0); 
+  const [resultDetails, setResultDetails] = useState([]);
   
-  // FIXED: We use a standard ID string for the HTML element
-  const containerId = '#dice-box';
-  const boxRef = useRef(null);
-  const initialized = useRef(false); // Ref to prevent double-init
+  // FIX: This ID must NOT have the hash when used in HTML
+  const containerId = 'dice-box-element'; 
+  const diceBoxRef = useRef(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    const initDiceBox = async () => {
-      // Prevent running init twice
-      if (initialized.current) return;
-      initialized.current = true;
+    if (initialized.current) return;
+    initialized.current = true;
 
-      // FIXED: Added '#' to the id so the library finds the <div>
+    const initBox = async () => {
+      // 1. Create Box
       const Box = new DiceBox({
-        id:+ containerId, 
-        assetPath: '/assets/',
-        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/',
+        // FIX: The library requires the selector with the hash
+        id:'#'+containerId, 
+        assetPath: 'assets/',
+        origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/',
         theme: 'default',
-        themeColor: '#22d3ee',
         scale: 6,
-        offscreen: true, // Use worker for performance
+        themeColor: '#00e5ff', 
+        debug: false,
+       // offscreen: true // Optimization
       });
 
+      diceBoxRef.current = Box;
+
       try {
+        setStatus('Loading Physics...');
         await Box.init();
-        boxRef.current = Box;
-        setStatus('ready');
-        Box.clear();
+        
+        // Force resize to fill the container we created
+        Box.resizeWorld();
+        
+        setStatus('Ready');
       } catch (e) {
-        console.error("Dice Init Error:", e);
-        setStatus('error');
+        console.error(e);
+        setStatus('Error: ' + e.message);
       }
     };
 
-    // Small delay to ensure DOM is rendered
-    setTimeout(initDiceBox, 100);
+    setTimeout(initBox, 100);
     
-    // Cleanup not strictly necessary for single-instance, but good practice
     return () => { initialized.current = false; };
   }, []);
 
@@ -413,53 +473,58 @@ const DiceRoller = ({ onClose }) => {
   };
 
   const handleClear = () => {
-    if (rolling) return;
-    setPool([]);
-    setResults(null);
-    setTotal(0);
-    if (boxRef.current) boxRef.current.clear();
+    if (diceBoxRef.current && !rolling) {
+      diceBoxRef.current.clear();
+      setPool([]);
+      setTotalResult(0);
+      setResultDetails([]);
+      setStatus('Ready');
+    }
   };
 
-  const handleRoll = async () => {
-    if (!boxRef.current || pool.length === 0 || rolling) return;
-    
-    setRolling(true);
-    setResults(null);
-    setTotal(0);
-    if (boxRef.current) boxRef.current.clear();
+  const handleRoll = () => {
+    if (!diceBoxRef.current || pool.length === 0 || rolling) return;
 
-    // Convert pool ['d20', 'd20'] -> "2d20"
+    // 1. Clear previous
+    diceBoxRef.current.clear();
+    setRolling(true);
+    setStatus('Rolling...');
+    setTotalResult(0);
+
+    // 2. PARSE THE POOL
     const counts = {};
     pool.forEach(die => { counts[die] = (counts[die] || 0) + 1; });
     const notationArray = Object.keys(counts).map(key => `${counts[key]}${key}`);
 
-    try {
-      const result = await boxRef.current.roll(notationArray);
-      
-      let sum = 0;
-      let resArray = [];
+    // 3. ROLL
+    diceBoxRef.current.roll(notationArray).then((result) => {
+      let total = 0;
+      let details = [];
+
       const rolls = Array.isArray(result) ? result : [result];
       
       rolls.forEach(r => {
-        const val = r.value !== undefined ? r.value : (r.total || 0);
-        if (r.rolls && r.rolls.length > 0) {
-           r.rolls.forEach(subRoll => {
-             sum += subRoll.value;
-             resArray.push({ type: `d${r.sides}`, value: subRoll.value });
-           });
+        if (r.rolls) {
+             r.rolls.forEach(sub => {
+                 total += sub.value;
+                 details.push({ type: `d${r.sides}`, value: sub.value });
+             });
         } else {
-           sum += val;
-           resArray.push({ type: `d${r.sides}`, value: val });
+             const val = r.value || r.total || 0;
+             total += val;
+             details.push({ type: `d${r.sides}`, value: val });
         }
       });
 
-      setTotal(sum);
-      setResults(resArray);
-    } catch (e) {
-      console.error("Roll Error", e);
-    } finally {
+      setTotalResult(total);
+      setResultDetails(details);
+      setStatus('Ready');
       setRolling(false);
-    }
+    }).catch(e => {
+        setStatus('Error');
+        console.error(e);
+        setRolling(false);
+    });
   };
 
   const diceOptions = [
@@ -474,62 +539,68 @@ const DiceRoller = ({ onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-end pointer-events-none">
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 200, pointerEvents: 'none' }}>
       
-      {/* 1. BACKGROUND CLOSER */}
-      <div className="absolute inset-0 z-0 pointer-events-auto bg-black/40 backdrop-blur-sm" onClick={(e) => {
-          if (!rolling) onClose();
-      }}></div>
+      {/* 1. CLICK TO CLOSE BG */}
+      <div 
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'transparent', pointerEvents: 'auto', zIndex: 1 }}
+        onClick={(e) => { if (!rolling) onClose(); }}
+        
+      ></div>
 
-      {/* 2. DICE CONTAINER (Must be behind UI) */}
+      {/* 2. DICE CONTAINER - ID matches init (without hash) */}
       <div 
         id={containerId} 
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{ width: '100%', height: '100%' }}
-      />
-      {/* FORCE CANVAS TO BACK: This style ensures the library's canvas never covers your buttons */}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 5 }}
+      ></div>
+
+      {/* 3. FORCE CANVAS VISIBILITY */}
       <style>{`
-        #${containerId} canvas {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 0 !important; 
-            pointer-events: none !important;
+        canvas {
+          display: block !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 10 !important;
+          pointer-events: none !important;
         }
       `}</style>
 
-      {/* 3. UI LAYER (High Z-Index) */}
-      <div className="relative z-50 w-full max-w-4xl p-4 mb-4 pointer-events-auto animate-in slide-in-from-bottom-10 duration-500">
+      {/* 4. UI FOREGROUND */}
+      <div className="absolute bottom-0 w-full flex flex-col items-center justify-end p-4 pb-8 pointer-events-auto" style={{ zIndex: 1000 }}>
         
-        {/* RESULT BUBBLE */}
-        <div className="flex justify-center mb-6">
-           <div className={`bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.5)] flex flex-col items-center min-w-[200px] transition-all duration-300 ${rolling ? 'scale-90 opacity-80' : 'scale-100 opacity-100'}`}>
-              <div className="text-cyan-400 font-bold tracking-widest text-xs mb-1">TOTAL RESULT</div>
-              <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 drop-shadow-sm">
-                {rolling ? '...' : total}
-              </div>
-              {results && (
-                <div className="flex flex-wrap gap-2 justify-center mt-3 max-w-lg">
-                  {results.map((r, i) => (
-                    <span key={i} className="px-2 py-1 bg-white/10 border border-white/20 rounded text-xs text-cyan-100 font-mono">
-                      {r.type}: <strong>{r.value}</strong>
-                    </span>
-                  ))}
+        {/* RESULT DISPLAY */}
+        <div className="mb-6 bg-black/80 backdrop-blur-xl border-2 border-cyan-500 p-6 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.5)] flex flex-col items-center min-w-[200px]">
+            <div className="text-cyan-400 font-bold text-xs mb-1">TOTAL</div>
+            <div className="text-7xl font-black text-white drop-shadow-sm">
+                {rolling ? '...' : totalResult}
+            </div>
+            {/* Show individual numbers if available */}
+            {resultDetails.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center mt-2 max-w-md">
+                    {resultDetails.map((d, i) => (
+                        <span key={i} className="text-xs bg-white/20 px-2 py-1 rounded text-cyan-100">
+                            {d.type}: {d.value}
+                        </span>
+                    ))}
                 </div>
-              )}
-           </div>
+            )}
         </div>
 
-        {/* CONTROLS BOX */}
-        <div className="bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4">
+        {/* CONTROLS */}
+        <div className="bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 w-full max-w-3xl">
             
+            {/* Header / Pool */}
             <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[80%]">
+                <div className="flex items-center gap-2 overflow-x-auto">
                    <Dices className="text-cyan-400 w-5 h-5 flex-shrink-0" />
                    {pool.length === 0 ? (
-                     <span className="text-gray-500 italic text-sm">Select dice...</span>
+                     <span className="text-gray-500 italic text-sm">Tap dice to add...</span>
                    ) : (
                      <div className="flex gap-1">
+                        {/* Display condensed pool */}
                         {Object.entries(pool.reduce((acc, curr) => { acc[curr] = (acc[curr] || 0) + 1; return acc; }, {})).map(([die, count]) => (
                             <span key={die} className="px-2 py-0.5 bg-purple-900/50 border border-purple-500/50 rounded text-xs text-purple-200 font-mono whitespace-nowrap">
                                 {count}{die}
@@ -538,73 +609,63 @@ const DiceRoller = ({ onClose }) => {
                      </div>
                    )}
                 </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><XCircle /></button>
+                <button onClick={onClose} className="text-gray-400 hover:text-white"><XCircle /></button>
             </div>
 
-            {/* DICE BUTTONS */}
-            <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+            {/* BUTTONS */}
+            <div className="flex flex-wrap justify-center gap-2">
                 {diceOptions.map((opt) => (
                     <button
                         key={opt.type}
                         onClick={() => addToPool(opt.type)}
-                        disabled={status !== 'ready' || rolling}
-                        className="w-12 h-12 md:w-16 md:h-16 bg-black/50 rounded-xl border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex flex-col items-center justify-center group"
+                        disabled={status !== 'Ready' || rolling}
+                        className="w-14 h-14 bg-black/50 rounded-xl border border-cyan-500/30 hover:bg-cyan-900/50 hover:border-cyan-400 transition-all font-bold text-cyan-100 text-sm"
                     >
-                        <span className="text-xs md:text-sm font-bold text-cyan-100 group-hover:text-white">{opt.label}</span>
+                        {opt.label}
                     </button>
                 ))}
                 
-                {/* CUSTOM INPUT */}
-                <form onSubmit={addCustomDie} className="flex items-center">
-                    <div className="relative flex items-center h-12 md:h-16 bg-black/50 rounded-xl border border-cyan-500/30 overflow-hidden focus-within:border-cyan-400 transition-all">
-                        <span className="pl-3 text-cyan-500 font-mono text-sm">d</span>
-                        <input 
-                            type="number" 
-                            min="1"
-                            placeholder="?"
-                            value={customSides}
-                            onChange={(e) => setCustomSides(e.target.value)}
-                            className="w-12 h-full bg-transparent text-white p-2 outline-none font-bold text-center"
-                        />
-                        <button type="submit" className="h-full px-2 hover:bg-cyan-900/50 text-cyan-400 border-l border-cyan-500/30">
-                            <Plus className="w-4 h-4" />
-                        </button>
-                    </div>
+                {/* Custom Input */}
+                <form onSubmit={addCustomDie} className="flex items-center h-14 bg-black/50 rounded-xl border border-cyan-500/30 overflow-hidden">
+                    <span className="pl-3 text-cyan-500 font-mono text-sm">d</span>
+                    <input 
+                        type="number" 
+                        min="1"
+                        placeholder="?"
+                        value={customSides}
+                        onChange={(e) => setCustomSides(e.target.value)}
+                        className="w-12 h-full bg-transparent text-white p-2 outline-none font-bold text-center"
+                    />
+                    <button type="submit" className="h-full px-3 hover:bg-cyan-900/50 text-cyan-400 border-l border-cyan-500/30">
+                        <Plus className="w-4 h-4" />
+                    </button>
                 </form>
             </div>
 
-            {/* ACTIONS */}
+            {/* ACTION BUTTONS */}
             <div className="grid grid-cols-4 gap-3 mt-2">
                 <button 
                     onClick={handleClear}
-                    className="col-span-1 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-400 hover:bg-red-900/40 hover:border-red-400 transition-all font-bold tracking-wider disabled:opacity-50"
                     disabled={rolling}
+                    className="col-span-1 py-3 rounded-xl bg-red-900/30 border border-red-500/30 text-red-400 hover:bg-red-900/50 font-bold"
                 >
                     CLEAR
                 </button>
                 <button
                     onClick={handleRoll}
-                    disabled={pool.length === 0 || rolling || status !== 'ready'}
-                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    disabled={pool.length === 0 || rolling || status !== 'Ready'}
+                    className="col-span-3 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-xl font-bold text-white text-lg hover:from-cyan-500 hover:to-purple-500 shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                    {rolling ? (
-                        <>ROLLING <Sparkles className="w-5 h-5 animate-spin" /></>
-                    ) : (
-                        <>ROLL DICE <Dices className="w-5 h-5" /></>
-                    )}
+                    {rolling ? 'ROLLING...' : 'ROLL DICE'}
                 </button>
             </div>
             
-            {/* STATUS MESSAGE */}
-            {status === 'loading' && <div className="text-center text-xs text-cyan-500/70 animate-pulse mt-2">Initializing Quantum Physics Engine...</div>}
-            {status === 'error' && <div className="text-center text-xs text-red-400 mt-2">Physics Engine Failed. Check Console.</div>}
+            <div className="text-center text-xs text-cyan-500/50 mt-1">Status: {status}</div>
         </div>
       </div>
     </div>
   );
 };
-
-// --- DICE COMPONENT ---
 
 // --- MAIN COMPONENT ---
 const CosmicSyndicate = () => {
@@ -680,7 +741,7 @@ const CosmicSyndicate = () => {
     let scene, camera, renderer, controls, animationId;
     let planets = [];
     let raycaster, mouse;
-    let targetCameraPos = null; 
+    let targetCameraPos = null;
     let targetLookAt = null;
 
     setIsPaused(false);
@@ -688,34 +749,45 @@ const CosmicSyndicate = () => {
 
     // Helper: Create Text Sprite
     const createLabel = (text) => {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = 256; canvas.height = 64;
-        context.font = 'Bold 24px Arial';
-        context.fillStyle = 'rgba(255,255,255,1)';
-        context.strokeStyle = 'rgba(0,0,0,0.8)';
-        context.lineWidth = 4;
-        context.textAlign = 'center';
-        context.strokeText(text, 128, 32);
-        context.fillText(text, 128, 32);
-        
-        const texture = new window.THREE.CanvasTexture(canvas);
-        const material = new window.THREE.SpriteMaterial({ map: texture, transparent: true });
-        const sprite = new window.THREE.Sprite(material);
-        sprite.scale.set(20, 5, 1);
-        return sprite;
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 64;
+      context.font = 'Bold 24px Arial';
+      context.fillStyle = 'rgba(255,255,255,1)';
+      context.strokeStyle = 'rgba(0,0,0,0.8)';
+      context.lineWidth = 4;
+      context.textAlign = 'center';
+      context.strokeText(text, 128, 32);
+      context.fillText(text, 128, 32);
+
+      const texture = new window.THREE.CanvasTexture(canvas);
+      const material = new window.THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+      });
+      const sprite = new window.THREE.Sprite(material);
+      sprite.scale.set(20, 5, 1);
+      return sprite;
     };
 
     const loadThreeJS = async () => {
-      if (window.THREE && window.THREE.OrbitControls) { initSolarSystem(); return; }
+      if (window.THREE && window.THREE.OrbitControls) {
+        initSolarSystem();
+        return;
+      }
       const scriptMain = document.createElement('script');
-      scriptMain.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+      scriptMain.src =
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
       scriptMain.async = true;
       scriptMain.onload = () => {
         const scriptControls = document.createElement('script');
-        scriptControls.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+        scriptControls.src =
+          'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
         scriptControls.async = true;
-        scriptControls.onload = () => { initSolarSystem(); };
+        scriptControls.onload = () => {
+          initSolarSystem();
+        };
         document.head.appendChild(scriptControls);
       };
       document.head.appendChild(scriptMain);
@@ -728,7 +800,12 @@ const CosmicSyndicate = () => {
       scene = new THREE.Scene();
       scene.fog = new THREE.FogExp2(0x000000, 0.002);
 
-      camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+      camera = new THREE.PerspectiveCamera(
+        60,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        2000
+      );
       camera.position.set(0, 150, 300);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -758,34 +835,107 @@ const CosmicSyndicate = () => {
 
       // Sun Glow
       const canvas = document.createElement('canvas');
-      canvas.width = 128; canvas.height = 128;
+      canvas.width = 128;
+      canvas.height = 128;
       const ctx = canvas.getContext('2d');
       const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
       gradient.addColorStop(0, 'rgba(255, 100, 0, 1)');
       gradient.addColorStop(0.2, 'rgba(255, 50, 0, 0.6)');
       gradient.addColorStop(0.5, 'rgba(100, 20, 0, 0.2)');
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = gradient; ctx.fillRect(0, 0, 128, 128);
-      const glowMat = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), color: 0xff5500, transparent: true, blending: THREE.AdditiveBlending });
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+      const glowMat = new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(canvas),
+        color: 0xff5500,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+      });
       const sunGlow = new THREE.Sprite(glowMat);
       sunGlow.scale.set(80, 80, 1);
       sunMesh.add(sunGlow);
 
       // PLANETS DATA
       const planetsData = [
-        { name: 'Sulfur', distance: 60, size: 4, speed: 0.005, color: 0xd97706, desc: 'Desert world - rocky terrain, sulfur lakes.', mat: { roughness: 0.9, metalness: 0.1 } },
-        { name: 'Rodina', distance: 90, size: 6, speed: 0.004, color: 0x3b82f6, desc: 'Earthy paradise.', mat: { roughness: 0.4, metalness: 0.1, emissive: 0x001133 } },
-        { name: 'Cupie', distance: 130, size: 7, speed: 0.003, color: 0xa855f7, desc: 'Two merging planets with a chaotic asteroid field.', type: 'dual-merge' },
-        { name: 'Apatia', distance: 170, size: 5.5, speed: 0.0025, color: 0x06b6d4, desc: 'Earth with a twist.', mat: { roughness: 0.3, metalness: 0.2 } },
-        { name: 'The March', distance: 210, size: 6.5, speed: 0.002, color: 0x6b7280, desc: 'Abandoned military world.', mat: { roughness: 1.0, metalness: 0.5 } },
-        { name: 'The Wilds', distance: 250, size: 8, speed: 0.0015, color: 0x10b981, desc: 'Amazon forest planet.', mat: { roughness: 0.8, emissive: 0x002200 } },
-        { name: 'Phantoma', distance: 300, size: 7, speed: 0.001, color: 0xffffff, desc: 'Ghost planet with moon.', hasMoon: true, isGhost: true },
+        {
+          name: 'Sulfur',
+          distance: 60,
+          size: 4,
+          speed: 0.005,
+          color: 0xd97706,
+          desc: 'Desert world - rocky terrain, sulfur lakes.',
+          mat: { roughness: 0.9, metalness: 0.1 },
+        },
+        {
+          name: 'Rodina',
+          distance: 90,
+          size: 6,
+          speed: 0.004,
+          color: 0x3b82f6,
+          desc: 'Earthy paradise.',
+          mat: { roughness: 0.4, metalness: 0.1, emissive: 0x001133 },
+        },
+        {
+          name: 'Cupie',
+          distance: 130,
+          size: 7,
+          speed: 0.003,
+          color: 0xa855f7,
+          desc: 'Two merging planets with a chaotic asteroid field.',
+          type: 'dual-merge',
+        },
+        {
+          name: 'Apatia',
+          distance: 170,
+          size: 5.5,
+          speed: 0.0025,
+          color: 0x06b6d4,
+          desc: 'Earth with a twist.',
+          mat: { roughness: 0.3, metalness: 0.2 },
+        },
+        {
+          name: 'The March',
+          distance: 210,
+          size: 6.5,
+          speed: 0.002,
+          color: 0x6b7280,
+          desc: 'Abandoned military world.',
+          mat: { roughness: 1.0, metalness: 0.5 },
+        },
+        {
+          name: 'The Wilds',
+          distance: 250,
+          size: 8,
+          speed: 0.0015,
+          color: 0x10b981,
+          desc: 'Amazon forest planet.',
+          mat: { roughness: 0.8, emissive: 0x002200 },
+        },
+        {
+          name: 'Phantoma',
+          distance: 300,
+          size: 7,
+          speed: 0.001,
+          color: 0xffffff,
+          desc: 'Ghost planet with moon.',
+          hasMoon: true,
+          isGhost: true,
+        },
       ];
 
       planetsData.forEach((data) => {
         // Orbit Line
-        const orbitGeo = new THREE.RingGeometry(data.distance - 0.3, data.distance + 0.3, 128);
-        const orbitMat = new THREE.MeshBasicMaterial({ color: 0x666666, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+        const orbitGeo = new THREE.RingGeometry(
+          data.distance - 0.3,
+          data.distance + 0.3,
+          128
+        );
+        const orbitMat = new THREE.MeshBasicMaterial({
+          color: 0x666666,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.3,
+        });
         const orbit = new THREE.Mesh(orbitGeo, orbitMat);
         orbit.rotation.x = Math.PI / 2;
         scene.add(orbit);
@@ -793,33 +943,61 @@ const CosmicSyndicate = () => {
         // Planet Group/Mesh
         let mainMesh;
         if (data.type === 'dual-merge') {
-            mainMesh = new THREE.Group();
-            const geoA = new THREE.SphereGeometry(data.size * 0.6, 32, 32);
-            const matA = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.7 });
-            const planetA = new THREE.Mesh(geoA, matA); planetA.position.set(-2.5, 0, 0);
-            const geoB = new THREE.SphereGeometry(data.size * 0.7, 32, 32);
-            const matB = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.6 });
-            const planetB = new THREE.Mesh(geoB, matB); planetB.position.set(2.5, 0, 0);
-            mainMesh.add(planetA); mainMesh.add(planetB);
+          mainMesh = new THREE.Group();
+          const geoA = new THREE.SphereGeometry(data.size * 0.6, 32, 32);
+          const matA = new THREE.MeshStandardMaterial({
+            color: 0x10b981,
+            roughness: 0.7,
+          });
+          const planetA = new THREE.Mesh(geoA, matA);
+          planetA.position.set(-2.5, 0, 0);
+          const geoB = new THREE.SphereGeometry(data.size * 0.7, 32, 32);
+          const matB = new THREE.MeshStandardMaterial({
+            color: 0xa855f7,
+            roughness: 0.6,
+          });
+          const planetB = new THREE.Mesh(geoB, matB);
+          planetB.position.set(2.5, 0, 0);
+          mainMesh.add(planetA);
+          mainMesh.add(planetB);
 
-            // Asteroids
-            const count = 600; const pos = new Float32Array(count*3);
-            for(let i=0; i<count; i++) {
-                const a = Math.random()*Math.PI*2; const r = 6+Math.random()*4;
-                pos[i*3] = Math.cos(a)*r; pos[i*3+1] = (Math.random()-0.5)*1.5; pos[i*3+2] = Math.sin(a)*r;
-            }
-            const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            const pMat = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.3 });
-            const belt = new THREE.Points(pGeo, pMat); belt.rotation.x = Math.PI/6; belt.rotation.y = Math.PI/6;
-            mainMesh.add(belt);
-            mainMesh.userData = { ...data };
+          // Asteroids
+          const count = 600;
+          const pos = new Float32Array(count * 3);
+          for (let i = 0; i < count; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 6 + Math.random() * 4;
+            pos[i * 3] = Math.cos(a) * r;
+            pos[i * 3 + 1] = (Math.random() - 0.5) * 1.5;
+            pos[i * 3 + 2] = Math.sin(a) * r;
+          }
+          const pGeo = new THREE.BufferGeometry();
+          pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+          const pMat = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.3 });
+          const belt = new THREE.Points(pGeo, pMat);
+          belt.rotation.x = Math.PI / 6;
+          belt.rotation.y = Math.PI / 6;
+          mainMesh.add(belt);
+          mainMesh.userData = { ...data };
         } else {
-            const geo = new THREE.SphereGeometry(data.size, 32, 32);
-            let mat;
-            if (data.isGhost) mat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, transmission: 0.6, roughness: 0.2, metalness: 0.1 });
-            else mat = new THREE.MeshStandardMaterial({ color: data.color, ...data.mat });
-            mainMesh = new THREE.Mesh(geo, mat);
-            mainMesh.userData = { ...data };
+          const geo = new THREE.SphereGeometry(data.size, 32, 32);
+          let mat;
+          if (data.isGhost)
+            mat = new THREE.MeshPhysicalMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0.3,
+              transmission: 0.6,
+              roughness: 0.2,
+              metalness: 0.1,
+            });
+          else
+            mat = new THREE.MeshStandardMaterial({
+              color: data.color,
+              ...data.mat,
+            });
+          mainMesh = new THREE.Mesh(geo, mat);
+          mainMesh.userData = { ...data };
         }
         scene.add(mainMesh);
 
@@ -833,13 +1011,23 @@ const CosmicSyndicate = () => {
         if (data.hasMoon) {
           moonPivot = new THREE.Object3D();
           mainMesh.add(moonPivot);
-          const moon = new THREE.Mesh(new THREE.SphereGeometry(data.size * 0.35, 16, 16), new THREE.MeshStandardMaterial({ color: 0x888888 }));
+          const moon = new THREE.Mesh(
+            new THREE.SphereGeometry(data.size * 0.35, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0x888888 })
+          );
           moon.position.set(12, 0, 0);
           moonPivot.add(moon);
         }
 
         const angle = Math.random() * Math.PI * 2;
-        planets.push({ mesh: mainMesh, distance: data.distance, speed: data.speed, angle: angle, moonPivot: moonPivot, type: data.type });
+        planets.push({
+          mesh: mainMesh,
+          distance: data.distance,
+          speed: data.speed,
+          angle: angle,
+          moonPivot: moonPivot,
+          type: data.type,
+        });
       });
 
       // RAYCASTER & ZOOM
@@ -852,12 +1040,18 @@ const CosmicSyndicate = () => {
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(scene.children, true);
-        const hit = intersects.find(i => i.object.userData && (i.object.userData.name || i.object.userData.desc));
-        
+        const hit = intersects.find(
+          (i) =>
+            i.object.userData &&
+            (i.object.userData.name || i.object.userData.desc)
+        );
+
         if (hit) {
-          const planetData = hit.object.parent?.userData?.name ? hit.object.parent.userData : hit.object.userData;
+          const planetData = hit.object.parent?.userData?.name
+            ? hit.object.parent.userData
+            : hit.object.userData;
           setSelectedPlanet(planetData);
-          
+
           // --- ZOOM LOGIC ---
           // 1. Pause rotation so planet stays still for reading
           setIsPaused(true);
@@ -866,13 +1060,18 @@ const CosmicSyndicate = () => {
           // 2. Calculate target position (Planet Position + Offset)
           const planetPos = new THREE.Vector3();
           // Use parent if it's a child mesh (like dual planet parts)
-          const targetObj = hit.object.parent?.type === 'Group' ? hit.object.parent : hit.object;
+          const targetObj =
+            hit.object.parent?.type === 'Group'
+              ? hit.object.parent
+              : hit.object;
           targetObj.getWorldPosition(planetPos);
 
           // New Camera Position: Planet Pos + Offset
-          targetCameraPos = planetPos.clone().add(new THREE.Vector3(15, 10, 20)); // Closer zoom
+          targetCameraPos = planetPos
+            .clone()
+            .add(new THREE.Vector3(15, 10, 20)); // Closer zoom
           targetLookAt = planetPos.clone();
-          
+
           // Update orbit controls target to pivot around this planet
           controls.target.copy(targetLookAt);
         }
@@ -887,16 +1086,16 @@ const CosmicSyndicate = () => {
 
         // Handle Zoom Animation (Lerp)
         if (targetCameraPos && targetLookAt) {
-            camera.position.lerp(targetCameraPos, 0.05);
-            // controls.target is updated instantly on click, but we ensure camera looks at it
-            camera.lookAt(controls.target); 
+          camera.position.lerp(targetCameraPos, 0.05);
+          // controls.target is updated instantly on click, but we ensure camera looks at it
+          camera.lookAt(controls.target);
         }
 
         const time = Date.now() * 0.001;
         sunGlow.scale.set(80 + Math.sin(time) * 5, 80 + Math.sin(time) * 5, 1);
 
         if (!isPausedRef.current) {
-          planets.forEach(p => {
+          planets.forEach((p) => {
             p.angle += p.speed;
             p.mesh.position.x = Math.cos(p.angle) * p.distance;
             p.mesh.position.z = Math.sin(p.angle) * p.distance;
@@ -1140,10 +1339,10 @@ const CosmicSyndicate = () => {
 
       {/* ARCADE OVERLAY */}
       {showArcade && <ArcadeOverlay onClose={() => setShowArcade(false)} />}
-      {/* --- PASTE THIS HERE --- */}
       {/* DICE ROLLER OVERLAY */}
-      {showDiceRoller && <DiceRoller onClose={() => setShowDiceRoller(false)} />}
-      {/* ----------------------- */}
+      {showDiceRoller && (
+        <DiceRoller onClose={() => setShowDiceRoller(false)} />
+      )}
 
       {/* Checkout Page Overlay */}
       {showCheckout && (
@@ -1758,7 +1957,7 @@ const CosmicSyndicate = () => {
             <MenuItem icon={Church} text="The Church" section="church" />
             <MenuItem icon={ShoppingBag} text="Merch" section="merch" />
             <MenuItem icon={MessageSquare} text="Reviews" section="reviews" />
-            
+
             {/* ARCADE BUTTON DESKTOP */}
             <button
               onClick={() => setShowArcade(true)}
@@ -1772,11 +1971,12 @@ const CosmicSyndicate = () => {
               </div>
               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
             </button>
-{/* DICE ROLLER BUTTON */}
+            {/* DICE ROLLER BUTTON */}
             <button
               onClick={() => setShowDiceRoller(true)}
               className="p-3 bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-cyan-500/30 rounded-lg hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform hover:scale-105"
-              title="Roll Dice">
+              title="Roll Dice"
+            >
               <Dices className="w-6 h-6 text-cyan-300" />
             </button>
             <button
@@ -1823,7 +2023,7 @@ const CosmicSyndicate = () => {
             <MenuItem icon={Church} text="The Church" section="church" />
             <MenuItem icon={ShoppingBag} text="Merch" section="merch" />
             <MenuItem icon={MessageSquare} text="Reviews" section="reviews" />
-            
+
             {/* ARCADE BUTTON MOBILE */}
             <button
               onClick={() => {
@@ -1839,7 +2039,7 @@ const CosmicSyndicate = () => {
                 </span>
               </div>
             </button>
-{/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}
+            {/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}
             <button
               onClick={() => {
                 setShowDiceRoller(true);
@@ -1854,8 +2054,8 @@ const CosmicSyndicate = () => {
                 </span>
               </div>
             </button>
-{/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}     
-         
+            {/* --- ADD THIS INSIDE THE {mobileMenuOpen && ( ... )} BLOCK ---  for dice roll*/}
+
             <button
               onClick={() => {
                 setShowOperations(true);

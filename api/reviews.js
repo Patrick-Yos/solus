@@ -12,15 +12,18 @@ module.exports = async (req, res) => {
   }
 
   try {
-    if (req.method === 'GET') {
-      const { rows } = await sql`SELECT * FROM reviews ORDER BY id`;
+// In reviews.js, replace the GET handler section:
+
+if (req.method === 'GET') {
+  const { rows } = await sql`SELECT * FROM reviews ORDER BY id`;
+  
   // Calculate average rating
   const averageRating = rows.length > 0 
     ? rows.reduce((sum, review) => sum + parseFloat(review.rating), 0) / rows.length 
     : 0;
 
   return res.json({ 
-    reviews: rows, s
+    reviews: rows, 
     averageRating: parseFloat(averageRating.toFixed(1)) 
   });
 }
@@ -56,4 +59,5 @@ module.exports = async (req, res) => {
     });
   }
 };
+
 

@@ -2302,7 +2302,7 @@ const submitReview = async (e) => {
               COSMIC SYNDICATE
             </span>
           </div>
-          <div className="hidden lg:flex gap-3">
+            <div className="hidden lg:flex lg:flex-wrap gap-3">
             <MenuItem icon={Users} text="Our Team" section="team" />
             <MenuItem icon={Target} text="Mission & Vision" section="mission" />
             <MenuItem icon={Trophy} text="Success Stories" section="stories" />
@@ -3575,5 +3575,6 @@ const submitReview = async (e) => {
     </div>
   );
 };
+
 
 export default CosmicSyndicate;

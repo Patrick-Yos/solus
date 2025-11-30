@@ -38,23 +38,15 @@ import {
 } from 'lucide-react';
 
 // --- Loading reviews--
-// Load reviews with the average:
-
+// Load reviews with the average::
 const loadReviews = async () => {
   try {
     const response = await fetch('/api/reviews');
     if (!response.ok) throw new Error('Failed');
-    const data = await response.json();
-    return { 
-      reviews: data.reviews || [], 
-      averageRating: data.averageRating || 0 
-    };
+    return await response.json(); // Just return the array
   } catch (error) {
     console.error('Error loading reviews:', error);
-    return { 
-      reviews: [{ id: 1, name: 'Gloria', rating: 4, comment: 'I guess they are okay', date: 'Cosmic Year 2024.7' }], 
-      averageRating: 4.0 
-    };
+    return [{ id: 1, name: 'Gloria', rating: 4, comment: 'I guess they are okay', date: 'Cosmic Year 2024.7' }];
   }
 };
 // -- save saving reviews
@@ -723,14 +715,9 @@ const CosmicSyndicate = () => {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
 const [reviews, setReviews] = useState([]);
-const [averageRating, setAverageRating] = useState(0); // Add this line
-
-useEffect(() => {
-  loadReviews().then(({ reviews, averageRating }) => {
-    setReviews(reviews);
-    setAverageRating(parseFloat(averageRating));
-  });
-}, []);
+  useEffect(() => {
+    loadReviews().then(setReviews);
+    }, []);
   
   const [newReview, setNewReview] = useState({
     name: '',
@@ -1224,19 +1211,6 @@ useEffect(() => {
       0
     );
   };
- // For average Reviews  ()
-const renderStarRating = (rating) => {
-  return [...Array(5)].map((_, i) => (
-    <Star
-      key={i}
-      className={`w-5 h-5 ${
-        i < Math.round(rating)
-          ? 'text-yellow-400 fill-yellow-400'
-          : 'text-gray-600'
-      }`}
-    />
-  ));
-};
 const submitReview = async (e) => {
   e.preventDefault();
   if (!newReview.name || !newReview.comment) return;
@@ -3118,21 +3092,7 @@ const submitReview = async (e) => {
             <p className="text-xl text-purple-200 italic">
               What the universe says about us
             </p>
-       {/* Average section  */}
-  {reviews.length > 0 && (
-    <div className="flex items-center justify-center gap-4 mt-6 p-4 bg-gradient-to-br from-purple-900/60 to-pink-900/60 rounded-xl border-2 border-purple-400/50 backdrop-blur-sm">
-      <span className="text-3xl font-bold text-white">
-        {averageRating.toFixed(1)}
-      </span>
-      <div className="flex gap-1">
-        {renderStarRating(averageRating)}
       </div>
-      <span className="text-purple-200">
-        ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
-      </span>
-    </div>
-  )}
-    </div>
     
           <div className="space-y-6">
             {reviews.map((review) => (

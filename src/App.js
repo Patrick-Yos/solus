@@ -14,7 +14,6 @@ const SelectionScreenStyles = () => (
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Share Tech Mono', monospace;
       position: relative;
       overflow: hidden;
     }
@@ -39,17 +38,19 @@ const SelectionScreenStyles = () => (
       z-index: 20;
     }
     
+    /* === THEMATIC TITLE === */
     .selection-title {
       font-family: 'Cinzel', serif;
       font-size: 3rem;
       font-weight: 900;
       text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 2rem;
       background: linear-gradient(to bottom, #e5c079, #8a6e3e);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       letter-spacing: 0.1em;
+      text-shadow: 0 0 40px rgba(197, 160, 89, 0.5);
     }
     
     .selection-subtitle {
@@ -57,7 +58,7 @@ const SelectionScreenStyles = () => (
       color: #ff3333;
       font-size: 0.75rem;
       letter-spacing: 0.2em;
-      margin-bottom: 3rem;
+      margin-bottom: 1rem;
     }
     
     .interface-grid {
@@ -67,7 +68,66 @@ const SelectionScreenStyles = () => (
       margin-top: 2rem;
     }
     
-    .interface-card {
+    /* === COSMIC SYNDICATE THEME === */
+    .cosmic-card {
+      background: #111;
+      border: 2px solid #06b6d4; /* Cyan border */
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    
+    .cosmic-card:hover {
+      border-color: #00e5ff; /* Bright cyan on hover */
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 229, 255, 0.3);
+    }
+    
+    .cosmic-card:active {
+      transform: translateY(-2px);
+    }
+    
+    .cosmic-clearance {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.65rem;
+      color: #00e5ff; /* Cyan text */
+      padding: 0.25rem 0.5rem;
+      letter-spacing: 0.1em;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    
+    .cosmic-icon {
+      width: 5rem;
+      height: 5rem;
+      margin: 0 auto 1rem;
+      color: #00e5ff; /* Cyan icon */
+    }
+    
+    .cosmic-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #00e5ff; /* Cyan title */
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .cosmic-desc {
+      font-size: 0.8rem;
+      color: #a0a0a0;
+      line-height: 1.4;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    
+    /* === DARK HERESY THEME === */
+    .heresy-card {
       background: #111;
       border: 2px solid #333;
       padding: 2rem;
@@ -76,48 +136,49 @@ const SelectionScreenStyles = () => (
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      font-family: 'Cinzel', serif;
     }
     
-    .interface-card:hover {
-      border-color: #c5a059;
+    .heresy-card:hover {
+      border-color: #c5a059; /* Gold trim */
       transform: translateY(-5px);
       box-shadow: 0 10px 30px rgba(197,160,89,0.2);
     }
     
-    .interface-card:active {
+    .heresy-card:active {
       transform: translateY(-2px);
     }
     
-    .interface-icon {
-      width: 5rem;
-      height: 5rem;
-      margin: 0 auto 1rem;
-      color: #c5a059;
-    }
-    
-    .interface-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #c5a059;
-      margin-bottom: 0.5rem;
-    }
-    
-    .interface-desc {
-      font-size: 0.8rem;
-      color: #a0a0a0;
-      line-height: 1.4;
-    }
-    
-    .clearance-badge {
+    .heresy-clearance {
       position: absolute;
       top: 1rem;
       right: 1rem;
+      font-family: 'Cinzel', serif;
       font-size: 0.6rem;
-      color: #ff3333;
-      border: 1px solid #ff3333;
+      color: #c5a059; /* Gold title */
       padding: 0.25rem 0.5rem;
       letter-spacing: 0.1em;
+    }
+
+    .heresy-icon {
+      width: 5rem;
+      height: 5rem;
+      margin: 0 auto 1rem;
+      color: #c5a059; /* Gold icon */
+    }
+    
+    .heresy-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #c5a059; /* Gold title */
+      margin-bottom: 0.5rem;
+    }
+    
+    .heresy-desc {
+      font-size: 0.8rem;
+      color: #a0a0a0;
+      line-height: 1.4;
     }
     
     .imperial-seal {
@@ -163,49 +224,52 @@ function App() {
       <div className="selection-root">
         <SelectionScreenStyles />
         <div className="selection-scanlines"></div>
-        
+
         <div className="selection-container flicker">
           {/* Decorative Elements */}
           <div className="imperial-seal">
             <Skull className="w-8 h-8 text-[#5a2e2e]" />
           </div>
-          
-          <h1 className="selection-title">INQUISITORIAL CONTROL</h1>
+
+          <h1 className="selection-title">CHOOSE YOUR ADVENTURE</h1>
           <p className="selection-subtitle">SELECT OPERATIONAL INTERFACE</p>
-          
+
           <div className="interface-grid">
             {/* COSMIC SYNDICATE OPTION */}
-            <div 
-              className="interface-card btn-interactive"
+            <div
+              className="cosmic-card btn-interactive"
               onClick={() => setCurrentPage('cosmic-syndicate')}
             >
-              <div className="clearance-badge">CLEARANCE: AMBER</div>
-              <Rocket className="interface-icon" />
-              <h2 className="interface-title">COSMIC SYNDICATE</h2>
-              <p className="interface-desc">
-                Neural interface for data brokerage, cosmic payload delivery, and interstellar market manipulation. 
-                For the Inquisitor who knows that information is the greatest weapon.
-              </p>
+              <div className="cosmic-clearance">Clearance: Solus</div>
+              <Rocket className="cosmic-icon" />
+              <h2 className="cosmic-title">Solus</h2>
+              <p className="cosmic-desc">Join the Wonderful World of Solus!</p>
             </div>
-            
+
             {/* DARK HERESY OPTION */}
-            <div 
-              className="interface-card btn-interactive"
+            <div
+              className="heresy-card btn-interactive"
               onClick={() => setCurrentPage('dark-heresy')}
             >
-              <div className="clearance-badge">CLEARANCE: MAGENTA</div>
-              <ShieldAlert className="interface-icon" />
-              <h2 className="interface-title">DARK HERESY</h2>
-              <p className="interface-desc">
-                Tactical auspex, retinue command, and Exterminatus deployment. 
-                For the Inquisitor whose tolerance for heresy is as low as their mercy.
+              <div className="heresy-clearance">CLEARANCE: MAGENTA</div>
+              <ShieldAlert className="heresy-icon" />
+              <h2 className="heresy-title">DARK HERESY</h2>
+              <p className="heresy-desc">
+                Tactical auspex, retinue command, and Exterminatus deployment.
+                For the Inquisitor whose tolerance for heresy is as low as their
+                mercy.
               </p>
             </div>
           </div>
-          
-          <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.7rem', color: '#5a2e2e' }}>
-            <p>+++ The Emperor Protects. The Inquisitor Expects. +++</p>
-          </div>
+
+          <div
+            style={{
+              marginTop: '2rem',
+              textAlign: 'center',
+              fontSize: '0.7rem',
+              color: '#5a2e2e',
+            }}
+          ></div>
         </div>
       </div>
     );
@@ -218,7 +282,9 @@ function App() {
 
   // DARK HERESY PAGE
   if (currentPage === 'dark-heresy') {
-    return <InquisitionDashboard onNavigate={() => setCurrentPage('selection')} />;
+    return (
+      <InquisitionDashboard onNavigate={() => setCurrentPage('selection')} />
+    );
   }
 
   // Fallback (should never reach)

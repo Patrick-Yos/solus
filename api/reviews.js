@@ -14,7 +14,16 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const { rows } = await sql`SELECT * FROM reviews ORDER BY id`;
-      return res.json(rows);
+  // Calculate average rating
+  const averageRating = rows.length > 0 
+    ? rows.reduce((sum, review) => sum + parseFloat(review.rating), 0) / rows.length 
+    : 0;
+
+  return res.json({ 
+    reviews: rows, s
+    averageRating: parseFloat(averageRating.toFixed(1)) 
+  });
+}
     }
     
     if (req.method === 'POST') {
@@ -47,3 +56,4 @@ module.exports = async (req, res) => {
     });
   }
 };
+

@@ -10,7 +10,6 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
   try {
 // In reviews.js, replace the GET handler section:
 
@@ -59,5 +58,6 @@ if (req.method === 'GET') {
     });
   }
 };
+
 
 

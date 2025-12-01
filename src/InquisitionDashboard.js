@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DiceBox from '@3d-dice/dice-box';
+import { useGameEngine } from '../hooks/useGameEngine';
+import { PlayButton } from '../components/PlayButton';
+import { SkillsMenu } from '../components/SkillsMenu';
+import { SkillRollModal } from '../components/SkillRollModal';
+import { LoginOverlay } from '../components/LoginOverlay';
 import {
   // Core Icons
   Skull,
@@ -48,7 +53,7 @@ import {
   Trophy as TrophyIcon,
 } from 'lucide-react';
 
-// --- ANIMATION SYSTEM ---
+// --- ANIMATION SYSTEM (UNCHANGED) ---
 const Anima = {
   entry: (targets, delay = 0) => {
     if (!window.anime) return;
@@ -62,7 +67,6 @@ const Anima = {
       easing: 'easeOutCubic',
     });
   },
-
   combat: (targets, intensity = 1) => {
     if (!window.anime) return;
     return window.anime({
@@ -77,7 +81,6 @@ const Anima = {
       easing: 'easeInOutQuad',
     });
   },
-
   exterminatus: (onComplete) => {
     if (!window.anime) return;
     return window.anime.timeline({
@@ -85,19 +88,15 @@ const Anima = {
       complete: onComplete,
     });
   },
-
   corruption: (targets, intensity) => {
     if (!window.anime) return;
     return window.anime({
       targets,
-      filter: `hue-rotate(${intensity * 3.6}deg) brightness(${
-        1 + intensity / 200
-      })`,
+      filter: `hue-rotate(${intensity * 3.6}deg) brightness(${1 + intensity / 200})`,
       duration: 2000,
       easing: 'easeInOutQuad',
     });
   },
-
   weaponFire: (targets) => {
     if (!window.anime) return;
     return window.anime({
@@ -111,7 +110,6 @@ const Anima = {
       easing: 'easeOutQuad',
     });
   },
-
   pulse: (targets) => {
     if (!window.anime) return;
     return window.anime({
@@ -122,7 +120,6 @@ const Anima = {
       easing: 'easeInOutQuad',
     });
   },
-
   shake: (targets, intensity = 5) => {
     if (!window.anime) return;
     return window.anime({
@@ -136,7 +133,6 @@ const Anima = {
       loop: 3,
     });
   },
-
   notify: (message, type = 'info') => {
     if (!window.anime) return;
     const toast = document.createElement('div');
@@ -174,7 +170,7 @@ const Anima = {
   },
 };
 
-// --- GLOBAL STYLES ---
+// --- GLOBAL STYLES (UNCHANGED) ---
 const ImperialGlobalStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Share+Tech+Mono&family=Inter:wght@400;600;700&display=swap');
@@ -227,16 +223,6 @@ const ImperialGlobalStyles = () => (
     ::-webkit-scrollbar-thumb { background: var(--gold-trim); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--gold-bright); }
 
-    /* PLANETARY ROTATION */
-    @keyframes rotate-planet { 
-      from { background-position: 0 0; } 
-      to { background-position: 200% 0; } 
-    }
-    .planet-texture { 
-      background-image: url('https://www.transparenttextures.com/patterns/black-scales.png'); 
-      animation: rotate-planet 20s linear infinite;
-    }
-
     /* BLOOD SPLATTER */
     .blood-splatter {
       background-image: url('https://www.transparenttextures.com/patterns/red-blood.png');
@@ -279,7 +265,7 @@ const ImperialGlobalStyles = () => (
   `}</style>
 );
 
-// --- TEXT SCRAMBLE COMPONENT ---
+// --- TEXT SCRAMBLE COMPONENT (UNCHANGED) ---
 const DecryptText = ({ text, className, chaosLevel = 0 }) => {
   const [display, setDisplay] = useState(text);
   const chars = '!@#$%^&*()_+-=[]{}|;:,.<>?/0123456789ABCDEF';
@@ -317,7 +303,7 @@ const DecryptText = ({ text, className, chaosLevel = 0 }) => {
   );
 };
 
-// --- TACTICAL AUSPEX COMPONENT ---
+// --- TACTICAL AUSPEX COMPONENT (UNCHANGED) ---
 const TacticalAuspex = ({ onClose, chaosLevel }) => {
   const [result, setResult] = useState(null);
   const [rolling, setRolling] = useState(false);
@@ -345,6 +331,7 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
           theme: 'default',
           themeColor: '#800000',
           scale: 25,
+          offscreen: true,
         });
         diceBoxRef.current = box;
         await box.init();
@@ -515,7 +502,7 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
   );
 };
 
-// --- ENHANCED WEAPON SYSTEM ---
+// --- ENHANCED WEAPON SYSTEM (UNCHANGED) ---
 const WeaponSelector = ({ selectedWeapon, onSelectWeapon, chaosLevel }) => {
   const [weapons, setWeapons] = useState([
     {
@@ -708,7 +695,7 @@ const WeaponSelector = ({ selectedWeapon, onSelectWeapon, chaosLevel }) => {
   );
 };
 
-// --- ENHANCED ENEMY SYSTEM ---
+// --- ENHANCED ENEMY SYSTEM (UNCHANGED) ---
 const EnemyTacticalDisplay = ({ enemies, onEngage, chaosLevel, onPurge }) => {
   const [scannedEnemy, setScannedEnemy] = useState(null);
 
@@ -886,7 +873,7 @@ const EnemyTacticalDisplay = ({ enemies, onEngage, chaosLevel, onPurge }) => {
   );
 };
 
-// --- MACHINE SPIRIT CONSOLE ---
+// --- MACHINE SPIRIT CONSOLE (UNCHANGED) ---
 const MachineSpiritConsole = ({ satisfaction, setSatisfaction }) => {
   const [praying, setPraying] = useState(false);
   const [favor, setFavor] = useState(0);
@@ -961,7 +948,7 @@ const MachineSpiritConsole = ({ satisfaction, setSatisfaction }) => {
   );
 };
 
-// --- CHAOS METER ---
+// --- CHAOS METER (UNCHANGED) ---
 const ChaosMeter = ({ level, setLevel }) => {
   const [streak, setStreak] = useState(0);
 
@@ -1019,7 +1006,7 @@ const ChaosMeter = ({ level, setLevel }) => {
   );
 };
 
-// --- ENHANCED PLANET VISUALIZER ---
+// --- ENHANCED PLANET VISUALIZER (UNCHANGED) ---
 const PlanetVisualizer = ({ damage = 0, onOrbitalStrike }) => {
   const [orbitalStrikes, setOrbitalStrikes] = useState([]);
   const [scanning, setScanning] = useState(false);
@@ -1127,8 +1114,18 @@ const PlanetVisualizer = ({ damage = 0, onOrbitalStrike }) => {
   );
 };
 
-// --- MAIN COMPONENT ---
+// --- MAIN COMPONENT (INTEGRATED) ---
 const InquisitionDashboard = ({ onNavigate }) => {
+  // CORE STATE
+  const { 
+    user, 
+    selectedCharacter, 
+    rollSkill, 
+    isRolling,
+    characters 
+  } = useGameEngine();
+  
+  // UI STATE
   const [mode, setMode] = useState('STANDARD');
   const [tab, setTab] = useState('SQUAD');
   const [showDice, setShowDice] = useState(false);
@@ -1137,7 +1134,6 @@ const InquisitionDashboard = ({ onNavigate }) => {
   const [combatLogs, setCombatLogs] = useState([]);
   const [animeReady, setAnimeReady] = useState(false);
   const [audioContext, setAudioContext] = useState(null);
-
   const [chaosLevel, setChaosLevel] = useState(15);
   const [selectedWeapon, setSelectedWeapon] = useState(null);
   const [enemies, setEnemies] = useState([]);
@@ -1146,17 +1142,16 @@ const InquisitionDashboard = ({ onNavigate }) => {
   const [audioMuted, setAudioMuted] = useState(false);
   const [exterminatusCountdown, setExterminatusCountdown] = useState(10);
   const [favor, setFavor] = useState(5);
-
+  
   const containerRef = useRef(null);
   const exterminatusInterval = useRef(null);
 
-  // Audio System
+  // AUDIO SYSTEM
   useEffect(() => {
-    if (!audioMuted) {
+    if (!audioMuted && !audioContext) {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       setAudioContext(ctx);
       
-      // Create ambient hum
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
       oscillator.type = 'sawtooth';
@@ -1171,12 +1166,12 @@ const InquisitionDashboard = ({ onNavigate }) => {
         ctx.close();
       };
     }
-  }, [audioMuted]);
+  }, [audioMuted, audioContext]);
 
+  // INITIALIZATION
   useEffect(() => {
     const script = document.createElement('script');
-    script.src =
-      'https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js';
     script.async = true;
     script.onload = () => {
       setAnimeReady(true);
@@ -1211,6 +1206,7 @@ const InquisitionDashboard = ({ onNavigate }) => {
     };
     document.body.appendChild(script);
 
+    // KEYBOARD SHORTCUTS
     const handleKeyPress = (e) => {
       if (e.key === '1') setTab('SQUAD');
       if (e.key === '2') setTab('MISSION');
@@ -1220,13 +1216,14 @@ const InquisitionDashboard = ({ onNavigate }) => {
         e.preventDefault();
         if (!exterminatus) handleExterminatus();
       }
-      if (e.key === 'r' || e.key === 'R') {
+      if (e.key.toLowerCase() === 'r') {
         setSelectedWeapon(null);
         Anima.notify('WEAPONS RESET', 'info');
       }
     };
     window.addEventListener('keydown', handleKeyPress);
 
+    // CHAOS & EVENT TIMERS
     const chaosTimer = setInterval(() => {
       setChaosLevel((prev) => Math.min(100, prev + Math.random() * 2));
     }, 5000);
@@ -1247,7 +1244,6 @@ const InquisitionDashboard = ({ onNavigate }) => {
       const event = events[Math.floor(Math.random() * events.length)];
       addCombatLog(event.msg);
       setChaosLevel((prev) => Math.max(0, Math.min(100, prev + event.level)));
-      // REMOVED: Anima.notify(event.msg, event.type);
     }, 15000);
 
     return () => {
@@ -1255,7 +1251,7 @@ const InquisitionDashboard = ({ onNavigate }) => {
       clearInterval(eventTimer);
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, []);
+  }, [exterminatus]);
 
   useEffect(() => {
     if (animeReady && window.anime) {
@@ -1263,8 +1259,18 @@ const InquisitionDashboard = ({ onNavigate }) => {
     }
   }, [tab, animeReady]);
 
+  // CHARACTER LOAD EFFECT
+  useEffect(() => {
+    if (selectedCharacter) {
+      addLog(`OPERATIVE LOADED: ${selectedCharacter.name}`);
+      Anima.notify(`CHARACTER: ${selectedCharacter.name}`, 'success');
+      Anima.entry('.character-panel', 200);
+    }
+  }, [selectedCharacter]);
+
+  // EXTERMINATUS HANDLER
   const handleExterminatus = () => {
-    if (exterminatus || !animeReady || favor < 3) {
+    if (exterminatus || favor < 3) {
       if (favor < 3)
         Anima.notify('REQUIRES 3 FAVOR TO INVOKE EXTERMINATUS', 'error');
       return;
@@ -1337,6 +1343,7 @@ const InquisitionDashboard = ({ onNavigate }) => {
       );
   };
 
+  // LOGGING
   const addLog = (msg) => {
     const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
     const imperialDate = `${Math.floor(Math.random() * 9) + 1}.${Math.floor(
@@ -1360,11 +1367,12 @@ const InquisitionDashboard = ({ onNavigate }) => {
 
   const showShortcuts = () => {
     Anima.notify(
-      'SHORTCUTS: [1,2,3,4]=Tabs [SPACE]=Exterminatus [R]=Reset',
+      'SHORTCUTS: [1,2,3,4]=Tabs [SPACE]=Exterminatus [R]=Reset Weapons',
       'info'
     );
   };
 
+  // RETINUE DATA
   const retinue = [
     {
       name: 'MAGOS KQ-234',
@@ -1441,6 +1449,7 @@ const InquisitionDashboard = ({ onNavigate }) => {
       } ${chaosLevel > 70 ? 'warp-corruption' : ''}`}
     >
       <ImperialGlobalStyles />
+      <LoginOverlay />
 
       <div className="fixed inset-0 z-0 bg-[radial-gradient(circle_at_center,_#1a1a1a_0%,_#000000_100%)]"></div>
       {mode === 'AUSPEX' && (
@@ -1506,6 +1515,9 @@ const InquisitionDashboard = ({ onNavigate }) => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* PLAY BUTTON INTEGRATION */}
+          <PlayButton />
+          
           <button
             onClick={showShortcuts}
             className="p-2 bg-[#111] border border-[#333] hover:border-[#c5a059] transition-all btn-interactive"
@@ -1552,6 +1564,39 @@ const InquisitionDashboard = ({ onNavigate }) => {
         className="main-interface relative z-10 max-w-7xl mx-auto p-4 md:p-8 crt-flicker"
         ref={containerRef}
       >
+        {/* CHARACTER PANEL */}
+        {selectedCharacter && (
+          <div className="character-panel mb-6 bg-[#111] border-2 border-[#c5a059] p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-gothic font-black text-2xl text-[#c5a059]">
+                  {selectedCharacter.name}
+                </h2>
+                <p className="font-tech text-xs text-zinc-400">
+                  {selectedCharacter.archetype} • {selectedCharacter.career} • XP: {selectedCharacter.xp}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  // Reset character selection
+                  window.location.reload();
+                }}
+                className="px-4 py-2 bg-red-900 border border-red-500 text-red-200 font-tech text-xs hover:bg-red-700 transition-all"
+              >
+                <X className="w-4 h-4 inline mr-1" /> CHANGE OPERATIVE
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* SKILLS MENU INTEGRATION */}
+        {selectedCharacter && (
+          <div className="mb-8">
+            <SkillsMenu />
+          </div>
+        )}
+
+        {/* MODE BUTTONS */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
           <button
             onClick={() => {
@@ -1660,6 +1705,7 @@ const InquisitionDashboard = ({ onNavigate }) => {
           </button>
         </div>
 
+        {/* MAIN CONTENT GRID */}
         <div className="grid lg:grid-cols-4 gap-6">
           {/* LEFT COLUMN: CONTENT */}
           <div className="lg:col-span-3 min-h-[600px]">
@@ -1946,33 +1992,50 @@ const InquisitionDashboard = ({ onNavigate }) => {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="bg-[#111] border-2 border-red-900 p-4">
-                    <h3 className="font-gothic font-bold text-red-500 mb-3">
-                      <AlertOctagon className="w-4 h-4 inline mr-2" /> PRIMARY
-                      TARGET
-                    </h3>
-                    <div className="font-tech text-[12px] text-red-400 space-y-1">
-                      <div className="font-gothic text-sm">
-                        DEMON PRINCE KOR'LAETH
-                      </div>
-                      <div className="text-[10px] text-zinc-400">
-                        Location: Hive Primus Cathedral
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <button className="flex-1 px-2 py-1 bg-red-900 border border-red-500 text-red-200 text-[9px] hover:bg-red-700 transition-all btn-interactive flex items-center justify-center gap-1">
-                          <Sword className="w-3 h-3" /> ENGAGE
-                        </button>
-                        <button className="px-2 py-1 bg-[#111] border border-[#333] text-zinc-400 text-[9px] hover:border-[#c5a059] transition-all btn-interactive">
-                          <Search className="w-3 h-3" />
-                        </button>
-                      </div>
+                  <div className="bg-[#1a0505] border-2 border-red-900 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[0_0_30px_rgba(255,0,0,0.1)] group">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
+                    <div className="purity-seal absolute top-2 left-2 text-[8px]">
+                      PURITY
                     </div>
+                    <div className="purity-seal absolute bottom-2 right-2 text-[8px]">
+                      FAITH
+                    </div>
+                    <AlertTriangle className="w-10 h-10 text-red-600 mb-2 group-hover:animate-bounce btn-interactive" />
+                    <h3 className="text-red-500 font-gothic font-bold text-lg mb-1 tracking-widest uppercase">
+                      Ultimate Sanction
+                    </h3>
+                    <p className="font-tech text-[10px] text-zinc-400 mb-3">
+                      Authorization: Lord Inquisitor Only
+                    </p>
+                    <button
+                      onClick={handleExterminatus}
+                      disabled={exterminatus || favor < 3}
+                      className="w-full py-3 bg-red-700 hover:bg-red-600 disabled:bg-gray-800 text-black font-black font-gothic tracking-[0.2em] border-2 border-red-400 shadow-[0_0_20px_rgba(255,0,0,0.6)] active:scale-95 transition-transform mt-2 relative overflow-hidden group btn-interactive"
+                    >
+                      <span className="relative z-10">
+                        {exterminatus ? 'ARMED...' : 'EXTERMINATUS'}
+                      </span>
+                      <div className="absolute inset-0 bg-red-500/50 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+                      <div className="absolute inset-0 bg-red-500/30 translate-x-[100%] group-hover:translate-x-[-100%] transition-transform duration-500"></div>
+                    </button>
+                    {!exterminatus && favor < 3 && (
+                      <div className="mt-1 font-tech text-[9px] text-red-400 animate-pulse">
+                        <Sparkles className="w-3 h-3 inline mr-1" /> COST: 3 FAVOR
+                      </div>
+                    )}
+                    {exterminatus && (
+                      <div className="mt-2 font-tech text-[10px] text-red-400 animate-pulse">
+                        <Gauge className="w-3 h-3 inline mr-1" /> ARMAGEDDON PATTERN
+                        ACTIVATED
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
           </div>
 
+          {/* RIGHT COLUMN: SIDEBAR */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-[#111] border-2 border-[#5a2e2e] p-4 font-tech text-xs space-y-4">
               <div className="flex justify-between items-center">
@@ -2055,45 +2118,6 @@ const InquisitionDashboard = ({ onNavigate }) => {
               satisfaction={satisfaction}
               setSatisfaction={setSatisfaction}
             />
-
-            <div className="bg-[#1a0505] border-2 border-red-900 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[0_0_30px_rgba(255,0,0,0.1)] group">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
-              <div className="purity-seal absolute top-2 left-2 text-[8px]">
-                PURITY
-              </div>
-              <div className="purity-seal absolute bottom-2 right-2 text-[8px]">
-                FAITH
-              </div>
-              <AlertTriangle className="w-10 h-10 text-red-600 mb-2 group-hover:animate-bounce btn-interactive" />
-              <h3 className="text-red-500 font-gothic font-bold text-lg mb-1 tracking-widest uppercase">
-                Ultimate Sanction
-              </h3>
-              <p className="font-tech text-[10px] text-zinc-400 mb-3">
-                Authorization: Lord Inquisitor Only
-              </p>
-              <button
-                onClick={handleExterminatus}
-                disabled={exterminatus || favor < 3}
-                className="w-full py-3 bg-red-700 hover:bg-red-600 disabled:bg-gray-800 text-black font-black font-gothic tracking-[0.2em] border-2 border-red-400 shadow-[0_0_20px_rgba(255,0,0,0.6)] active:scale-95 transition-transform mt-2 relative overflow-hidden group btn-interactive"
-              >
-                <span className="relative z-10">
-                  {exterminatus ? 'ARMED...' : 'EXTERMINATUS'}
-                </span>
-                <div className="absolute inset-0 bg-red-500/50 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
-                <div className="absolute inset-0 bg-red-500/30 translate-x-[100%] group-hover:translate-x-[-100%] transition-transform duration-500"></div>
-              </button>
-              {!exterminatus && favor < 3 && (
-                <div className="mt-1 font-tech text-[9px] text-red-400 animate-pulse">
-                  <Sparkles className="w-3 h-3 inline mr-1" /> COST: 3 FAVOR
-                </div>
-              )}
-              {exterminatus && (
-                <div className="mt-2 font-tech text-[10px] text-red-400 animate-pulse">
-                  <Gauge className="w-3 h-3 inline mr-1" /> ARMAGEDDON PATTERN
-                  ACTIVATED
-                </div>
-              )}
-            </div>
 
             {chaosLevel > 75 && (
               <div className="bg-purple-900/30 border-2 border-purple-700 p-4 animate-[pulse_1s_ease-in-out_infinite]">

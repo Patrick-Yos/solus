@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DiceBox from '@3d-dice/dice-box';
-// Ensure you have a style.css file or remove this line if styling is handled via Tailwind
+// Ensure you have a style.css file or remove this line if styling is handled via Tailwind//
 import './style.css'; 
 import {
   Sparkles,
@@ -3578,3 +3578,4 @@ const submitReview = async (e) => {
 
 
 export default CosmicSyndicate;
+

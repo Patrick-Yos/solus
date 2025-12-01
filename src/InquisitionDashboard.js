@@ -4,56 +4,59 @@ import { useGameEngine } from './useGameEngine';
 import { PlayButton } from './PlayButton';
 import { SkillsMenu } from './SkillsMenu';
 import { SkillRollModal } from './SkillRollModal';
-import { Anima } from './animation';
+import { Anima } from './animation';import React, { useState, useEffect, useRef } from 'react';
+import DiceBox from '@3d-dice/dice-box';
+import { useGameEngine } from './useGameEngine';
+import { useAuth } from './useAuth'; // Added useAuth
+import { PlayButton } from './PlayButton';
+import { SkillsMenu } from './SkillsMenu';
+import { Anima } from './animation'; // Use Imported Anima
 import {
-  // Core Icons
-  Skull,
-  Crosshair,
-  Flame,
-  Orbit,
-  Book,
-  Cpu,
-  Scroll,
-  Terminal,
-  ChevronRight,
-  ShieldAlert,
-  Activity,
-  X,
-  Dices,
-  AlertTriangle,
-  Fingerprint,
-  Radio,
-  Eye,
-  Target,
-  Zap,
-  Lock,
-  BarChart3,
-  Globe,
-  Wifi,
-  Sword,
-  Radiation,
-  Biohazard,
-  Sparkles,
-  Bug,
-  ShieldCheck,
-  Heart,
-  Brain,
-  Volume2,
-  VolumeX,
-  ChevronDown,
-  RotateCw,
-  Gauge,
-  AlertOctagon,
-  Check,
-  AlertCircle,
-  HelpCircle,
-  Trophy,
-  Search,
-  Swords,
-  Trophy as TrophyIcon,
+  Skull, Crosshair, Flame, Orbit, Book, Cpu, Scroll, Terminal, ChevronRight,
+  ShieldAlert, Activity, X, Dices, AlertTriangle, Fingerprint, Eye, Target,
+  Zap, Lock, Sword, Radiation, // Changed Radioactive to Radiation
+  Biohazard, Sparkles, Bug, ShieldCheck, Heart, Brain, Volume2, VolumeX,
+  HelpCircle, Trophy as TrophyIcon, Search, Swords, AlertCircle, RotateCw, Gauge
 } from 'lucide-react';
-
 // --- ANIMATION SYSTEM (UNCHANGED) ---
+
+// --- LOGIN COMPONENT (WAS MISSING) ---
+const LoginOverlay = () => {
+  const { login } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const success = login(username, password);
+    if(success) {
+        document.getElementById('login-overlay').classList.add('hidden');
+        Anima.notify('IDENTITY VERIFIED', 'success');
+    }
+  };
+
+  return (
+    <div id="login-overlay" className="fixed inset-0 z-[1000] bg-black flex items-center justify-center hidden">
+      <div className="w-full max-w-md bg-[#111] border-4 border-[#5a2e2e] p-8 shadow-[0_0_50px_rgba(90,46,46,0.5)]">
+         <h2 className="text-3xl font-gothic text-red-600 mb-6 text-center">IDENTITY REQUIRED</h2>
+         <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+                <label className="text-[#c5a059] font-tech text-xs">IDENT CODE</label>
+                <input type="text" value={username} onChange={e=>setUsername(e.target.value)} className="w-full bg-black border border-[#c5a059] p-2 text-[#c5a059]" />
+            </div>
+            <div>
+                <label className="text-[#c5a059] font-tech text-xs">CYPHER</label>
+                <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-black border border-[#c5a059] p-2 text-[#c5a059]" />
+            </div>
+            <button type="submit" className="w-full bg-red-900 text-white font-gothic py-3 border border-red-500 hover:bg-red-700">SUBMIT CREDENTIALS</button>
+         </form>
+         <button onClick={() => document.getElementById('login-overlay').classList.add('hidden')} className="mt-4 text-xs text-zinc-500 w-full text-center hover:text-white">CANCEL</button>
+      </div>
+    </div>
+  );
+};
+
+
 const Anima = {
   entry: (targets, delay = 0) => {
     if (!window.anime) return;

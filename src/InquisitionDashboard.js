@@ -1,17 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import DiceBox from '@3d-dice/dice-box'; // Fixed: Default import
 import { useGameEngine } from './useGameEngine';
-import { useAuth } from './useAuth';
+import { useAuth, AuthProvider } from './useAuth'; // Fixed: Added Provider import
 import { PlayButton } from './PlayButton';
 import { SkillsMenu } from './SkillsMenu';
-import { Anima } from './animation'; // Using the imported Anima
+import { SkillRollModal } from './SkillRollModal';
+import { Anima } from './animation'; // Fixed: We use this, and removed the duplicate local definition below
 import {
   Skull, Crosshair, Flame, Orbit, Book, Cpu, Scroll, Terminal, ChevronRight,
   ShieldAlert, Activity, X, Dices, AlertTriangle, Fingerprint, Eye, Target,
-  Zap, Sword, Radiation,
-  Biohazard, Sparkles, Bug, ShieldCheck, Heart, Brain, Volume2, VolumeX,
-  HelpCircle, Trophy as TrophyIcon, Search, Swords, AlertCircle, RotateCw, Gauge
+  Zap, Lock, BarChart3, Globe, Wifi, Sword, Radiation, Biohazard, Sparkles,
+  Bug, ShieldCheck, Heart, Brain, Volume2, VolumeX, ChevronDown, RotateCw,
+  Gauge, AlertOctagon, Check, AlertCircle, HelpCircle, Trophy, Search,
+  Swords, Trophy as TrophyIcon
 } from 'lucide-react';
-import DiceBox from '@3d-dice/dice-box';
 
 // --- LOGIN COMPONENT ---
 const LoginOverlay = () => {
@@ -23,7 +25,8 @@ const LoginOverlay = () => {
     e.preventDefault();
     const success = login(username, password);
     if(success) {
-        document.getElementById('login-overlay').classList.add('hidden');
+        const overlay = document.getElementById('login-overlay');
+        if(overlay) overlay.classList.add('hidden');
         Anima.notify('IDENTITY VERIFIED', 'success');
     }
   };
@@ -43,7 +46,10 @@ const LoginOverlay = () => {
             </div>
             <button type="submit" className="w-full bg-red-900 text-white font-gothic py-3 border border-red-500 hover:bg-red-700">SUBMIT CREDENTIALS</button>
          </form>
-         <button onClick={() => document.getElementById('login-overlay').classList.add('hidden')} className="mt-4 text-xs text-zinc-500 w-full text-center hover:text-white">CANCEL</button>
+         <button onClick={() => {
+             const overlay = document.getElementById('login-overlay');
+             if(overlay) overlay.classList.add('hidden');
+         }} className="mt-4 text-xs text-zinc-500 w-full text-center hover:text-white">CANCEL</button>
       </div>
     </div>
   );
@@ -203,17 +209,18 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
 
     const initBox = async () => {
       try {
-        const box = new DiceBox('#auspex-canvas', {
-          id: '#dice-box',
-          assetPath: 'assets/',
-          origin: 'https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/',
-          theme: 'default',
-          themeColor: '#800000',
-          scale: 25,
-          offscreen: true,
-        });
-        diceBoxRef.current = box;
-        await box.init();
+        if(document.querySelector('#auspex-canvas')) {
+            const box = new DiceBox('#auspex-canvas', {
+            id: '#dice-box',
+            assetPath: '/assets/', // Ensure this exists
+            theme: 'default',
+            themeColor: '#800000',
+            scale: 25,
+            offscreen: true,
+            });
+            diceBoxRef.current = box;
+            await box.init();
+        }
       } catch (e) {
         console.error(e);
       }
@@ -1049,41 +1056,48 @@ const InquisitionDashboard = ({ onNavigate }) => {
 
   // INITIALIZATION
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js';
-    script.async = true;
-    script.onload = () => {
-      setAnimeReady(true);
-      const timeline = window.anime.timeline({
-        easing: 'cubicBezier(.5, .05, .1, .3)',
-      });
+    // Check if script already exists to avoid dupes
+    if(!document.querySelector('script[src*="anime.min.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js';
+        script.async = true;
+        script.onload = () => {
+        setAnimeReady(true);
+        if(window.anime) {
+            const timeline = window.anime.timeline({
+                easing: 'cubicBezier(.5, .05, .1, .3)',
+            });
 
-      timeline
-        .add({
-          targets: '.main-interface',
-          scaleY: [0.01, 1],
-          opacity: [0, 1],
-          duration: 800,
-        })
-        .add(
-          { targets: '.scanlines', opacity: [0, 1], duration: 1000 },
-          '-=400'
-        )
-        .add(
-          {
-            targets: '.boot-sequence',
-            opacity: [0, 1],
-            translateX: [-20, 0],
-            duration: 600,
-          },
-          '-=200'
-        )
-        .finished.then(() => {
-          addLog('NOOSPHERE SYNCHRONIZED...');
-          Anima.notify('INQUISITORIAL CLEARANCE VERIFIED', 'success');
-        });
-    };
-    document.body.appendChild(script);
+            timeline
+                .add({
+                targets: '.main-interface',
+                scaleY: [0.01, 1],
+                opacity: [0, 1],
+                duration: 800,
+                })
+                .add(
+                { targets: '.scanlines', opacity: [0, 1], duration: 1000 },
+                '-=400'
+                )
+                .add(
+                {
+                    targets: '.boot-sequence',
+                    opacity: [0, 1],
+                    translateX: [-20, 0],
+                    duration: 600,
+                },
+                '-=200'
+                )
+                .finished.then(() => {
+                addLog('NOOSPHERE SYNCHRONIZED...');
+                Anima.notify('INQUISITORIAL CLEARANCE VERIFIED', 'success');
+                });
+        }
+        };
+        document.body.appendChild(script);
+    } else {
+        setAnimeReady(true);
+    }
 
     // KEYBOARD SHORTCUTS
     const handleKeyPress = (e) => {
@@ -2024,4 +2038,13 @@ const InquisitionDashboard = ({ onNavigate }) => {
   );
 };
 
-export default InquisitionDashboard;
+// --- WRAPPER TO PREVENT WHITE SCREEN ---
+const DashboardWithProviders = (props) => {
+    return (
+        <AuthProvider>
+            <InquisitionDashboard {...props} />
+        </AuthProvider>
+    );
+};
+
+export default DashboardWithProviders;

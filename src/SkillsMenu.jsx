@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { useGameEngine } from '.  /useGameEngine';
+import { useGameEngine } from './useGameEngine';
 import { SkillRollModal } from './SkillRollModal';
 import { ChevronDown, ChevronRight, Plus, Minus } from 'lucide-react';
-import Anima from '.  /animation';
+import Anima from './animation';
 
 export const SkillsMenu = () => {
   const { skills, rollSkill, selectedCharacter } = useGameEngine();
@@ -170,3 +170,4 @@ export const SkillsMenu = () => {
   );
 
 };
+

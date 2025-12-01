@@ -4,7 +4,6 @@ import { useGameEngine } from './useGameEngine';
 import { PlayButton } from './PlayButton';
 import { SkillsMenu } from './SkillsMenu';
 import { SkillRollModal } from './SkillRollModal';
-import { LoginOverlay } from './LoginOverlay';
 import {
   // Core Icons
   Skull,

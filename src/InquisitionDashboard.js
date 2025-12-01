@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DiceBox from '@3d-dice/dice-box';
-import { useGameEngine } from '../hooks/useGameEngine';
+import { useGameEngine } from './useGameEngine';
 import { PlayButton } from '../components/PlayButton';
 import { SkillsMenu } from '../components/SkillsMenu';
 import { SkillRollModal } from '../components/SkillRollModal';

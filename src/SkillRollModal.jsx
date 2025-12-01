@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGameEngine } from './useGameEngine';
 import { DiceBox } from '@3d-dice/dice-box';
 import { X, Zap, AlertTriangle, Trophy } from 'lucide-react';
-import Anima from '../utils/animation';
+import Anima from './animation';
 
 export const SkillRollModal = ({ skill, onClose }) => {
   const { rollSkill, isRolling } = useGameEngine();
@@ -155,3 +155,4 @@ export const SkillRollModal = ({ skill, onClose }) => {
   );
 
 };
+

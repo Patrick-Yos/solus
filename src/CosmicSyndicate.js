@@ -24,6 +24,7 @@ import {
   Plus,
   Minus,
   Trash2,
+  Book,
   MessageSquare,
   Globe,
   LogOut,
@@ -730,7 +731,7 @@ const LoginOverlay = ({ onClose, onLogin }) => {
 
       if (!response.ok) throw new Error(data.error || 'Login failed');
 
-      localStorage.setItem('cosmicToken', data.token);
+      localStorage.setItem('cosmicToken',  data.token);
       localStorage.setItem('cosmicUser', JSON.stringify(data.user));
       
       onLogin(data.user);
@@ -918,6 +919,184 @@ const ChatWindow = ({ isOpen, onClose, currentUser }) => {
   );
 };
 //////////
+
+
+
+// -- AI COMPONENT//
+
+// --- DND CHAT BUBBLE ---
+const DndChatBubble = ({ onToggle, hasNewResponse }) => (
+  <button 
+    onClick={onToggle} 
+    className="fixed bottom-28 right-8 z-[155] p-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full border-2 border-violet-400 shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:shadow-[0_0_35px_rgba(139,92,246,0.7)] transition-all duration-300 transform hover:scale-110"
+  >
+    <Book className="w-5 h-5 text-white" />
+    {hasNewResponse && (
+      <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+    )}
+  </button>
+);
+
+// --- DND CHAT WINDOW ---
+const DndChatWindow = ({ isOpen, onClose, currentUser }) => {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!newMessage.trim() || !currentUser) return;
+    
+    const userMsg = { 
+      id: Date.now(), 
+      username: currentUser.username, 
+      text: newMessage.trim(),
+      isUser: true 
+    };
+    
+    setMessages(prev => [...prev, userMsg]);
+    setIsStreaming(true);
+    
+    try {
+      const response = await fetch('/api/dnd-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: newMessage.trim() }),
+      });
+
+      setNewMessage('');
+      
+      // Add assistant message placeholder
+      const assistantMsg = { 
+        id: Date.now() + 1, 
+        username: 'D&D Assistant', 
+        text: '',
+        isUser: false 
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+
+      // Read streaming response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1].text = fullText;
+          return newMessages;
+        });
+      }
+      
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        username: 'System',
+        text: 'Error: Unable to connect to D&D assistant',
+        isUser: false
+      }]);
+    } finally {
+      setIsStreaming(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed bottom-28 right-8 z-[160] w-80 h-96 bg-gradient-to-br from-violet-900/98 to-purple-900/98 backdrop-blur-lg rounded-2xl border-2 border-violet-400/50 shadow-[0_0_40px_rgba(139,92,246,0.6)] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="p-4 bg-gradient-to-r from-violet-600/80 to-purple-600/80 border-b border-violet-400/50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Dices className="w-5 h-5 text-white" />
+          <h3 className="text-white font-bold">D&D Session Assistant</h3>
+        </div>
+        <button onClick={onClose} className="p-1 hover:bg-white/20 rounded transition-colors">
+          <X className="w-4 h-4 text-white" />
+        </button>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-3 text-sm">
+        {messages.length === 0 && (
+          <div className="text-center text-violet-300 text-sm mt-8">
+            <p>Ask me about your D&D sessions!</p>
+            <p className="text-xs mt-2 text-violet-400">I'll search the campaign document</p>
+          </div>
+        )}
+        
+        {messages.map(msg => (
+          <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-xs px-3 py-2 rounded-lg ${
+              msg.isUser 
+                ? 'bg-violet-600 text-white' 
+                : 'bg-purple-800/60 text-violet-100 border border-violet-500/30'
+            }`}>
+              {!msg.isUser && (
+                <div className="text-xs opacity-70 mb-1 font-semibold">
+                  {msg.username}
+                </div>
+              )}
+              <div className="whitespace-pre-wrap">{msg.text}</div>
+            </div>
+          </div>
+        ))}
+        
+        {isStreaming && (
+          <div className="flex justify-start">
+            <div className="px-3 py-2 rounded-lg bg-purple-800/60 text-violet-100 border border-violet-500/30">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-3 border-t border-violet-400/30 flex gap-2">
+        <input 
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ask about sessions..."
+          className="flex-1 px-3 py-2 bg-purple-800/60 border border-violet-400/30 rounded-lg text-violet-100 placeholder-violet-400 focus:border-violet-400 focus:outline-none transition-colors text-sm"
+          disabled={isStreaming}
+        />
+        <button 
+          onClick={handleSend}
+          disabled={!newMessage.trim() || isStreaming}
+          className="px-3 py-2 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:opacity-50 rounded-lg text-white transition-colors"
+        >
+          <span className="font-bold">Send</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+////
 // --- MAIN COMPONENT ---
 const CosmicSyndicate = () => {
   const [activeSection, setActiveSection] = useState('home');
@@ -950,6 +1129,15 @@ const [reviews, setReviews] = useState([]);
   const [showArcade, setShowArcade] = useState(false); // NEW ARCADE STATE
   const [showDiceRoller, setShowDiceRoller] = useState(false); // NEW DICE STATE
   const [selectedPlanet, setSelectedPlanet] = useState(null);
+  // AI
+  const [dndChatOpen, setDndChatOpen] = useState(false);
+  const [dndHasNewResponse, setDndHasNewResponse] = useState(false);
+  useEffect(() => {
+    if (!dndChatOpen) {
+      // This would track if assistant responded while window was closed
+      // For now, it's a visual indicator that can be triggered by your logic
+    }
+  }, [dndChatOpen]);
   const [paymentForm, setPaymentForm] = useState({
     cardNumber: '',
     fullName: '',
@@ -1692,10 +1880,35 @@ const submitReview = async (e) => {
 
       {/*Chat OVERLAY */}     
 
-      {currentUser && (<>
-       <ChatBubble onToggle={() => setChatOpen(!chatOpen)} unreadCount={unreadCount} />
-        <ChatWindow isOpen={chatOpen} onClose={() => setChatOpen(false)} currentUser={currentUser} /></>)}  
-
+      {/* Chat Components - Only show for logged in users */}
+      {currentUser && (
+        <>
+          {/* Cosmic Chat */}
+          <ChatBubble 
+            onToggle={() => setChatOpen(!chatOpen)} 
+            unreadCount={unreadCount} 
+          />
+          <ChatWindow 
+            isOpen={chatOpen} 
+            onClose={() => setChatOpen(false)} 
+            currentUser={currentUser} 
+          />
+          
+          {/* D&D Assistant Chat - New! */}
+          <DndChatBubble 
+            onToggle={() => {
+              setDndChatOpen(!dndChatOpen);
+              setDndHasNewResponse(false);
+            }} 
+            hasNewResponse={dndHasNewResponse}
+          />
+          <DndChatWindow 
+            isOpen={dndChatOpen} 
+            onClose={() => setDndChatOpen(false)} 
+            currentUser={currentUser}
+          />
+        </>
+      )}
       {/* Checkout Page Overlay */}
       {showCheckout && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg overflow-y-auto">

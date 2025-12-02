@@ -71,9 +71,9 @@ Answer:`;
     // 3. Call Groq
     const stream = await groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: 'llama3-8b-8192',
-      temperature: 0.5,
-      max_tokens: 1024,
+      model: 'openai/gpt-oss-120b',
+      temperature: 0.7,
+      max_tokens: 4096,
       stream: true,
     });
 

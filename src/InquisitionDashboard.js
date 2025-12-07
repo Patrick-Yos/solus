@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DiceBox from '@3d-dice/dice-box';
+import AdministratumRequest from './administratumRequest'; // Adjust path as needed
 import {
   // Core Icons//
   Skull,
@@ -45,7 +46,6 @@ import {
   Trophy,
   Search,
   Swords,
-  Trophy as TrophyIcon,
 } from 'lucide-react';
 
 // --- ANIMATION SYSTEM ---
@@ -324,6 +324,8 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
   const [notation, setNotation] = useState('1d20');
   const diceBoxRef = useRef(null);
   const [diceLog, setDiceLog] = useState([]);
+  const [showAdminRequest, setShowAdminRequest] = useState(false);
+
 
   useEffect(() => {
     if (window.anime) {
@@ -354,7 +356,11 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
     };
     initBox();
   }, []);
-
+const handleAdministratumRequest = () => {
+  setShowAdminRequest(true);
+  addLog('ADMINISTRATUM REQUEST PROTOCOL INITIATED...');
+  Anima.notify('ADMINISTRATUM REQUEST OPENED', 'info');
+};
   const rollDice = async (customNotation = null) => {
     if (!diceBoxRef.current || rolling) return;
     const rollNotation = customNotation || notation;
@@ -517,7 +523,7 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
 
 // --- ENHANCED WEAPON SYSTEM ---
 const WeaponSelector = ({ selectedWeapon, onSelectWeapon, chaosLevel }) => {
-  const [weapons, setWeapons] = useState([
+  const [weapons, setWeapons] = e([
     {
       name: 'BOLT PISTOL',
       dmg: '2d6+3',
@@ -1482,7 +1488,9 @@ const InquisitionDashboard = ({ onNavigate }) => {
           chaosLevel={chaosLevel}
         />
       )}
-
+{showAdminRequest && (
+  <AdministratumRequest onClose={() => setShowAdminRequest(false)} />
+)}
       <header className="relative z-10 border-b-4 border-[#5a2e2e] bg-black/90 p-4 sticky top-0 shadow-2xl flex justify-between items-center main-interface crt-flicker">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-[#2a0f0f] border-2 border-[#5a2e2e] flex items-center justify-center relative overflow-hidden btn-interactive">
@@ -1545,6 +1553,15 @@ const InquisitionDashboard = ({ onNavigate }) => {
             </div>
             <ChevronRight className="w-5 h-5 text-red-500 group-hover:translate-x-1 transition-transform" />
           </button>
+
+              <button
+  onClick={handleAdministratumRequest}
+  className="p-2 bg-[#111] border border-[#333] hover:border-[#c5a059] transition-all btn-interactive"
+  title="Administratum Request"
+    >
+  <Scroll className="w-5 h-5 text-zinc-400 hover:text-[#c5a059]" />
+</button>
+    
         </div>
       </header>
 
@@ -1906,7 +1923,7 @@ const InquisitionDashboard = ({ onNavigate }) => {
                 />
                 <div className="bg-[#111] border-2 border-[#5a4a3a] p-4">
                   <h3 className="font-gothic font-bold text-[#c5a059] mb-3 flex items-center gap-2">
-                    <TrophyIcon className="w-4 h-4" /> FAVOR
+                    <Trophy className="w-4 h-4" /> FAVOR
                   </h3>
                   <div className="font-tech text-[24px] text-center text-green-400">
                     {favor}

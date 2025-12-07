@@ -324,7 +324,6 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
   const [notation, setNotation] = useState('1d20');
   const diceBoxRef = useRef(null);
   const [diceLog, setDiceLog] = useState([]);
-  const [showAdminRequest, setShowAdminRequest] = useState(false);
 
 
   useEffect(() => {
@@ -356,11 +355,7 @@ const TacticalAuspex = ({ onClose, chaosLevel }) => {
     };
     initBox();
   }, []);
-const handleAdministratumRequest = () => {
-  setShowAdminRequest(true);
-  addLog('ADMINISTRATUM REQUEST PROTOCOL INITIATED...');
-  Anima.notify('ADMINISTRATUM REQUEST OPENED', 'info');
-};
+
   const rollDice = async (customNotation = null) => {
     if (!diceBoxRef.current || rolling) return;
     const rollNotation = customNotation || notation;
@@ -523,7 +518,7 @@ const handleAdministratumRequest = () => {
 
 // --- ENHANCED WEAPON SYSTEM ---
 const WeaponSelector = ({ selectedWeapon, onSelectWeapon, chaosLevel }) => {
-  const [weapons, setWeapons] = e([
+  const [weapons, setWeapons] = useState([
     {
       name: 'BOLT PISTOL',
       dmg: '2d6+3',
@@ -1155,7 +1150,16 @@ const InquisitionDashboard = ({ onNavigate }) => {
 
   const containerRef = useRef(null);
   const exterminatusInterval = useRef(null);
+// ADD these lines with other state declarations:
+  const [showAdminRequest, setShowAdminRequest] = useState(false);
 
+  // ADD this function near other handlers (around line 650):
+const handleAdministratumRequest = () => {
+  setShowAdminRequest(true);
+  addLog('ADMINISTRATUM REQUEST PROTOCOL INITIATED...');
+  Anima.notify('ADMINISTRATUM REQUEST OPENED', 'info');
+};
+  
   // Audio System
   useEffect(() => {
     if (!audioMuted) {

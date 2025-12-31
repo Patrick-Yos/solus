@@ -37,6 +37,7 @@ import {
   XCircle,
   Dices,
   Heart,
+  Map,
 } from 'lucide-react';
 
 // --- Loading reviews--
@@ -313,34 +314,108 @@ const ArcadeOverlay = ({ onClose }) => {
         <div className="flex-1 p-8 overflow-y-auto">
           {/* MENU */}
           {activeGame === 'menu' && (
-            <div className="grid md:grid-cols-2 gap-8 h-full place-items-center">
-              <button
-                onClick={() => {
-                  setActiveGame('whack');
-                  startWhack();
-                }}
-                className="group relative w-full h-64 bg-black/40 border-2 border-green-500/50 rounded-2xl hover:border-green-400 hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-4"
-              >
-                <Ghost className="w-20 h-20 text-green-400 group-hover:animate-bounce" />
-                <h3 className="text-2xl font-bold text-green-300">
-                  WHACK-A-ALIEN
+            <div className="space-y-8">
+              {/* Original Minigames */}
+              <div>
+                <h3 className="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5" /> SYNDICATE ORIGINALS
                 </h3>
-                <p className="text-green-500/70">Reflex Training</p>
-              </button>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <button
+                    onClick={() => {
+                      setActiveGame('whack');
+                      startWhack();
+                    }}
+                    className="group relative w-full h-48 bg-black/40 border-2 border-green-500/50 rounded-2xl hover:border-green-400 hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-3"
+                  >
+                    <Ghost className="w-16 h-16 text-green-400 group-hover:animate-bounce" />
+                    <h3 className="text-xl font-bold text-green-300">
+                      WHACK-A-ALIEN
+                    </h3>
+                    <p className="text-sm text-green-500/70">Reflex Training</p>
+                  </button>
 
-              <button
-                onClick={() => {
-                  setActiveGame('memory');
-                  initializeMemory();
-                }}
-                className="group relative w-full h-64 bg-black/40 border-2 border-pink-500/50 rounded-2xl hover:border-pink-400 hover:shadow-[0_0_30px_rgba(236,72,153,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-4"
-              >
-                <Brain className="w-20 h-20 text-pink-400 group-hover:animate-spin" />
-                <h3 className="text-2xl font-bold text-pink-300">
-                  MEMORY HACK
+                  <button
+                    onClick={() => {
+                      setActiveGame('memory');
+                      initializeMemory();
+                    }}
+                    className="group relative w-full h-48 bg-black/40 border-2 border-pink-500/50 rounded-2xl hover:border-pink-400 hover:shadow-[0_0_30px_rgba(236,72,153,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-3"
+                  >
+                    <Brain className="w-16 h-16 text-pink-400 group-hover:animate-spin" />
+                    <h3 className="text-xl font-bold text-pink-300">
+                      MEMORY HACK
+                    </h3>
+                    <p className="text-sm text-pink-500/70">Neural Calibration</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Retro Zone */}
+              <div>
+                <h3 className="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">
+                  <Flame className="w-5 h-5" /> RETRO ZONE - Classic Games
                 </h3>
-                <p className="text-pink-500/70">Neural Calibration</p>
-              </button>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => setActiveGame('doom')}
+                    className="group relative w-full h-40 bg-black/40 border-2 border-red-500/50 rounded-2xl hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2"
+                  >
+                    <Flame className="w-12 h-12 text-red-400 group-hover:animate-pulse" />
+                    <h3 className="text-lg font-bold text-red-300">DOOM</h3>
+                    <p className="text-xs text-red-500/70">Classic FPS</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveGame('wolfenstein')}
+                    className="group relative w-full h-40 bg-black/40 border-2 border-yellow-500/50 rounded-2xl hover:border-yellow-400 hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2"
+                  >
+                    <Shield className="w-12 h-12 text-yellow-400 group-hover:animate-pulse" />
+                    <h3 className="text-lg font-bold text-yellow-300">WOLFENSTEIN 3D</h3>
+                    <p className="text-xs text-yellow-500/70">The Original FPS</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveGame('oregon')}
+                    className="group relative w-full h-40 bg-black/40 border-2 border-green-500/50 rounded-2xl hover:border-green-400 hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2"
+                  >
+                    <Map className="w-12 h-12 text-green-400 group-hover:animate-bounce" />
+                    <h3 className="text-lg font-bold text-green-300">OREGON TRAIL</h3>
+                    <p className="text-xs text-green-500/70">Adventure Classic</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveGame('tetris')}
+                    className="group relative w-full h-40 bg-black/40 border-2 border-blue-500/50 rounded-2xl hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2"
+                  >
+                    <Cpu className="w-12 h-12 text-blue-400 group-hover:animate-pulse" />
+                    <h3 className="text-lg font-bold text-blue-300">TETRIS</h3>
+                    <p className="text-xs text-blue-500/70">Puzzle Legend</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveGame('pinball')}
+                    className="group relative w-full h-40 bg-black/40 border-2 border-purple-500/50 rounded-2xl hover:border-purple-400 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2"
+                  >
+                    <Star className="w-12 h-12 text-purple-400 group-hover:animate-spin" />
+                    <h3 className="text-lg font-bold text-purple-300">SPACE PINBALL</h3>
+                    <p className="text-xs text-purple-500/70">3D Pinball</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveGame('prince')}
+                    className="group relative w-full h-40 bg-black/40 border-2 border-cyan-500/50 rounded-2xl hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2"
+                  >
+                    <Sword className="w-12 h-12 text-cyan-400 group-hover:animate-bounce" />
+                    <h3 className="text-lg font-bold text-cyan-300">PRINCE OF PERSIA</h3>
+                    <p className="text-xs text-cyan-500/70">Platformer Classic</p>
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-center text-gray-500 text-sm italic mt-4">
+                Retro games use DOS/browser emulation - keyboard controls recommended. Click on game to focus.
+              </p>
             </div>
           )}
 
@@ -464,6 +539,221 @@ const ArcadeOverlay = ({ onClose }) => {
               >
                 Back to Menu
               </button>
+            </div>
+          )}
+
+          {/* DOOM GAME - Fullscreen Mode */}
+          {activeGame === 'doom' && (
+            <div className="fixed inset-0 z-[200] bg-black">
+              {/* Floating Back Button */}
+              <div className="absolute top-4 left-4 z-[210] flex items-center gap-4">
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="px-4 py-2 bg-red-600/90 hover:bg-red-500 rounded-lg text-white font-bold shadow-lg backdrop-blur-sm border border-red-400/50 flex items-center gap-2 transition-all"
+                >
+                  <X className="w-4 h-4" /> Exit Game
+                </button>
+                <span className="text-red-400 font-bold text-lg drop-shadow-lg">DOOM - Shareware</span>
+              </div>
+
+              {/* Fullscreen Game Container */}
+              <iframe
+                src="https://archive.org/embed/doom-play"
+                className="w-full h-full border-0"
+                style={{ width: '100vw', height: '100vh' }}
+                title="DOOM"
+                allow="autoplay; fullscreen; keyboard-map"
+                allowFullScreen
+                tabIndex={0}
+                autoFocus
+              />
+
+              {/* Floating Controls Hint */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[210] bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-red-500/50 shadow-lg">
+                <p className="text-red-300 text-sm font-medium">
+                  🎮 Arrow Keys = Move | Ctrl = Shoot | Space = Open Doors | Click game to focus
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* OREGON TRAIL */}
+          {activeGame === 'oregon' && (
+            <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+              {/* Floating Back Button */}
+              <div className="absolute top-4 left-4 z-[210] flex items-center gap-4">
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="px-4 py-2 bg-green-600/90 hover:bg-green-500 rounded-lg text-white font-bold shadow-lg backdrop-blur-sm border border-green-400/50 flex items-center gap-2 transition-all"
+                >
+                  <X className="w-4 h-4" /> Exit Game
+                </button>
+                <span className="text-green-400 font-bold text-lg drop-shadow-lg">Oregon Trail</span>
+              </div>
+
+              {/* Centered Game Container */}
+              <div className="w-full h-full max-w-5xl max-h-[85vh] mx-auto my-auto flex items-center justify-center">
+                <iframe
+                  src="https://archive.org/embed/msdos_Oregon_Trail_The_1990"
+                  className="w-full h-full border-0 rounded-lg shadow-[0_0_50px_rgba(34,197,94,0.3)]"
+                  title="Oregon Trail"
+                  allow="autoplay; fullscreen; keyboard-map"
+                  allowFullScreen
+                  tabIndex={0}
+                  autoFocus
+                />
+              </div>
+
+              {/* Floating Controls Hint */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[210] bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-green-500/50 shadow-lg">
+                <p className="text-green-300 text-sm font-medium">
+                  🎮 Use keyboard to make choices | Enter = Confirm | Click game to focus
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* WOLFENSTEIN 3D */}
+          {activeGame === 'wolfenstein' && (
+            <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+              {/* Floating Back Button */}
+              <div className="absolute top-4 left-4 z-[210] flex items-center gap-4">
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="px-4 py-2 bg-yellow-600/90 hover:bg-yellow-500 rounded-lg text-white font-bold shadow-lg backdrop-blur-sm border border-yellow-400/50 flex items-center gap-2 transition-all"
+                >
+                  <X className="w-4 h-4" /> Exit Game
+                </button>
+                <span className="text-yellow-400 font-bold text-lg drop-shadow-lg">Wolfenstein 3D</span>
+              </div>
+
+              {/* Centered Game Container */}
+              <div className="w-full h-full max-w-5xl max-h-[85vh] mx-auto my-auto flex items-center justify-center">
+                <iframe
+                  src="https://archive.org/embed/msdos_Wolfenstein_3D_1992"
+                  className="w-full h-full border-0 rounded-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]"
+                  title="Wolfenstein 3D"
+                  allow="autoplay; fullscreen; keyboard-map"
+                  allowFullScreen
+                  tabIndex={0}
+                  autoFocus
+                />
+              </div>
+
+              {/* Floating Controls Hint */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[210] bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-yellow-500/50 shadow-lg">
+                <p className="text-yellow-300 text-sm font-medium">
+                  🎮 Arrow Keys = Move | Ctrl = Shoot | Space = Open Doors | Click game to focus
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* TETRIS */}
+          {activeGame === 'tetris' && (
+            <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+              {/* Floating Back Button */}
+              <div className="absolute top-4 left-4 z-[210] flex items-center gap-4">
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 rounded-lg text-white font-bold shadow-lg backdrop-blur-sm border border-blue-400/50 flex items-center gap-2 transition-all"
+                >
+                  <X className="w-4 h-4" /> Exit Game
+                </button>
+                <span className="text-blue-400 font-bold text-lg drop-shadow-lg">Tetris</span>
+              </div>
+
+              {/* Centered Game Container */}
+              <div className="w-full h-full max-w-5xl max-h-[85vh] mx-auto my-auto flex items-center justify-center">
+                <iframe
+                  src="https://archive.org/embed/msdos_Tetris_1986"
+                  className="w-full h-full border-0 rounded-lg shadow-[0_0_50px_rgba(59,130,246,0.3)]"
+                  title="Tetris"
+                  allow="autoplay; fullscreen; keyboard-map"
+                  allowFullScreen
+                  tabIndex={0}
+                  autoFocus
+                />
+              </div>
+
+              {/* Floating Controls Hint */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[210] bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-blue-500/50 shadow-lg">
+                <p className="text-blue-300 text-sm font-medium">
+                  🎮 Arrow Keys = Move/Rotate | Space = Drop | Click game to focus
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* PRINCE OF PERSIA */}
+          {activeGame === 'prince' && (
+            <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+              {/* Floating Back Button */}
+              <div className="absolute top-4 left-4 z-[210] flex items-center gap-4">
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="px-4 py-2 bg-cyan-600/90 hover:bg-cyan-500 rounded-lg text-white font-bold shadow-lg backdrop-blur-sm border border-cyan-400/50 flex items-center gap-2 transition-all"
+                >
+                  <X className="w-4 h-4" /> Exit Game
+                </button>
+                <span className="text-cyan-400 font-bold text-lg drop-shadow-lg">Prince of Persia</span>
+              </div>
+
+              {/* Centered Game Container */}
+              <div className="w-full h-full max-w-5xl max-h-[85vh] mx-auto my-auto">
+                <iframe
+                  src="https://archive.org/embed/msdos_Prince_of_Persia_1990"
+                  className="w-full h-full border-0 rounded-lg shadow-[0_0_50px_rgba(34,211,238,0.3)]"
+                  title="Prince of Persia"
+                  allow="autoplay; fullscreen; keyboard-map"
+                  allowFullScreen
+                  tabIndex={0}
+                  autoFocus
+                />
+              </div>
+
+              {/* Floating Controls Hint */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[210] bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-cyan-500/50 shadow-lg">
+                <p className="text-cyan-300 text-sm font-medium">
+                  🎮 Arrow Keys = Move/Jump | Shift = Walk Carefully | Up = Climb/Jump | Click game to focus
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* SPACE PINBALL GAME - Fullscreen Dedicated Mode */}
+          {activeGame === 'pinball' && (
+            <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+              {/* Floating Back Button */}
+              <div className="absolute top-4 left-4 z-[210] flex items-center gap-4">
+                <button
+                  onClick={() => setActiveGame('menu')}
+                  className="px-4 py-2 bg-purple-600/90 hover:bg-purple-500 rounded-lg text-white font-bold shadow-lg backdrop-blur-sm border border-purple-400/50 flex items-center gap-2 transition-all"
+                >
+                  <X className="w-4 h-4" /> Exit Game
+                </button>
+                <span className="text-purple-400 font-bold text-lg drop-shadow-lg">Space Cadet Pinball</span>
+              </div>
+
+              {/* Centered Game Container */}
+              <div className="w-full h-full max-w-4xl max-h-[90vh] mx-auto my-auto">
+                <iframe
+                  src="https://alula.github.io/SpaceCadetPinball/"
+                  className="w-full h-full border-0 rounded-lg shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+                  title="Space Cadet Pinball"
+                  allow="autoplay; fullscreen; keyboard-map"
+                  allowFullScreen
+                  tabIndex={0}
+                  autoFocus
+                />
+              </div>
+
+              {/* Floating Controls Hint */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[210] bg-black/80 backdrop-blur-sm px-6 py-3 rounded-full border border-purple-500/50 shadow-lg">
+                <p className="text-purple-300 text-sm font-medium">
+                  🎮 Z = Left Flipper | / = Right Flipper | Space = Launch Ball | Click game to focus
+                </p>
+              </div>
             </div>
           )}
         </div>

@@ -4025,10 +4025,10 @@ const CosmicSyndicate = () => {
           <div className="text-center space-y-4">
             <Heart className="w-20 h-20 text-rose-400 mx-auto mb-4 animate-pulse" />
             <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-300 to-pink-300">
-              IN MEMORY OF DJ SMOOCH.EXE
+              HELP US RESURRECT DJ SMOOCH.EXE
             </h2>
             <p className="text-xl text-rose-200 italic">
-              Gone too soon, but his beats echo through eternity
+              He may be gone, but with enough cosmic credits, we can bring back the legend
             </p>
 
             {/* Donation Progress */}
@@ -4046,7 +4046,7 @@ const CosmicSyndicate = () => {
                 />
               </div>
               <p className="text-sm text-rose-300 mt-2">
-                {donationTotal >= 2000 ? '🎉 Goal Reached! DJ Smooch.exe smiles from the cosmic beyond!' : `${(2000 - donationTotal).toLocaleString()} ◈ to go!`}
+                {donationTotal >= 2000 ? '🎉 Goal Reached! DJ Smooch.exe\'s resurrection is underway!' : `${(2000 - donationTotal).toLocaleString()} ◈ to go until resurrection!`}
               </p>
             </div>
           </div>
@@ -4063,8 +4063,8 @@ const CosmicSyndicate = () => {
                 <p>
                   <strong className="text-rose-300">DJ Smooch.exe</strong> wasn't just a DJ — he was a
                   <em className="text-pink-300"> cosmic phenomenon</em>. His wireless setup was so legendary
-                  that <strong className="text-cyan-300">Bob</strong> once tried to photobomb his pictures,
-                  and honestly? Those photos became collectible NFTs worth more than some star systems.
+                  that fans from across the galaxy lined up just to see it in action,
+                  and honestly? Photos of his setup became collectible NFTs worth more than some star systems.
                 </p>
 
                 <p>
@@ -4095,7 +4095,7 @@ const CosmicSyndicate = () => {
                 </p>
 
                 <p>
-                  Nobody saw Bob coming. <em>Nobody ever does.</em> One moment DJ Smooch.exe was there,
+                  Nobody saw them coming. <em>Nobody ever does.</em> One moment DJ Smooch.exe was there,
                   mid-sentence, probably about to drop the sickest beat the universe had ever heard.
                   The next moment — <strong className="text-red-400">stabbed</strong>. Right there.
                   <span className="text-rose-300">Chimer caught him as he fell.</span> Johnny tried slapping
@@ -4112,16 +4112,18 @@ const CosmicSyndicate = () => {
                 </div>
 
                 <p>
-                  The cruel irony? <strong className="text-emerald-300">Bob</strong>, our lovable blob friend,
-                  the one who brings snacks on missions and asks about your day... did this.
-                  The scars on Chimer from a previous Bob encounter? <em>Identical.</em>
-                  Bob's moral compass is, shall we say, <strong className="text-green-400">delightfully flexible</strong>.
+                  The cruel irony? It was an <strong className="text-red-300">unknown assassin</strong> from
+                  <em className="text-gray-300">The Shadow Kabal</em> — a notorious assassination syndicate
+                  that operates in the dark corners of the cosmos. No one knows who hired them.
+                  No one knows why. The scars on Chimer from a previous encounter with their operatives? <em>Identical.</em>
+                  Their methods are as <strong className="text-red-400">ruthless</strong> as they are mysterious.
                 </p>
 
                 <p className="text-rose-200">
                   Was there a bounty on DJ Smooch.exe's head? The retired wrestlers mentioned bounties.
-                  Was this a targeted hit? An accident? Did Bob just <em>really</em> hate EDM?
-                  We may never know. What we DO know is that the universe lost a legend that day.
+                  Was this a targeted hit by <em className="text-gray-300">The Shadow Kabal</em>? A contract killing?
+                  Who wanted him silenced? We may never know. What we DO know is that the universe lost a legend that day.
+                  <strong className="text-rose-300"> But legends can be brought back.</strong>
                 </p>
 
                 <div className="p-6 bg-gradient-to-br from-black/50 to-rose-900/30 rounded-xl border-2 border-rose-400/50">
@@ -4137,7 +4139,7 @@ const CosmicSyndicate = () => {
                     </li>
                     <li className="flex items-start gap-3">
                       <Sparkles className="w-6 h-6 text-purple-400 flex-shrink-0 mt-1" />
-                      <span>His wireless setup was <strong className="text-purple-300">"really cool"</strong> — Bob's own words before, you know, the stabbing.</span>
+                      <span>His wireless setup was <strong className="text-purple-300">"really cool"</strong> — even his assassin probably appreciated it before, you know, the stabbing.</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Zap className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-1" />
@@ -4148,8 +4150,8 @@ const CosmicSyndicate = () => {
 
                 <p className="text-center text-xl font-semibold">
                   <span className="text-rose-300">DJ Smooch.exe</span> didn't die doing what he loved.
-                  He died getting <span className="text-red-400">stabbed backstage</span> by a friendly blob.
-                  <br />But hey, at least he was at a concert? <em className="text-pink-400">Silver linings.</em>
+                  He died getting <span className="text-red-400">stabbed backstage</span> by an assassin from the shadows.
+                  <br />But hey, at least he was at a concert? <em className="text-pink-400">And we're going to bring him back.</em>
                 </p>
               </div>
             </div>
@@ -4158,7 +4160,7 @@ const CosmicSyndicate = () => {
           {/* Donation Form */}
           <div className="relative p-8 bg-gradient-to-br from-indigo-900/40 to-rose-900/40 rounded-2xl border-2 border-rose-400/50 backdrop-blur-lg shadow-[0_0_40px_rgba(244,63,94,0.3)]">
             <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-300 to-pink-300 mb-6 text-center">
-              💝 Contribute to His Memory 💝
+              🔮 Fund His Resurrection 🔮
             </h3>
             <form
               onSubmit={(e) => {
@@ -4265,13 +4267,13 @@ const CosmicSyndicate = () => {
           {/* Memorial Quote */}
           <div className="text-center p-8 bg-gradient-to-br from-black/50 to-rose-900/30 rounded-2xl border-2 border-rose-400/30">
             <p className="text-2xl font-bold text-rose-300 italic">
-              "The beat drops, but legends never do." 🎧💔
+              "The beat drops, but legends never stay down." 🎧🔮
             </p>
             <p className="text-rose-400 mt-4">
-              — The Cosmic Syndicate, still wondering what DJ Smooch.exe was about to say
+              — The Cosmic Syndicate, preparing the resurrection ritual
             </p>
             <p className="text-sm text-rose-500 mt-4">
-              (Bob has been asked to "maybe not stab our collaborators next time." He said he'd "think about it." 🙃)
+              (The Shadow Kabal will pay for this. We're coming for them. 🗡️)
             </p>
           </div>
         </div>

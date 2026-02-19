@@ -2385,7 +2385,8 @@ const CosmicSyndicate = () => {
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(scene.children, true);
+        // Only intersect planets (and their children) to ignore bubble/dust/stars
+        const intersects = raycaster.intersectObjects(planets.map(p => p.mesh), true);
         const hit = intersects.find(
           (i) => {
             const od = i.object.userData;

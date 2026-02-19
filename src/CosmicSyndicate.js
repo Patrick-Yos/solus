@@ -2167,7 +2167,7 @@ const CosmicSyndicate = () => {
           color: orbitColor,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.35,
+          opacity: 0.12,
         });
         const orbit = new THREE.Mesh(orbitGeo, orbitMat);
         orbit.rotation.x = Math.PI / 2;
@@ -2184,7 +2184,7 @@ const CosmicSyndicate = () => {
             color: factionColors[primaryFaction],
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.08,
+            opacity: 0.03,
           });
           const glowRing = new THREE.Mesh(glowGeo, glowMat);
           glowRing.rotation.x = Math.PI / 2;
@@ -2417,6 +2417,12 @@ const CosmicSyndicate = () => {
       };
 
       renderer.domElement.addEventListener('click', onMouseClick);
+
+      // Cancel lerp zoom when user scrolls (so OrbitControls can handle wheel zoom freely)
+      renderer.domElement.addEventListener('wheel', () => {
+        targetCameraPos = null;
+        targetLookAt = null;
+      });
 
       // ANIMATION
       const animate = () => {

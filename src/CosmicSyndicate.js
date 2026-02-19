@@ -2368,7 +2368,19 @@ const CosmicSyndicate = () => {
       const defaultCameraPos = new THREE.Vector3(0, 150, 300);
       const defaultLookAt = new THREE.Vector3(0, 0, 0);
 
-      const onMouseClick = (event) => {
+      // Track mouse to distinguish click vs drag
+      let mouseDownPos = { x: 0, y: 0 };
+
+      renderer.domElement.addEventListener('mousedown', (event) => {
+        mouseDownPos = { x: event.clientX, y: event.clientY };
+      });
+
+      renderer.domElement.addEventListener('mouseup', (event) => {
+        // Only treat as click if mouse moved less than 5px (not a drag)
+        const dx = event.clientX - mouseDownPos.x;
+        const dy = event.clientY - mouseDownPos.y;
+        if (Math.sqrt(dx * dx + dy * dy) > 5) return;
+
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -2414,9 +2426,7 @@ const CosmicSyndicate = () => {
           targetLookAt = defaultLookAt.clone();
           controls.target.copy(targetLookAt);
         }
-      };
-
-      renderer.domElement.addEventListener('click', onMouseClick);
+      });
 
       // Cancel lerp zoom when user scrolls (so OrbitControls can handle wheel zoom freely)
       renderer.domElement.addEventListener('wheel', () => {

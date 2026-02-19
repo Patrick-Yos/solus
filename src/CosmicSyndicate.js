@@ -1731,6 +1731,73 @@ const CosmicSyndicate = () => {
         scene.add(nebula);
       });
 
+      // === SYSTEM BOUNDARY BUBBLE — Translucent containment field ===
+      // Outer shell — faint hex grid feel
+      const bubbleGeo = new THREE.SphereGeometry(420, 64, 64);
+      const bubbleMat = new THREE.MeshBasicMaterial({
+        color: 0x22d3ee,
+        transparent: true,
+        opacity: 0.03,
+        side: THREE.BackSide,
+        wireframe: false,
+      });
+      const bubbleMesh = new THREE.Mesh(bubbleGeo, bubbleMat);
+      scene.add(bubbleMesh);
+
+      // Wireframe overlay for hex/grid pattern
+      const wireGeo = new THREE.IcosahedronGeometry(420, 3);
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0x22d3ee,
+        transparent: true,
+        opacity: 0.06,
+        wireframe: true,
+      });
+      const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+      scene.add(wireMesh);
+
+      // Inner energy shell — subtle purple glow
+      const innerShellGeo = new THREE.SphereGeometry(415, 32, 32);
+      const innerShellMat = new THREE.MeshBasicMaterial({
+        color: 0xa855f7,
+        transparent: true,
+        opacity: 0.015,
+        side: THREE.BackSide,
+      });
+      const innerShell = new THREE.Mesh(innerShellGeo, innerShellMat);
+      scene.add(innerShell);
+
+      // Ecliptic reference grid — flat ring at y=0
+      const gridGeo = new THREE.RingGeometry(30, 400, 128);
+      const gridMat = new THREE.MeshBasicMaterial({
+        color: 0x22d3ee,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.02,
+      });
+      const gridMesh = new THREE.Mesh(gridGeo, gridMat);
+      gridMesh.rotation.x = Math.PI / 2;
+      scene.add(gridMesh);
+
+      // Floating cosmic dust particles
+      const dustCount = 500;
+      const dustPositions = new Float32Array(dustCount * 3);
+      for (let i = 0; i < dustCount; i++) {
+        dustPositions[i * 3] = (Math.random() - 0.5) * 700;
+        dustPositions[i * 3 + 1] = (Math.random() - 0.5) * 200;
+        dustPositions[i * 3 + 2] = (Math.random() - 0.5) * 700;
+      }
+      const dustGeo = new THREE.BufferGeometry();
+      dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+      const dustMat = new THREE.PointsMaterial({
+        size: 0.5,
+        color: 0x88ccff,
+        transparent: true,
+        opacity: 0.3,
+        blending: THREE.AdditiveBlending,
+      });
+      const dustField = new THREE.Points(dustGeo, dustMat);
+      scene.add(dustField);
+
       // SYSTEM TITLE LABEL
       const titleCanvas = document.createElement('canvas');
       titleCanvas.width = 512;
@@ -2297,6 +2364,10 @@ const CosmicSyndicate = () => {
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
 
+      // Default camera position for zooming back out
+      const defaultCameraPos = new THREE.Vector3(0, 150, 300);
+      const defaultLookAt = new THREE.Vector3(0, 0, 0);
+
       const onMouseClick = (event) => {
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -2316,27 +2387,31 @@ const CosmicSyndicate = () => {
           setSelectedPlanet(planetData);
           setPlanetInfoTab('overview');
 
-          // --- ZOOM LOGIC ---
-          // 1. Pause rotation so planet stays still for reading
+          // --- ZOOM IN ---
           setIsPaused(true);
           isPausedRef.current = true;
 
-          // 2. Calculate target position (Planet Position + Offset)
           const planetPos = new THREE.Vector3();
-          // Use parent if it's a child mesh (like dual planet parts)
           const targetObj =
             hit.object.parent?.type === 'Group'
               ? hit.object.parent
               : hit.object;
           targetObj.getWorldPosition(planetPos);
 
-          // New Camera Position: Planet Pos + Offset
           targetCameraPos = planetPos
             .clone()
-            .add(new THREE.Vector3(15, 10, 20)); // Closer zoom
+            .add(new THREE.Vector3(15, 10, 20));
           targetLookAt = planetPos.clone();
+          controls.target.copy(targetLookAt);
+        } else {
+          // --- ZOOM OUT — Click on empty space ---
+          setSelectedPlanet(null);
+          setPlanetInfoTab('overview');
+          setIsPaused(false);
+          isPausedRef.current = false;
 
-          // Update orbit controls target to pivot around this planet
+          targetCameraPos = defaultCameraPos.clone();
+          targetLookAt = defaultLookAt.clone();
           controls.target.copy(targetLookAt);
         }
       };
@@ -2351,8 +2426,13 @@ const CosmicSyndicate = () => {
         // Handle Zoom Animation (Lerp)
         if (targetCameraPos && targetLookAt) {
           camera.position.lerp(targetCameraPos, 0.05);
-          // controls.target is updated instantly on click, but we ensure camera looks at it
           camera.lookAt(controls.target);
+
+          // Clear targets once close enough (prevents permanent lerp)
+          if (camera.position.distanceTo(targetCameraPos) < 0.5) {
+            targetCameraPos = null;
+            targetLookAt = null;
+          }
         }
 
         const time = Date.now() * 0.001;
@@ -2365,19 +2445,31 @@ const CosmicSyndicate = () => {
             p.mesh.position.z = Math.sin(p.angle) * p.distance;
             p.mesh.rotation.y += 0.005;
             if (p.type === 'dual-merge') p.mesh.rotation.z += 0.002;
-            if (p.type === 'station') p.mesh.rotation.y += 0.01; // Faster station spin
+            if (p.type === 'station') p.mesh.rotation.y += 0.01;
             if (p.moonPivot) p.moonPivot.rotation.y += 0.03;
           });
         }
 
-        // Phantoma ghost flicker effect — pulsing opacity
+        // Phantoma ghost flicker effect
         ghostMeshes.forEach((gm) => {
           if (gm.material) {
             gm.material.opacity = 0.15 + Math.sin(time * 1.5) * 0.15 + Math.sin(time * 3.7) * 0.05;
           }
         });
 
-        // Slow starfield rotation for atmosphere
+        // Bubble breathing effect — subtle pulse
+        bubbleMat.opacity = 0.025 + Math.sin(time * 0.3) * 0.01;
+        innerShellMat.opacity = 0.01 + Math.sin(time * 0.5 + 1) * 0.008;
+
+        // Wireframe slow rotation
+        wireMesh.rotation.y += 0.0002;
+        wireMesh.rotation.x += 0.0001;
+
+        // Dust field gentle drift
+        dustField.rotation.y += 0.0001;
+        dustField.rotation.x += 0.00005;
+
+        // Starfield rotation
         starField.rotation.y += 0.00005;
 
         renderer.render(scene, camera);
@@ -3178,10 +3270,10 @@ const CosmicSyndicate = () => {
                 <div className="flex gap-2 mt-3 flex-wrap">
                   {selectedPlanet.threatLevel && (
                     <span className={`px-3 py-1 text-xs font-black rounded-full border-2 uppercase tracking-wider ${selectedPlanet.threatLevel === 'Extreme' ? 'bg-red-900/70 border-red-500 text-red-200 shadow-[0_0_12px_rgba(239,68,68,0.5)] animate-pulse' :
-                        selectedPlanet.threatLevel === 'High' ? 'bg-orange-900/70 border-orange-500 text-orange-200 shadow-[0_0_8px_rgba(249,115,22,0.4)]' :
-                          selectedPlanet.threatLevel === 'Moderate' ? 'bg-yellow-900/70 border-yellow-600 text-yellow-200' :
-                            selectedPlanet.threatLevel === '???' ? 'bg-purple-900/70 border-purple-500 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.6)] animate-pulse' :
-                              'bg-green-900/70 border-green-500 text-green-200'
+                      selectedPlanet.threatLevel === 'High' ? 'bg-orange-900/70 border-orange-500 text-orange-200 shadow-[0_0_8px_rgba(249,115,22,0.4)]' :
+                        selectedPlanet.threatLevel === 'Moderate' ? 'bg-yellow-900/70 border-yellow-600 text-yellow-200' :
+                          selectedPlanet.threatLevel === '???' ? 'bg-purple-900/70 border-purple-500 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.6)] animate-pulse' :
+                            'bg-green-900/70 border-green-500 text-green-200'
                       }`}>
                       {selectedPlanet.threatLevel === 'Extreme' ? '🔥' : selectedPlanet.threatLevel === '???' ? '❓' : '⚠️'} THREAT: {selectedPlanet.threatLevel}
                     </span>

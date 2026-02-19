@@ -3078,7 +3078,7 @@ const CosmicSyndicate = () => {
         // Added z-[100] to fix overlap with nav
         <div className="fixed inset-0 z-[100] bg-black">
           {/* UPDATED: Top Right Control Panel */}
-          <div className="absolute top-6 right-6 z-20 flex flex-col gap-3">
+          <div className="absolute top-6 right-6 z-20 flex flex-col gap-3" style={{ right: selectedPlanet ? '440px' : '24px', transition: 'right 0.4s ease' }}>
             <button
               onClick={() => {
                 setShowOperations(false);
@@ -3107,11 +3107,26 @@ const CosmicSyndicate = () => {
           </div>
 
           <div className="absolute top-4 left-4 z-10 p-4 bg-black/80 backdrop-blur-lg rounded-xl border-2 border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.4)]">
-            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-2">
-              AREA OF OPERATIONS
+            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-1">
+              🛸 AREA OF OPERATIONS
             </h2>
-            <p className="text-sm text-cyan-200">
+            <p className="text-sm text-cyan-200 mb-2">
               🖱️ Click planets • Drag to rotate • Scroll to zoom
+            </p>
+            <p className="text-xs text-cyan-400/60 italic">
+              {['⚡ "Recycle these nuts!" — Reigen, Masquerade of Sulfur',
+                '🎲 "Hui complained 12 times!" — The Goblins, Sulfur',
+                '🎵 "His beats will echo forever!" — DJ Smooch.exe Memorial',
+                '🐱 "Mamaa!" — The Quasit, to Tabaga',
+                '🧀 "I\'m just cheese." — The Mozzarella, Sulfur',
+                '🎸 "Do you think you\'re better off in a corporation?" — The Cheese, to Johnny',
+                '💀 "Don\'t make a mess on the carpet." — The Don, to Bob',
+                '🌙 Snoopy the Destroyer rides again!',
+                '🎭 "What the hell are you?" — The Don, meeting Bob',
+                '🪙 The Lucky Lincoln demands another flip...',
+                '🧬 Chimer is 2,500 years old. He had no idea.',
+                '⚔️ "These nuts!" — Reigen\'s legendary taunt',
+              ][Math.floor(Date.now() / 15000) % 12]}
             </p>
           </div>
 
@@ -3121,149 +3136,222 @@ const CosmicSyndicate = () => {
             style={{ cursor: 'grab' }}
           />
 
+          {/* === PLANET INFO SIDEBAR — Content-Forward Design === */}
           {selectedPlanet && (
-            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-[420px] z-10 bg-black/90 backdrop-blur-lg rounded-xl border-2 border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.5)] animate-[fadeInScale_0.3s_ease-out] max-h-[70vh] flex flex-col">
-              {/* Header */}
-              <div className="p-4 border-b border-cyan-400/30 flex-shrink-0">
+            <div
+              className="absolute top-0 right-0 bottom-0 z-10 flex flex-col"
+              style={{
+                width: '420px',
+                background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(15,23,42,0.97) 50%, rgba(30,10,60,0.95) 100%)',
+                borderLeft: '2px solid rgba(34,211,238,0.4)',
+                boxShadow: '-10px 0 60px rgba(34,211,238,0.15), -5px 0 30px rgba(168,85,247,0.1)',
+                animation: 'slideInRight 0.35s ease-out',
+              }}
+            >
+              {/* === HEADER — Planet Name + Tagline === */}
+              <div className="p-5 flex-shrink-0" style={{ borderBottom: '1px solid rgba(34,211,238,0.25)', background: 'linear-gradient(180deg, rgba(34,211,238,0.08) 0%, transparent 100%)' }}>
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
-                      {selectedPlanet.name.toUpperCase()}
-                    </h3>
-                    <p className="text-xs text-cyan-300/70 mt-1">{selectedPlanet.desc}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-2xl">
+                        {selectedPlanet.type === 'station' ? '🛸' :
+                          selectedPlanet.isGhost ? '👻' :
+                            selectedPlanet.type === 'tidal-lock' ? '🌗' :
+                              selectedPlanet.type === 'dual-merge' ? '💕' :
+                                selectedPlanet.threatLevel === 'Extreme' ? '💀' : '🪐'}
+                      </span>
+                      <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300" style={{ letterSpacing: '0.05em' }}>
+                        {selectedPlanet.name.toUpperCase()}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-cyan-200/80 italic leading-snug">{selectedPlanet.desc}</p>
                   </div>
                   <button
                     onClick={() => { setSelectedPlanet(null); setPlanetInfoTab('overview'); }}
-                    className="p-1 hover:bg-cyan-500/20 rounded-lg transition-colors flex-shrink-0"
+                    className="p-1.5 hover:bg-red-500/30 rounded-lg transition-all flex-shrink-0 group"
                   >
-                    <X className="w-5 h-5 text-cyan-400" />
+                    <X className="w-5 h-5 text-cyan-400/60 group-hover:text-red-400 transition-colors" />
                   </button>
                 </div>
-                {/* Status + Threat badges */}
-                <div className="flex gap-2 mt-2 flex-wrap">
+
+                {/* Threat + Status Badges */}
+                <div className="flex gap-2 mt-3 flex-wrap">
                   {selectedPlanet.threatLevel && (
-                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full border ${selectedPlanet.threatLevel === 'Extreme' ? 'bg-red-900/60 border-red-500 text-red-300' :
-                      selectedPlanet.threatLevel === 'High' ? 'bg-orange-900/60 border-orange-500 text-orange-300' :
-                        selectedPlanet.threatLevel === 'Moderate' ? 'bg-yellow-900/60 border-yellow-500 text-yellow-300' :
-                          selectedPlanet.threatLevel === '???' ? 'bg-purple-900/60 border-purple-500 text-purple-300 animate-pulse' :
-                            'bg-green-900/60 border-green-500 text-green-300'
+                    <span className={`px-3 py-1 text-xs font-black rounded-full border-2 uppercase tracking-wider ${selectedPlanet.threatLevel === 'Extreme' ? 'bg-red-900/70 border-red-500 text-red-200 shadow-[0_0_12px_rgba(239,68,68,0.5)] animate-pulse' :
+                        selectedPlanet.threatLevel === 'High' ? 'bg-orange-900/70 border-orange-500 text-orange-200 shadow-[0_0_8px_rgba(249,115,22,0.4)]' :
+                          selectedPlanet.threatLevel === 'Moderate' ? 'bg-yellow-900/70 border-yellow-600 text-yellow-200' :
+                            selectedPlanet.threatLevel === '???' ? 'bg-purple-900/70 border-purple-500 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.6)] animate-pulse' :
+                              'bg-green-900/70 border-green-500 text-green-200'
                       }`}>
-                      ⚠ {selectedPlanet.threatLevel}
+                      {selectedPlanet.threatLevel === 'Extreme' ? '🔥' : selectedPlanet.threatLevel === '???' ? '❓' : '⚠️'} THREAT: {selectedPlanet.threatLevel}
                     </span>
                   )}
                   {selectedPlanet.status && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-cyan-900/40 border border-cyan-500/40 text-cyan-300">
-                      {selectedPlanet.status}
+                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-cyan-900/50 border border-cyan-500/40 text-cyan-200">
+                      📡 {selectedPlanet.status}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Tabs */}
-              <div className="flex border-b border-cyan-400/20 flex-shrink-0">
-                {['overview', 'factions', 'intel', 'stats'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setPlanetInfoTab(tab)}
-                    className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-all ${planetInfoTab === tab
-                      ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-900/20'
-                      : 'text-cyan-500/60 hover:text-cyan-400 hover:bg-cyan-900/10'
-                      }`}
-                  >
-                    {tab === 'overview' && '📋 '}
-                    {tab === 'factions' && '⚔️ '}
-                    {tab === 'intel' && '🔍 '}
-                    {tab === 'stats' && '📊 '}
-                    {tab}
-                  </button>
-                ))}
-              </div>
+              {/* === SCROLLABLE CONTENT — Everything visible! === */}
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(34,211,238,0.3) transparent' }}>
 
-              {/* Tab Content */}
-              <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
-                {/* Overview Tab */}
-                {planetInfoTab === 'overview' && (
-                  <div className="space-y-3 text-cyan-100">
-                    <p className="text-sm leading-relaxed">{selectedPlanet.lore || selectedPlanet.desc}</p>
+                {/* --- LORE / MISSION BRIEFING --- */}
+                <div className="p-5" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                  <h4 className="text-xs font-black text-cyan-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                    <Book className="w-3.5 h-3.5" /> MISSION BRIEFING
+                  </h4>
+                  <p className="text-sm text-cyan-100/90 leading-relaxed">{selectedPlanet.lore || selectedPlanet.desc}</p>
+                </div>
+
+                {/* --- FACTIONS --- */}
+                {selectedPlanet.factions && selectedPlanet.factions.length > 0 && (
+                  <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                    <h4 className="text-xs font-black text-cyan-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5" /> ACTIVE FACTIONS
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedPlanet.factions.map((faction, i) => {
+                        const colorHex = (() => {
+                          const colors = {
+                            "The Don's Syndicate": '#d97706', 'Ifriti Clans': '#ff6600', 'Brass Lords': '#ff4400',
+                            'Banana Guard': '#fbbf24', 'Rebis Company': '#3b82f6', 'Hero Corps': '#60a5fa',
+                            'Luna Corps': '#c084fc', 'Niniche Military': '#ef4444', 'Ultimum Inc': '#7c3aed',
+                            'Galaxy Bucks': '#06b6d4', 'Cult of the Sun': '#f59e0b', 'Cult of the Unseen': '#6366f1',
+                            'Broken Chain': '#b45309', 'Salamine Military Family': '#dc2626', 'March Warlords': '#991b1b',
+                            'Indigenous Communities': '#10b981', 'Beach Commune': '#38bdf8', 'Feywild Courts': '#22c55e',
+                            'Lincoln Station Workers': '#94a3b8', 'Fathom Ink': '#64748b', "Cupid's Arrow Corp": '#e879a8',
+                            "Tabaga's Family": '#f472b6', 'Orc Communities': '#84cc16', 'Kuo-toa Communities': '#0e7490',
+                            'Oddjobers Union': '#78716c',
+                          };
+                          return colors[faction] || '#8b5cf6';
+                        })();
+                        return (
+                          <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold" style={{
+                            backgroundColor: colorHex + '20',
+                            border: `1px solid ${colorHex}60`,
+                            color: colorHex,
+                            textShadow: `0 0 10px ${colorHex}40`,
+                          }}>
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorHex, boxShadow: `0 0 6px ${colorHex}` }} />
+                            {faction}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 
-                {/* Factions Tab */}
-                {planetInfoTab === 'factions' && (
-                  <div className="space-y-2">
-                    {selectedPlanet.factions && selectedPlanet.factions.length > 0 ? (
-                      selectedPlanet.factions.map((faction, i) => (
-                        <div key={i} className="flex items-center gap-2 p-2 bg-cyan-900/20 rounded-lg border border-cyan-400/20">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#' + (['d97706', '3b82f6', 'a855f7', '06b6d4', '10b981', 'ef4444', 'c084fc', 'f59e0b', 'fbbf24', '7c3aed', 'dc2626'][i % 11]) }} />
-                          <span className="text-sm text-cyan-200 font-medium">{faction}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-cyan-400/50 italic">No known factions</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Intel Tab */}
-                {planetInfoTab === 'intel' && (
-                  <div className="space-y-4">
-                    {/* Key NPCs */}
-                    {selectedPlanet.keyNPCs && selectedPlanet.keyNPCs.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Key NPCs</h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedPlanet.keyNPCs.map((npc, i) => (
-                            <span key={i} className="px-2 py-0.5 text-xs bg-purple-900/40 border border-purple-400/30 rounded-full text-purple-200">
-                              {npc}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {/* Events */}
-                    {selectedPlanet.events && selectedPlanet.events.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Campaign Events</h4>
-                        <div className="space-y-1.5">
-                          {selectedPlanet.events.map((event, i) => (
-                            <div key={i} className="flex items-start gap-2 text-xs text-cyan-200">
-                              <span className="text-cyan-500 mt-0.5 flex-shrink-0">▸</span>
-                              <span>{event}</span>
+                {/* --- KEY NPCs --- */}
+                {selectedPlanet.keyNPCs && selectedPlanet.keyNPCs.length > 0 && (
+                  <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                    <h4 className="text-xs font-black text-cyan-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5" /> KEY NPCs ({selectedPlanet.keyNPCs.length})
+                    </h4>
+                    <div className="space-y-1.5">
+                      {selectedPlanet.keyNPCs.map((npc, i) => {
+                        const parts = npc.split(' — ');
+                        const name = parts[0];
+                        const desc = parts[1] || '';
+                        return (
+                          <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg transition-all hover:bg-purple-900/30" style={{ background: 'rgba(88,28,135,0.15)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                            <span className="text-purple-400 text-xs mt-0.5 flex-shrink-0">👤</span>
+                            <div className="min-w-0">
+                              <span className="text-sm font-bold text-purple-200">{name}</span>
+                              {desc && <span className="text-xs text-purple-300/60 ml-1">— {desc}</span>}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 
-                {/* Stats Tab */}
-                {planetInfoTab === 'stats' && (
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
-                      <span className="text-cyan-400 font-bold block mb-1">🌐 Distance</span>
-                      <span className="text-cyan-100 text-lg font-bold">{selectedPlanet.distance * 10}M</span>
-                      <span className="text-cyan-300/60"> km</span>
-                    </div>
-                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
-                      <span className="text-cyan-400 font-bold block mb-1">📏 Diameter</span>
-                      <span className="text-cyan-100 text-lg font-bold">{selectedPlanet.size * 1000}</span>
-                      <span className="text-cyan-300/60"> km</span>
-                    </div>
-                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
-                      <span className="text-cyan-400 font-bold block mb-1">🔄 Orbit Speed</span>
-                      <span className="text-cyan-100 text-lg font-bold">{(selectedPlanet.speed * 10000).toFixed(1)}</span>
-                      <span className="text-cyan-300/60"> u/s</span>
-                    </div>
-                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
-                      <span className="text-cyan-400 font-bold block mb-1">🏷️ Type</span>
-                      <span className="text-cyan-100 text-sm font-bold capitalize">{selectedPlanet.type || 'Planet'}</span>
+                {/* --- CAMPAIGN EVENTS TIMELINE --- */}
+                {selectedPlanet.events && selectedPlanet.events.length > 0 && (
+                  <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                    <h4 className="text-xs font-black text-cyan-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                      <Zap className="w-3.5 h-3.5" /> CAMPAIGN LOG ({selectedPlanet.events.length} ENTRIES)
+                    </h4>
+                    <div className="space-y-1">
+                      {selectedPlanet.events.map((event, i) => (
+                        <div key={i} className="flex items-start gap-2.5 py-1.5 group">
+                          <div className="flex flex-col items-center flex-shrink-0 mt-1">
+                            <div className="w-2 h-2 rounded-full bg-cyan-400 group-hover:bg-cyan-300 transition-colors" style={{ boxShadow: '0 0 6px rgba(34,211,238,0.5)' }} />
+                            {i < selectedPlanet.events.length - 1 && (
+                              <div className="w-px h-4 bg-cyan-800/50 mt-0.5" />
+                            )}
+                          </div>
+                          <span className="text-xs text-cyan-100/80 leading-relaxed group-hover:text-cyan-100 transition-colors">{event}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
+
+                {/* --- PLANETARY STATS --- */}
+                <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                  <h4 className="text-xs font-black text-cyan-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5" /> SENSOR DATA
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { label: 'DIST', value: `${selectedPlanet.distance * 10}M`, unit: 'km', icon: '🌐' },
+                      { label: 'SIZE', value: `${selectedPlanet.size * 1000}`, unit: 'km', icon: '📏' },
+                      { label: 'ORBIT', value: `${(selectedPlanet.speed * 10000).toFixed(1)}`, unit: 'u/s', icon: '🔄' },
+                      { label: 'TYPE', value: (selectedPlanet.type || 'planet').toUpperCase(), unit: '', icon: '🏷️' },
+                    ].map((stat, i) => (
+                      <div key={i} className="text-center p-2 rounded-lg" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.15)' }}>
+                        <div className="text-xs mb-1">{stat.icon}</div>
+                        <div className="text-xs font-bold text-cyan-200">{stat.value}</div>
+                        <div className="text-[10px] text-cyan-500/60">{stat.unit || stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* --- REBIS PIECE STATUS (if relevant) --- */}
+                {(() => {
+                  const rebisPieces = {
+                    'Sulfur': { piece: 'RUBEDO', type: 'Fabricator', status: 'RECOVERED ✅', color: '#ef4444' },
+                    'Rodina': { piece: 'ALBEDO', type: 'Locator', status: 'SECURED 🔒', color: '#3b82f6' },
+                    'The March': { piece: 'NEGRADO', type: 'Transmuter', status: 'MISSING — Entered Apatia ⚠️', color: '#6b7280' },
+                    'Phantoma': { piece: 'CITRINITAS', type: 'Analyzer', status: 'INACCESSIBLE 🚫', color: '#a855f7' },
+                  };
+                  const piece = rebisPieces[selectedPlanet.name];
+                  if (!piece) return null;
+                  return (
+                    <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+                      <h4 className="text-xs font-black text-cyan-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
+                        <Cpu className="w-3.5 h-3.5" /> REBIS MACHINE PIECE
+                      </h4>
+                      <div className="p-3 rounded-lg" style={{ background: `${piece.color}15`, border: `1px solid ${piece.color}40` }}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-black" style={{ color: piece.color }}>{piece.piece}</span>
+                          <span className="text-xs font-bold text-cyan-300/70">{piece.type}</span>
+                        </div>
+                        <div className="text-xs font-bold mt-1" style={{ color: piece.status.includes('RECOVERED') || piece.status.includes('SECURED') ? '#4ade80' : piece.status.includes('MISSING') ? '#fbbf24' : '#ef4444' }}>
+                          {piece.status}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Bottom padding */}
+                <div className="h-6" />
               </div>
             </div>
           )}
+
+          {/* Slide-in animation keyframes */}
+          <style>{`
+            @keyframes slideInRight {
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
         </div>
       )}
 

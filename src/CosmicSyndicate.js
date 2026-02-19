@@ -1704,6 +1704,7 @@ const CosmicSyndicate = () => {
       starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
       const starMat = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.8 });
       const starField = new THREE.Points(starGeo, starMat);
+      starField.raycast = () => { }; // Disable raycasting
       scene.add(starField);
 
       // NEBULA CLOUDS
@@ -1728,6 +1729,7 @@ const CosmicSyndicate = () => {
         nebula.scale.set(500, 500, 1);
         const angle = (i / nebulaColors.length) * Math.PI * 2;
         nebula.position.set(Math.cos(angle) * 400, (Math.random() - 0.5) * 200, Math.sin(angle) * 400);
+        nebula.raycast = () => { }; // Disable raycasting
         scene.add(nebula);
       });
 
@@ -1742,6 +1744,7 @@ const CosmicSyndicate = () => {
         wireframe: false,
       });
       const bubbleMesh = new THREE.Mesh(bubbleGeo, bubbleMat);
+      bubbleMesh.raycast = () => { }; // Disable raycasting
       scene.add(bubbleMesh);
 
       // Wireframe overlay for hex/grid pattern
@@ -1753,6 +1756,7 @@ const CosmicSyndicate = () => {
         wireframe: true,
       });
       const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+      wireMesh.raycast = () => { }; // Disable raycasting
       scene.add(wireMesh);
 
       // Inner energy shell — subtle purple glow
@@ -1764,6 +1768,7 @@ const CosmicSyndicate = () => {
         side: THREE.BackSide,
       });
       const innerShell = new THREE.Mesh(innerShellGeo, innerShellMat);
+      innerShell.raycast = () => { }; // Disable raycasting
       scene.add(innerShell);
 
       // Ecliptic reference grid — flat ring at y=0
@@ -1776,6 +1781,7 @@ const CosmicSyndicate = () => {
       });
       const gridMesh = new THREE.Mesh(gridGeo, gridMat);
       gridMesh.rotation.x = Math.PI / 2;
+      gridMesh.raycast = () => { }; // Disable raycasting
       scene.add(gridMesh);
 
       // Floating cosmic dust particles
@@ -1796,6 +1802,7 @@ const CosmicSyndicate = () => {
         blending: THREE.AdditiveBlending,
       });
       const dustField = new THREE.Points(dustGeo, dustMat);
+      dustField.raycast = () => { }; // Disable raycasting
       scene.add(dustField);
 
       // SYSTEM TITLE LABEL
@@ -1814,6 +1821,7 @@ const CosmicSyndicate = () => {
       const titleSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: titleTexture, transparent: true }));
       titleSprite.scale.set(60, 8, 1);
       titleSprite.position.set(0, 50, 0);
+      titleSprite.raycast = () => { }; // Disable raycasting
       scene.add(titleSprite);
 
       // PLANETS DATA — Deep lore from all 783 lines of campaign logs

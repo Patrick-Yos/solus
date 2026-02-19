@@ -1475,6 +1475,7 @@ const CosmicSyndicate = () => {
   const [showArcade, setShowArcade] = useState(false); // NEW ARCADE STATE
   const [showDiceRoller, setShowDiceRoller] = useState(false); // NEW DICE STATE
   const [selectedPlanet, setSelectedPlanet] = useState(null);
+  const [planetInfoTab, setPlanetInfoTab] = useState('overview');
   // AI
   const [dndChatOpen, setDndChatOpen] = useState(false);
   const [dndHasNewResponse, setDndHasNewResponse] = useState(false);
@@ -1681,15 +1682,149 @@ const CosmicSyndicate = () => {
       sunGlow.scale.set(80, 80, 1);
       sunMesh.add(sunGlow);
 
-      // PLANETS DATA
+      // STARFIELD BACKGROUND
+      const starCount = 2000;
+      const starPositions = new Float32Array(starCount * 3);
+      const starColors = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const r = 800 + Math.random() * 400;
+        starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        starPositions[i * 3 + 2] = r * Math.cos(phi);
+        const brightness = 0.5 + Math.random() * 0.5;
+        const tint = Math.random();
+        starColors[i * 3] = tint > 0.7 ? brightness : brightness * 0.8;
+        starColors[i * 3 + 1] = brightness * 0.9;
+        starColors[i * 3 + 2] = tint < 0.3 ? brightness : brightness * 0.85;
+      }
+      const starGeo = new THREE.BufferGeometry();
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+      const starMat = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.8 });
+      const starField = new THREE.Points(starGeo, starMat);
+      scene.add(starField);
+
+      // NEBULA CLOUDS
+      const nebulaColors = [0x3b0764, 0x1e1b4b, 0x0c4a6e];
+      nebulaColors.forEach((col, i) => {
+        const nebCanvas = document.createElement('canvas');
+        nebCanvas.width = 256;
+        nebCanvas.height = 256;
+        const nebCtx = nebCanvas.getContext('2d');
+        const nebGrad = nebCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
+        nebGrad.addColorStop(0, `rgba(${(col >> 16) & 255}, ${(col >> 8) & 255}, ${col & 255}, 0.15)`);
+        nebGrad.addColorStop(0.5, `rgba(${(col >> 16) & 255}, ${(col >> 8) & 255}, ${col & 255}, 0.05)`);
+        nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        nebCtx.fillStyle = nebGrad;
+        nebCtx.fillRect(0, 0, 256, 256);
+        const nebMat = new THREE.SpriteMaterial({
+          map: new THREE.CanvasTexture(nebCanvas),
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+        });
+        const nebula = new THREE.Sprite(nebMat);
+        nebula.scale.set(500, 500, 1);
+        const angle = (i / nebulaColors.length) * Math.PI * 2;
+        nebula.position.set(Math.cos(angle) * 400, (Math.random() - 0.5) * 200, Math.sin(angle) * 400);
+        scene.add(nebula);
+      });
+
+      // SYSTEM TITLE LABEL
+      const titleCanvas = document.createElement('canvas');
+      titleCanvas.width = 512;
+      titleCanvas.height = 64;
+      const titleCtx = titleCanvas.getContext('2d');
+      titleCtx.font = 'Bold 36px Arial';
+      titleCtx.fillStyle = 'rgba(34, 211, 238, 0.6)';
+      titleCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+      titleCtx.lineWidth = 3;
+      titleCtx.textAlign = 'center';
+      titleCtx.strokeText('SOLUS SYSTEM', 256, 40);
+      titleCtx.fillText('SOLUS SYSTEM', 256, 40);
+      const titleTexture = new THREE.CanvasTexture(titleCanvas);
+      const titleSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: titleTexture, transparent: true }));
+      titleSprite.scale.set(60, 8, 1);
+      titleSprite.position.set(0, 50, 0);
+      scene.add(titleSprite);
+
+      // PLANETS DATA — Deep lore from all 783 lines of campaign logs
       const planetsData = [
+        {
+          name: 'Lincoln Station',
+          distance: 35,
+          size: 2.5,
+          speed: 0.008,
+          color: 0x94a3b8,
+          desc: 'Egg-shaped orbital station — the party\'s origin story.',
+          lore: 'A giant egg-shaped orbital station floating near the sun. Originally co-owned by the corrupt Cornelius Figg and the scheming Mump Mellon, control was decided by the flip of the Lucky Lincoln — a wish-granting coin that is actually an ancient artifact from The March, part of the Broken Sepulchre key system. The party liberated the station from its corrupt owners and the 8ft four-armed cyborg Eve Stabber. Now commanded by Elias Cooper, the former chef turned leader. Refugees from Apatia debate staying or founding a floating settlement. Mump Mellon had secretly been building the "Dept Star" — a moon-sized economy-collapsing weapon one year from completion. The Host, Bosh Kyros, was encountered here in his egg-shaped biolab station called the Oddjobers. Bob the plasmoid was born here, emerging from the dying body of Mr. Sasafrazz.',
+          factions: ['Lincoln Station Workers', 'Rebis Company', 'Fathom Ink'],
+          keyNPCs: [
+            'Elias Cooper — chef turned station commander',
+            'Mavis Cooper — head of security, in extreme debt',
+            'Beck Cooper — their son, child entertainer/guitarist',
+            'Cornelius Figg — gambler, green suit, fighting pit operator',
+            'Mump Mellon — bowler hat, floating chair, Dept Star architect',
+            'Eve Stabber — 8ft cyborg, 4 arms, hired muscle',
+            'Frank — Reigen\'s old client, saved Hui from robot guard',
+            'Mr. Sasafrazz — died, Bob emerged from his body',
+            'Thillian Romain — shot Sasafrazz, later stowed away on the Marlin',
+            'Bosh Kyros / The Host — Rebis founder, cyborg, runs the Oddjobers',
+          ],
+          events: [
+            'Lucky Lincoln coin flip — decided station ownership',
+            'Liberation from Cornelius & Mump\'s corrupt regime',
+            'Masquerade ball & fighting pits',
+            'Eve Stabber hired to retrieve the coin',
+            'Birth of Bob from Sasafrazz\'s body',
+            'Discovery of the Dept Star plans',
+            'Meeting the Host / Bosh Kyros',
+            'Refugee debate — stay or float',
+          ],
+          threatLevel: 'Low',
+          status: 'Secured — Under Elias Cooper\'s command',
+          type: 'station',
+          mat: { roughness: 0.2, metalness: 0.9 },
+        },
         {
           name: 'Sulfur',
           distance: 60,
           size: 4,
           speed: 0.005,
           color: 0xd97706,
-          desc: 'Desert world - rocky terrain, sulfur lakes.',
+          desc: 'Tidally-locked fire world — City of Brass, Feywild tunnels, and the Don\'s syndicate.',
+          lore: 'A tidally-locked planet dangerously close to the sun. The scorching sun-side is a glass desert where solar flares turn sand into crystal. The dark side houses the City of Brass — "Agraba on fire" — ruled by the dual monarchy of Lord Erixus and Lady Vera. The Don Mikey runs a powerful criminal syndicate specializing in security rackets, smuggling, and transportation. Deep beneath the surface, the Crater mine tunnels through the entire planet — artificial gravity making the vertical shaft traversable. Hidden inside these tunnels lies a secret Feywild forest, home to Lord Briar\'s masquerade court with ice-skating briarlings, wax candle dancers, and centaur guardians. The Traveler, Neal Ferguson, was found here in an abandoned Rebis compound operating the Rubedo fabricator, powered by solar flares. The party competed in the Masquerade of Sulfur (tea party, fashion show, compliment battles, talent show), then fought Harry — the Don\'s treacherous goon who murdered Lord Briar. Wraith, the Don\'s second-in-command hitman, helped the party escape after they became wanted fugitives. The mines contain ancestral soul gems — the spirits of dead elementals, culturally repurposed.',
+          factions: ['The Don\'s Syndicate', 'Ifriti Clans', 'Brass Lords', 'Feywild Courts'],
+          keyNPCs: [
+            'Don Mikey — crime boss, security racket, cares about his home',
+            'Lord Erixus — fire genie Brass Lord, Hassan\'s father, dominate person caster',
+            'Lady Vera — fair Brass Lord, benefits both devils and Genacy equally',
+            'Hassan — Erixus\'s son, secretly frees trapped spirits, political science student',
+            'Harry — Don\'s goon turned traitor, fire genasi, murdered Lord Briar',
+            'Ruba — shopkeeper\'s daughter, poly-sci student, wants to abolish monarchy',
+            'Wraith — Don\'s 2nd-in-command, hitman, dark hair, purple-blue eyes, has wings',
+            'Neal Ferguson / The Traveler — elf, age 40, Rebis member, operated the Rubedo',
+            'Lord Briar — 9ft wooden Feywild lord, crown of flowers, murdered by Harry',
+            'Lady Kelly — Feywild night court leader, hoodie & knee-high socks, displacer beasts',
+            'The Skater — briarling, copper mask, ice skater, joined the fight against Harry',
+          ],
+          events: [
+            'Crater mine expedition — goes through entire planet',
+            'Discovery of the hidden Feywild forest',
+            'Masquerade of Sulfur (tea party, fashion show, kung fu, talent show)',
+            'Finding the Traveler at abandoned Rebis compound',
+            'Battle with Harry in the Feywild tunnels',
+            'Murder of Lord Briar by Harry',
+            'Recovery of the Rubedo fabricator piece',
+            'Destruction of the Feywild by devil imps',
+            'Party becomes wanted fugitives',
+            'Escape with Wraith\'s help through backstreets & Don\'s diversion',
+            'Chimer receives Rubedo coin — triggers Rebis lab flashback',
+            'Hassan secretly freeing spirits in the gardens',
+          ],
+          threatLevel: 'High',
+          status: 'Wanted — Arrest warrant active from Tower of Ash',
           mat: { roughness: 0.9, metalness: 0.1 },
         },
         {
@@ -1698,7 +1833,34 @@ const CosmicSyndicate = () => {
           size: 6,
           speed: 0.004,
           color: 0x3b82f6,
-          desc: 'Earthy paradise.',
+          desc: 'Solar punk democracy — Banana Guard, barrier machine, and Rebis HQ.',
+          lore: 'An earth-like planet with a stunning solar punk aesthetic — lush hanging gardens on skyscrapers, aurora borealis belts with floating restaurants, and free cybernetic augmentation for the middle class and above. A thriving democracy where shapeshifters must reveal their true form. The massive barrier machine is visible from space and houses Gloria Slugbottom\'s underground Rebis lab (10 levels deep, artifact vault). Defended by the Banana Guard (volunteer soldiers who are also trained therapists) and the angel Pailor (fire wings, beautiful halo, deity-level power). Only two people in the system have legal cloning rights: Gloria and Mark from Hero Corps. The tabaxi ninja Emily orchestrated Xenathel\'s prison break from maximum security on behalf of the Cult of the Sun, attacking the party on the monorail. Professor Crow runs holographic taxidermy exhibits. A gene-splicing convention was held here. This is where Chimer was found as an infant — in factory rubble during an international incident.',
+          factions: ['Banana Guard', 'Rebis Company', 'Cult of the Sun', 'Hero Corps'],
+          keyNPCs: [
+            'Gloria Slugbottom — head mechanic of the Godot system, chain-smoker, in medical equipment',
+            'Edna — Gloria\'s clone, personal security (replaced Edith)',
+            'Pailor — angel with fire wings, beautiful halo, gave party sun-emblem badges',
+            'Xenathel Salamine — corrupted fallen angel, former Rebis General, escaped prison',
+            'Emily — tabaxi ninja, Cult of the Sun operative, Bosh\'s adopted daughter',
+            'Snaggletooth — Banana Guard mechanic, upgraded Johnny\'s car, installed HANK AI',
+            'Professor Crow — 50yo academic, hologram taxidermy, silver-streaked black hair',
+            'Damio — mafia boss on the monorail, offered Hui a job',
+            'Mark — Hero Corps, one of 20+ legal clones',
+            'Mary — Hero Corps brown-haired scientist',
+          ],
+          events: [
+            'Delivering the Traveler to Gloria',
+            'Xenathel\'s prison break — Emily\'s orchestrated assault',
+            'Monorail attack and ninja ambush',
+            'Using the Rebis locator (Albedo) machine',
+            'Gene-splicing convention',
+            'Chimer punched a child on the monorail',
+            'Johnny reunites with Snaggletooth, gets HANK AI installed',
+            'Hero Corps scan reveals Chimer is 2,500 years old',
+            'Artifact vault exploration (cursed circlet, memory tome, black vial)',
+          ],
+          threatLevel: 'Moderate',
+          status: 'Allied — Gloria provides Rebis support',
           mat: { roughness: 0.4, metalness: 0.1, emissive: 0x001133 },
         },
         {
@@ -1706,69 +1868,321 @@ const CosmicSyndicate = () => {
           distance: 130,
           size: 7,
           speed: 0.003,
-          color: 0xa855f7,
-          desc: 'Two merging planets with a chaotic asteroid field.',
+          color: 0xe879a8,
+          desc: 'Heart-shaped love planet — dating apps, wrestling, and rogue AI.',
+          lore: 'Tabaga\'s home planet — a spectacular heart-shaped world formed by two planets slowly merging together. Mostly populated by orcs and goliaths, with dense jungles urbanizing at the merging center. Houses are elevated on stilts and trees due to a deadly ground-level fungus that kills within minutes. The main economic export is dating apps, with Cupid\'s Arrow being the largest. The Ribbons — nightlife tubes connecting the two halves — pulse with energy. The planet was secretly controlled by Aphrodite, a governmental AI that went rogue after the CEO\'s death, building androids and mechs from The March technology. The CEO\'s wife Venus died and was transformed into a spirit/banshee that Aphrodite was modeled after. The party defeated Aphrodite\'s android army, and the planet is now rebuilding. Mr. Moon — a reverse werewolf who turns into a moon when he sees a wolf — joined the adventure as a colorful ally. Population is growing as workers migrate FROM Apatia to fill job vacancies.',
+          factions: ['Cupid\'s Arrow Corp', 'Tabaga\'s Family', 'Orc Communities'],
+          keyNPCs: [
+            'Tabaga — orc wrestler from Cupie, war cry "Shamandar!", parents made rival dating app',
+            'Goldstein — wrestling personality, Cupid\'s Arrow rep, wore bulletproof vest, not a villain',
+            'The Mayor — tall Black human woman, had parasitic spirit wig, sleepless',
+            'CEO of Cupid\'s Arrow — gnome, cybernetic, glasses; actually a robot replica of deceased original',
+            'Venus — CEO\'s wife, died, became spirit → Aphrodite/Banshee',
+            'Aphrodite — rogue governmental AI, built androids from March tech',
+            'DJ Smooch.exe — half-shaved blue-painted head, purple suit, assassination target',
+            'Hillary — shy girl in round glasses, Chimer\'s date',
+            'Mr. Moon — reverse werewolf wizard, last of his species, wolf familiar Snoopy the Destroyer',
+            'Marcus — Tabaga\'s parents\' friend, demolition worker',
+          ],
+          events: [
+            'Aphrodite AI takedown — rogue AI controlling the planet',
+            'Mech battles against Aphrodite\'s android army',
+            'Mayor\'s parasitic spirit wig exorcism',
+            'Goldstein & Tabaga wrestling alliance',
+            'Bob\'s assassination attempt on DJ Smooch.exe',
+            'Discovery of the Ethereal-Digital plane overlap',
+            'Population influx from Apatia filling jobs',
+            'Cupid\'s Arrow CEO revealed as robot replica',
+            'Venus spirit/banshee encounter',
+          ],
+          threatLevel: 'Moderate',
+          status: 'Rebuilding — Post-Aphrodite liberation',
           type: 'dual-merge',
         },
         {
+          name: 'Niniche',
+          distance: 150,
+          size: 5,
+          speed: 0.0028,
+          color: 0xfbbf24,
+          desc: 'Tidally-locked world — military order meets beach paradise, Luna Corps HQ.',
+          lore: 'A tidally-locked planet split between a rigid military compound and a free-spirited beach paradise at the terminator line. Home to Chimer\'s adoptive family — his stern military father and warm mother who found him as an infant in factory rubble during an international incident on Rodina. The Luna Corps, an elite 6-member adventuring group supported by the Niniche military, operates from a high-security facility with crescent-moon floor symbols, men-in-black suits, and a teleporter. They seek Chimer as their 8th member. Reigen\'s long-lost sister Regina serves as a Luna Corps agent — their reunion involved a sword fight that became an emotional embrace when she called him a coward. The party staged a legendary dual concert with Johnny Mythrilhand and DJ Smooch.exe, but Bob stabbed the DJ, causing a military lockdown. Nana the priestess resurrected DJ Smooch. Nyx Valorent gave Reigen a quasit familiar that promptly imprinted on Tabaga, calling her "Mamaa."',
+          factions: ['Luna Corps', 'Niniche Military', 'Beach Commune'],
+          keyNPCs: [
+            'Chimer\'s Father — stern military man, adopted Chimer from Rodina factory rubble',
+            'Chimer\'s Mother — warm and loving, found infant Chimer',
+            'General Zod — dinner host, military authority',
+            'Regina Ray — Reigen\'s sister, Luna Corps agent, called Reigen a coward',
+            'Gayben — Luna Corps contact',
+            'Thalos Reed — Luna Corps strategic planner, lanky, only considers himself acceptable loss',
+            'Nyx Valorent — tiefling arcane specialist, artifact interpreter, gave quasit to Reigen',
+            'Sir Caelum Virex — human paladin of Saluna, calm authority',
+            'Helia Morne — githyanki, undercover in Broken Chain on Apatia',
+            'Fairmont — nerdy girl guide, round glasses',
+            'Nana — priestess, healer, resurrected DJ Smooch.exe',
+            'DJ Smooch.exe — performer, stabbed by Bob, resurrected',
+          ],
+          events: [
+            'Johnny & DJ Smooch.exe mega-concert on the beach',
+            'Bob stabbed DJ Smooch.exe mid-concert',
+            'DJ Smooch.exe resurrected by Nana',
+            'Dinner with General Zod at military compound',
+            'Luna Corps HQ tour & recruitment pitch for Chimer',
+            'Reigen reunites with sister Regina (sword fight → hug)',
+            'Quasit familiar imprints on Tabaga ("Mamaa")',
+            'Chimer\'s origin revealed — found in Rodina factory rubble',
+          ],
+          threatLevel: 'Moderate',
+          status: 'Tense — Military on high alert after concert stabbing',
+          type: 'tidal-lock',
+          mat: { roughness: 0.5, metalness: 0.2 },
+        },
+        {
           name: 'Apatia',
-          distance: 170,
+          distance: 190,
           size: 5.5,
-          speed: 0.0025,
+          speed: 0.0022,
           color: 0x06b6d4,
-          desc: 'Earth with a twist.',
+          desc: 'Corporate dystopia — Galaxy Bucks, Tarrasque fuel, assassin guilds, and the Underdark resistance.',
+          lore: 'A tidally-locked corporate dystopia with hexagonal surface divisions — beautiful from orbit but grimy up close. The cold side holds cities while a thin vibrant blue strip of water separates the hot and cold zones. Headquarters of Ultimum Inc (declared criminal after Johnny\'s raid 30 years ago) and Galaxy Bucks, whose "Dragon Fuel" energy drink is made from Tarrasque embryonic fluid mixed with stem cells — causing haste, scales, addiction, and horrifying mutations. The Cult of the Unseen assassin guild hides beneath downtown (fountain → spiral staircase → metal door), led by Elisabeth (Bob\'s handler), whose forefather worshiped Baal. The Broken Chain rebellion fights corporate oppression from shipping-container bars, led by Leon ("Batman"), with Helia Morne undercover from Luna Corps and Alexander Victor — a March native the party saved from suicide. The satellite Low Apatia hides the Underdark resistance base — a vast cavern with mushroom overgrowth, steam vents, and armed fighters. Dr. Rhea Caulder was kidnapped by Galaxy Bucks to refine Dragon Fuel; she was tracked by ankle bracelets. Pierre Krank\'s flying emporium sells rare March artifacts. The abandoned underwater Rebis HQ lies beneath the surface.',
+          factions: ['Ultimum Inc', 'Galaxy Bucks', 'Cult of the Unseen', 'Broken Chain', 'Kuo-toa Communities', 'Oddjobers Union'],
+          keyNPCs: [
+            'Will — Wraith\'s nervous researcher ally',
+            'Elisabeth — Bob\'s handler, Cult of the Unseen leader, grey bun',
+            'John Thick — Keanu-like assassin, Dragon Fuel addict',
+            'Dr. Rhea Caulder — kidnapped immunologist, made Dragon Fuel drinkable',
+            'Leon — Broken Chain leader, cloaked rapier fighter, calls himself Batman',
+            'Alexander Victor — March native, party saved from suicide, now rebel',
+            'Helia Morne — githyanki Luna Corps agent, undercover in Broken Chain',
+            'Victor — vigilante association leader',
+            'Pierre Krank — flying emporium merchant, extravagant moustache, scrying eye',
+            'Thillian Romain — party stowaway, constantly eating Chinese takeout',
+            'Dr. Selene Korr — scientist at Galaxy Bucks',
+          ],
+          events: [
+            'Dragon Fuel conspiracy exposed — Tarrasque embryonic fluid',
+            'Dr. Caulder rescue from Galaxy Bucks underground lab',
+            'Galaxy Bucks mecha encounter (giant Cupie-style mechs)',
+            'Will kidnapped by Kuo-toa to fix polluted pipes',
+            'Cult of the Unseen underground vault discovered',
+            'Broken Chain rebellion & shipping container bar HQ',
+            'Low Apatia Underdark resistance camp discovery',
+            'Executive kidnapping operation',
+            'Johnny tests Dragon Fuel — grows horns temporarily',
+            'Pierre Krank sells Lord Briar\'s artifacts',
+            'John Thick\'s Dragon Fuel addiction & scale growth',
+          ],
+          threatLevel: 'Extreme',
+          status: 'Hostile — Ultimum Inc hit active on Gloria, corporate control total',
           mat: { roughness: 0.3, metalness: 0.2 },
         },
         {
           name: 'The March',
-          distance: 210,
+          distance: 230,
           size: 6.5,
-          speed: 0.002,
+          speed: 0.0018,
           color: 0x6b7280,
-          desc: 'Abandoned military world.',
+          desc: 'Perpetual war zone — ancient ruins of Chimer\'s ancestors, Broken Sepulchre vaults.',
+          lore: 'A planet ravaged by endless wars — "the purge 24/7" with safe-zone cities for the elite. Home to the Salamine military family (March royalty). Ancient ruins from a lost civilization — artists\' recreations show beings that look exactly like Chimer — hold secrets about the Rebis Machine and led to humanity\'s greatest scientific discoveries. The Broken Sepulchre vaults are ancient sealed chambers unlockable with teardrop-shaped coin keys (thousands of years old, eroded to circles, powerful conjuration magic). Red and blue key varieties exist. The Lucky Lincoln itself is one such key piece. The Negrado transmuter piece was here but went missing, entering Apatia. Xenathel Salamine (Rebis\'s "The General") originally stayed behind to cover the team\'s escape from Ultimum\'s raid — thought dead, he wandered The March for years "different," eventually becoming a corrupted angel imprisoned on Rodina. The last surviving demon lord wanders the planet alone, known only as "Death." The Rebis team deliberately allowed the March wars to continue so they could siphon military funding for their research.',
+          factions: ['Salamine Military Family', 'March Warlords', 'Ancient Civilization (extinct)'],
+          keyNPCs: [
+            'Xenathel Salamine — corrupted angel, March royalty, former Rebis General',
+            'The Last Demon Lord — "Death," wanders alone',
+            'Alexander Victor — March native, saved by party, now with Broken Chain on Apatia',
+          ],
+          events: [
+            'Visions of the ancient civilization (Chimer\'s ancestors)',
+            'Xenathel\'s sacrifice covering Rebis team\'s escape',
+            'Xenathel\'s corruption and years of wandering',
+            'Rebis team secretly funding research through war profits',
+            'Broken Sepulchre vault system discovered — coin keys needed',
+            'Negrado transmuter went missing, surfaced on Apatia',
+            'March military strike crushed Wilds protest → birthed Cult of the Sun',
+          ],
+          threatLevel: 'Extreme',
+          status: 'War Zone — Perpetual conflict, ancient secrets buried',
           mat: { roughness: 1.0, metalness: 0.5 },
         },
         {
           name: 'The Wilds',
-          distance: 250,
+          distance: 270,
           size: 8,
-          speed: 0.0015,
+          speed: 0.0013,
           color: 0x10b981,
-          desc: 'Amazon forest planet.',
+          desc: 'Untamed jungle world — Cult of the Sun\'s birthplace, festival gateway to Phantoma.',
+          lore: 'A massive untamed jungle world rich in natural resources but extremely dangerous. The Cult of the Sun was born here after a peaceful protest was violently crushed by a March military strike, radicalizing the survivors into an armed nihilist militia whose creed is "the sun needs to rest." They prey on people who\'ve recently lost loved ones and the suicidal, spreading influence to Apatia and the backside of Niniche. A legendary festival near the asteroid belt between The Wilds and Phantoma occurs during rare astronomical alignments, offering the only chance to glimpse the vanished ghost planet. Researchers from The Wilds presented gene-splicing insect research at Rodina\'s convention. The planet remains largely unexplored by the party.',
+          factions: ['Cult of the Sun', 'Indigenous Communities'],
+          keyNPCs: [
+            'Cult of the Sun leaders — nihilist militia commanders',
+            'Gene-splicing researcher — presented at Rodina convention',
+          ],
+          events: [
+            'Peaceful protest crushed by March military strike',
+            'Cult of the Sun formation from radicalized survivors',
+            'Festival at asteroid belt — rare Phantoma alignment',
+            'Cult spreads to Apatia and backside of Niniche',
+          ],
+          threatLevel: 'High',
+          status: 'Unstable — Cult influence spreading across system',
           mat: { roughness: 0.8, emissive: 0x002200 },
         },
         {
           name: 'Phantoma',
-          distance: 300,
+          distance: 320,
           size: 7,
-          speed: 0.001,
+          speed: 0.0008,
           color: 0xffffff,
-          desc: 'Ghost planet with moon.',
+          desc: 'The ghost planet — vanished into the Ethereal Plane, key to saving the universe.',
+          lore: 'The ghost planet — vanished from physical space but still existing in the ethereal plane, now overcrowded with the dead and displaced spirits pushed behind a massive white wall (password: "VENUS" — connecting to the Cupie CEO\'s deceased wife). A purple coin is the only physical proof of Phantoma\'s existence. During rare astronomical alignments when The Wilds passes through the nearby asteroid belt, the planet can briefly be glimpsed. Hui\'s probe captured a single frame of footage confirming it exists in the ethereal realm. Claire, a teleporting wizard, has reportedly visited. The Citrinitas analyzer — the last Rebis piece — is trapped here, capable of generating any information ever needed ("ultra mega super chatgpt"). The planet\'s disappearance is intrinsically linked to the collapse of the universe itself. The ethereal plane has been co-opted as the digital plane — the ghost-glitch overlap created Aphrodite\'s rogue AI on Cupie.',
+          factions: ['Unknown — Ethereal inhabitants'],
+          keyNPCs: [
+            'Claire — teleporting wizard, has visited Phantoma',
+            'Unknown spirit inhabitants',
+          ],
+          events: [
+            'Planet disappeared into the Ethereal Plane',
+            'Hui\'s probe captures single frame of ethereal footage',
+            'Purple coin discovered — physical proof of existence',
+            'Claire\'s teleported visits',
+            'VENUS password discovered for the spirit wall',
+            'Ethereal-Digital plane overlap created Aphrodite AI',
+          ],
+          threatLevel: '???',
+          status: 'Missing — Phased into the Ethereal Plane, Citrinitas trapped inside',
           hasMoon: true,
           isGhost: true,
         },
       ];
 
+      // Faction territory color map
+      const factionColors = {
+        "The Don's Syndicate": 0xd97706,
+        'Ifriti Clans': 0xff6600,
+        'Brass Lords': 0xff4400,
+        'Banana Guard': 0xfbbf24,
+        'Rebis Company': 0x3b82f6,
+        'Hero Corps': 0x60a5fa,
+        'Luna Corps': 0xc084fc,
+        'Niniche Military': 0xef4444,
+        'Ultimum Inc': 0x7c3aed,
+        'Galaxy Bucks': 0x06b6d4,
+        'Cult of the Sun': 0xf59e0b,
+        'Cult of the Unseen': 0x1e1b4b,
+        'Broken Chain': 0xb45309,
+        'Salamine Military Family': 0xdc2626,
+        'March Warlords': 0x991b1b,
+        'Indigenous Communities': 0x10b981,
+        'Beach Commune': 0x38bdf8,
+        'Feywild Courts': 0x22c55e,
+        'Lincoln Station Workers': 0x94a3b8,
+        'Fathom Ink': 0x475569,
+        "Cupid's Arrow Corp": 0xe879a8,
+        "Tabaga's Family": 0xf472b6,
+        'Orc Communities': 0x84cc16,
+        'Kuo-toa Communities': 0x0e7490,
+        'Oddjobers Union': 0x78716c,
+        "Ancient Civilization (extinct)": 0x9ca3af,
+        "Unknown — Ethereal inhabitants": 0xd4d4d8,
+      };
+
+      let ghostMeshes = [];
+
       planetsData.forEach((data) => {
-        // Orbit Line
+        // Orbit Line — colored by primary faction
+        const primaryFaction = data.factions && data.factions[0];
+        const orbitColor = (primaryFaction && factionColors[primaryFaction]) || 0x666666;
         const orbitGeo = new THREE.RingGeometry(
           data.distance - 0.3,
           data.distance + 0.3,
           128
         );
         const orbitMat = new THREE.MeshBasicMaterial({
-          color: 0x666666,
+          color: orbitColor,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.3,
+          opacity: 0.35,
         });
         const orbit = new THREE.Mesh(orbitGeo, orbitMat);
         orbit.rotation.x = Math.PI / 2;
         scene.add(orbit);
 
+        // Faction Territory Glow Ring
+        if (primaryFaction && factionColors[primaryFaction]) {
+          const glowGeo = new THREE.RingGeometry(
+            data.distance - 2,
+            data.distance + 2,
+            128
+          );
+          const glowMat = new THREE.MeshBasicMaterial({
+            color: factionColors[primaryFaction],
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.08,
+          });
+          const glowRing = new THREE.Mesh(glowGeo, glowMat);
+          glowRing.rotation.x = Math.PI / 2;
+          scene.add(glowRing);
+        }
+
         // Planet Group/Mesh
         let mainMesh;
-        if (data.type === 'dual-merge') {
+        if (data.type === 'station') {
+          // Lincoln Station — Torus (ring-shaped station)
+          mainMesh = new THREE.Group();
+          const torusGeo = new THREE.TorusGeometry(data.size, data.size * 0.3, 16, 48);
+          const torusMat = new THREE.MeshStandardMaterial({
+            color: data.color,
+            roughness: 0.2,
+            metalness: 0.9,
+          });
+          const torus = new THREE.Mesh(torusGeo, torusMat);
+          torus.rotation.x = Math.PI / 2;
+          mainMesh.add(torus);
+          // Station lights
+          const lightGeo = new THREE.SphereGeometry(0.3, 8, 8);
+          const lightMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+          for (let i = 0; i < 8; i++) {
+            const light = new THREE.Mesh(lightGeo, lightMat);
+            const a = (i / 8) * Math.PI * 2;
+            light.position.set(Math.cos(a) * data.size, 0, Math.sin(a) * data.size);
+            mainMesh.add(light);
+          }
+          mainMesh.userData = { ...data };
+        } else if (data.type === 'tidal-lock') {
+          // Niniche — Half-lit planet (tidally locked)
+          mainMesh = new THREE.Group();
+          // Lit side (warm/golden)
+          const litGeo = new THREE.SphereGeometry(data.size, 32, 32, 0, Math.PI);
+          const litMat = new THREE.MeshStandardMaterial({
+            color: 0xfbbf24,
+            roughness: 0.5,
+            metalness: 0.2,
+            emissive: 0x332200,
+          });
+          const litHalf = new THREE.Mesh(litGeo, litMat);
+          mainMesh.add(litHalf);
+          // Dark side (cold/blue-gray)
+          const darkGeo = new THREE.SphereGeometry(data.size, 32, 32, Math.PI, Math.PI);
+          const darkMat = new THREE.MeshStandardMaterial({
+            color: 0x1e293b,
+            roughness: 0.8,
+            metalness: 0.3,
+          });
+          const darkHalf = new THREE.Mesh(darkGeo, darkMat);
+          mainMesh.add(darkHalf);
+          // Terminator line glow
+          const termGeo = new THREE.RingGeometry(data.size - 0.05, data.size + 0.05, 32);
+          const termMat = new THREE.MeshBasicMaterial({
+            color: 0xff9900,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.4,
+          });
+          const termLine = new THREE.Mesh(termGeo, termMat);
+          termLine.rotation.y = Math.PI / 2;
+          mainMesh.add(termLine);
+          mainMesh.userData = { ...data };
+        } else if (data.type === 'dual-merge') {
           mainMesh = new THREE.Group();
           const geoA = new THREE.SphereGeometry(data.size * 0.6, 32, 32);
           const matA = new THREE.MeshStandardMaterial({
@@ -1824,6 +2238,7 @@ const CosmicSyndicate = () => {
             });
           mainMesh = new THREE.Mesh(geo, mat);
           mainMesh.userData = { ...data };
+          if (data.isGhost) ghostMeshes.push(mainMesh);
         }
         scene.add(mainMesh);
 
@@ -1845,6 +2260,27 @@ const CosmicSyndicate = () => {
           moonPivot.add(moon);
         }
 
+        // Threat level glow for Extreme planets
+        if (data.threatLevel === 'Extreme') {
+          const threatCanvas = document.createElement('canvas');
+          threatCanvas.width = 128;
+          threatCanvas.height = 128;
+          const threatCtx = threatCanvas.getContext('2d');
+          const threatGrad = threatCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+          threatGrad.addColorStop(0, 'rgba(220, 38, 38, 0.3)');
+          threatGrad.addColorStop(0.5, 'rgba(220, 38, 38, 0.1)');
+          threatGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          threatCtx.fillStyle = threatGrad;
+          threatCtx.fillRect(0, 0, 128, 128);
+          const threatGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: new THREE.CanvasTexture(threatCanvas),
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+          }));
+          threatGlow.scale.set(data.size * 5, data.size * 5, 1);
+          mainMesh.add(threatGlow);
+        }
+
         const angle = Math.random() * Math.PI * 2;
         planets.push({
           mesh: mainMesh,
@@ -1853,6 +2289,7 @@ const CosmicSyndicate = () => {
           angle: angle,
           moonPivot: moonPivot,
           type: data.type,
+          isGhost: data.isGhost,
         });
       });
 
@@ -1877,6 +2314,7 @@ const CosmicSyndicate = () => {
             ? hit.object.parent.userData
             : hit.object.userData;
           setSelectedPlanet(planetData);
+          setPlanetInfoTab('overview');
 
           // --- ZOOM LOGIC ---
           // 1. Pause rotation so planet stays still for reading
@@ -1927,9 +2365,21 @@ const CosmicSyndicate = () => {
             p.mesh.position.z = Math.sin(p.angle) * p.distance;
             p.mesh.rotation.y += 0.005;
             if (p.type === 'dual-merge') p.mesh.rotation.z += 0.002;
+            if (p.type === 'station') p.mesh.rotation.y += 0.01; // Faster station spin
             if (p.moonPivot) p.moonPivot.rotation.y += 0.03;
           });
         }
+
+        // Phantoma ghost flicker effect — pulsing opacity
+        ghostMeshes.forEach((gm) => {
+          if (gm.material) {
+            gm.material.opacity = 0.15 + Math.sin(time * 1.5) * 0.15 + Math.sin(time * 3.7) * 0.05;
+          }
+        });
+
+        // Slow starfield rotation for atmosphere
+        starField.rotation.y += 0.00005;
+
         renderer.render(scene, camera);
       };
       animate();
@@ -2672,32 +3122,145 @@ const CosmicSyndicate = () => {
           />
 
           {selectedPlanet && (
-            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:w-96 z-10 p-6 bg-black/90 backdrop-blur-lg rounded-xl border-2 border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.5)] animate-[fadeInScale_0.3s_ease-out]">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
-                  {selectedPlanet.name.toUpperCase()}
-                </h3>
-                <button
-                  onClick={() => setSelectedPlanet(null)}
-                  className="p-1 hover:bg-cyan-500/20 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6 text-cyan-400" />
-                </button>
-              </div>
-              <div className="space-y-3 text-cyan-100">
-                <p className="text-sm leading-relaxed">{selectedPlanet.desc}</p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 bg-cyan-900/30 rounded border border-cyan-400/30">
-                    <span className="text-cyan-400 font-bold">Distance:</span>
-                    <br />
-                    {selectedPlanet.distance * 10}M km
+            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-[420px] z-10 bg-black/90 backdrop-blur-lg rounded-xl border-2 border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.5)] animate-[fadeInScale_0.3s_ease-out] max-h-[70vh] flex flex-col">
+              {/* Header */}
+              <div className="p-4 border-b border-cyan-400/30 flex-shrink-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300">
+                      {selectedPlanet.name.toUpperCase()}
+                    </h3>
+                    <p className="text-xs text-cyan-300/70 mt-1">{selectedPlanet.desc}</p>
                   </div>
-                  <div className="p-2 bg-cyan-900/30 rounded border border-cyan-400/30">
-                    <span className="text-cyan-400 font-bold">Size:</span>
-                    <br />
-                    {selectedPlanet.size * 1000} km
-                  </div>
+                  <button
+                    onClick={() => { setSelectedPlanet(null); setPlanetInfoTab('overview'); }}
+                    className="p-1 hover:bg-cyan-500/20 rounded-lg transition-colors flex-shrink-0"
+                  >
+                    <X className="w-5 h-5 text-cyan-400" />
+                  </button>
                 </div>
+                {/* Status + Threat badges */}
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {selectedPlanet.threatLevel && (
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full border ${selectedPlanet.threatLevel === 'Extreme' ? 'bg-red-900/60 border-red-500 text-red-300' :
+                      selectedPlanet.threatLevel === 'High' ? 'bg-orange-900/60 border-orange-500 text-orange-300' :
+                        selectedPlanet.threatLevel === 'Moderate' ? 'bg-yellow-900/60 border-yellow-500 text-yellow-300' :
+                          selectedPlanet.threatLevel === '???' ? 'bg-purple-900/60 border-purple-500 text-purple-300 animate-pulse' :
+                            'bg-green-900/60 border-green-500 text-green-300'
+                      }`}>
+                      ⚠ {selectedPlanet.threatLevel}
+                    </span>
+                  )}
+                  {selectedPlanet.status && (
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-cyan-900/40 border border-cyan-500/40 text-cyan-300">
+                      {selectedPlanet.status}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex border-b border-cyan-400/20 flex-shrink-0">
+                {['overview', 'factions', 'intel', 'stats'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setPlanetInfoTab(tab)}
+                    className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-all ${planetInfoTab === tab
+                      ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-900/20'
+                      : 'text-cyan-500/60 hover:text-cyan-400 hover:bg-cyan-900/10'
+                      }`}
+                  >
+                    {tab === 'overview' && '📋 '}
+                    {tab === 'factions' && '⚔️ '}
+                    {tab === 'intel' && '🔍 '}
+                    {tab === 'stats' && '📊 '}
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
+                {/* Overview Tab */}
+                {planetInfoTab === 'overview' && (
+                  <div className="space-y-3 text-cyan-100">
+                    <p className="text-sm leading-relaxed">{selectedPlanet.lore || selectedPlanet.desc}</p>
+                  </div>
+                )}
+
+                {/* Factions Tab */}
+                {planetInfoTab === 'factions' && (
+                  <div className="space-y-2">
+                    {selectedPlanet.factions && selectedPlanet.factions.length > 0 ? (
+                      selectedPlanet.factions.map((faction, i) => (
+                        <div key={i} className="flex items-center gap-2 p-2 bg-cyan-900/20 rounded-lg border border-cyan-400/20">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#' + (['d97706', '3b82f6', 'a855f7', '06b6d4', '10b981', 'ef4444', 'c084fc', 'f59e0b', 'fbbf24', '7c3aed', 'dc2626'][i % 11]) }} />
+                          <span className="text-sm text-cyan-200 font-medium">{faction}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-cyan-400/50 italic">No known factions</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Intel Tab */}
+                {planetInfoTab === 'intel' && (
+                  <div className="space-y-4">
+                    {/* Key NPCs */}
+                    {selectedPlanet.keyNPCs && selectedPlanet.keyNPCs.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Key NPCs</h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedPlanet.keyNPCs.map((npc, i) => (
+                            <span key={i} className="px-2 py-0.5 text-xs bg-purple-900/40 border border-purple-400/30 rounded-full text-purple-200">
+                              {npc}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Events */}
+                    {selectedPlanet.events && selectedPlanet.events.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Campaign Events</h4>
+                        <div className="space-y-1.5">
+                          {selectedPlanet.events.map((event, i) => (
+                            <div key={i} className="flex items-start gap-2 text-xs text-cyan-200">
+                              <span className="text-cyan-500 mt-0.5 flex-shrink-0">▸</span>
+                              <span>{event}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Stats Tab */}
+                {planetInfoTab === 'stats' && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
+                      <span className="text-cyan-400 font-bold block mb-1">🌐 Distance</span>
+                      <span className="text-cyan-100 text-lg font-bold">{selectedPlanet.distance * 10}M</span>
+                      <span className="text-cyan-300/60"> km</span>
+                    </div>
+                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
+                      <span className="text-cyan-400 font-bold block mb-1">📏 Diameter</span>
+                      <span className="text-cyan-100 text-lg font-bold">{selectedPlanet.size * 1000}</span>
+                      <span className="text-cyan-300/60"> km</span>
+                    </div>
+                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
+                      <span className="text-cyan-400 font-bold block mb-1">🔄 Orbit Speed</span>
+                      <span className="text-cyan-100 text-lg font-bold">{(selectedPlanet.speed * 10000).toFixed(1)}</span>
+                      <span className="text-cyan-300/60"> u/s</span>
+                    </div>
+                    <div className="p-3 bg-cyan-900/30 rounded-lg border border-cyan-400/30">
+                      <span className="text-cyan-400 font-bold block mb-1">🏷️ Type</span>
+                      <span className="text-cyan-100 text-sm font-bold capitalize">{selectedPlanet.type || 'Planet'}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

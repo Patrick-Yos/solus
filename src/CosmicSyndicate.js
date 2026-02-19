@@ -2387,9 +2387,11 @@ const CosmicSyndicate = () => {
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(scene.children, true);
         const hit = intersects.find(
-          (i) =>
-            i.object.userData &&
-            (i.object.userData.name || i.object.userData.desc)
+          (i) => {
+            const od = i.object.userData;
+            const pd = i.object.parent?.userData;
+            return (od && (od.name || od.desc)) || (pd && (pd.name || pd.desc));
+          }
         );
 
         if (hit) {

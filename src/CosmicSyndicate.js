@@ -2376,48 +2376,53 @@ const CosmicSyndicate = () => {
       });
 
       renderer.domElement.addEventListener('mouseup', (event) => {
-        // Only treat as click if mouse moved less than 5px (not a drag)
+        // Only treat as click if mouse moved less than 10px (forgiving threshold)
         const dx = event.clientX - mouseDownPos.x;
         const dy = event.clientY - mouseDownPos.y;
-        if (Math.sqrt(dx * dx + dy * dy) > 5) return;
+        if (Math.sqrt(dx * dx + dy * dy) > 10) return;
 
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        // Only intersect planets (and their children) to ignore bubble/dust/stars
-        const intersects = raycaster.intersectObjects(planets.map(p => p.mesh), true);
-        const hit = intersects.find(
-          (i) => {
-            const od = i.object.userData;
-            const pd = i.object.parent?.userData;
-            return (od && (od.name || od.desc)) || (pd && (pd.name || pd.desc));
+
+        // Raycast against everything but filter carefully
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        // Find first object that belongs to a planet (check self + parents)
+        const hit = intersects.find((i) => {
+          let obj = i.object;
+          while (obj) {
+            if (obj.userData && (obj.userData.name || obj.userData.desc)) return true;
+            obj = obj.parent;
           }
-        );
+          return false;
+        });
 
         if (hit) {
-          const planetData = hit.object.parent?.userData?.name
-            ? hit.object.parent.userData
-            : hit.object.userData;
-          setSelectedPlanet(planetData);
-          setPlanetInfoTab('overview');
+          // Extract data from the found ancestor
+          let targetObj = hit.object;
+          while (targetObj && !(targetObj.userData && (targetObj.userData.name || targetObj.userData.desc))) {
+            targetObj = targetObj.parent;
+          }
 
-          // --- ZOOM IN ---
-          setIsPaused(true);
-          isPausedRef.current = true;
+          if (targetObj) {
+            setSelectedPlanet(targetObj.userData);
+            setPlanetInfoTab('overview');
 
-          const planetPos = new THREE.Vector3();
-          const targetObj =
-            hit.object.parent?.type === 'Group'
-              ? hit.object.parent
-              : hit.object;
-          targetObj.getWorldPosition(planetPos);
+            // --- ZOOM IN ---
+            setIsPaused(true);
+            isPausedRef.current = true;
 
-          targetCameraPos = planetPos
-            .clone()
-            .add(new THREE.Vector3(15, 10, 20));
-          targetLookAt = planetPos.clone();
-          controls.target.copy(targetLookAt);
+            const planetPos = new THREE.Vector3();
+            targetObj.getWorldPosition(planetPos);
+
+            targetCameraPos = planetPos
+              .clone()
+              .add(new THREE.Vector3(15, 10, 20));
+            targetLookAt = planetPos.clone();
+            controls.target.copy(targetLookAt);
+          }
         } else {
           // --- ZOOM OUT — Click on empty space ---
           setSelectedPlanet(null);

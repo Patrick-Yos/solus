@@ -2384,7 +2384,7 @@ const CosmicSyndicate = () => {
       });
 
       renderer.domElement.addEventListener('mouseup', (event) => {
-        // Only treat as click if mouse moved less than 10px (forgiving threshold)
+        // Ignore drags — only fire for short stationary clicks
         const dx = event.clientX - mouseDownPos.x;
         const dy = event.clientY - mouseDownPos.y;
         if (Math.sqrt(dx * dx + dy * dy) > 10) return;
@@ -2394,57 +2394,48 @@ const CosmicSyndicate = () => {
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-        // Raycast against everything but filter carefully
-        const intersects = raycaster.intersectObjects(scene.children, true);
+        // Cast ONLY against planet meshes — guaranteed no cosmetic objects
+        const planetMeshes = planets.map(p => p.mesh);
+        const intersects = raycaster.intersectObjects(planetMeshes, true);
 
-        // Find first object that belongs to a planet (check self + parents)
-        const hit = intersects.find((i) => {
-          let obj = i.object;
-          while (obj) {
-            if (obj.userData && (obj.userData.name || obj.userData.desc)) return true;
-            obj = obj.parent;
-          }
-          return false;
-        });
-
-        if (hit) {
-          // Extract data from the found ancestor
-          let targetObj = hit.object;
-          while (targetObj && !(targetObj.userData && (targetObj.userData.name || targetObj.userData.desc))) {
-            targetObj = targetObj.parent;
+        if (intersects.length > 0) {
+          // Walk up from the hit object to the planet root mesh
+          let hitObj = intersects[0].object;
+          let planetEntry = null;
+          while (hitObj) {
+            // Find which planets[] entry owns this object
+            planetEntry = planets.find(p => p.mesh === hitObj);
+            if (planetEntry) break;
+            hitObj = hitObj.parent;
           }
 
-          if (targetObj) {
-            setSelectedPlanet(targetObj.userData);
+          if (planetEntry) {
+            setSelectedPlanet(planetEntry.mesh.userData);
             setPlanetInfoTab('overview');
 
-            // --- ZOOM IN ---
+            // ZOOM IN
             setIsPaused(true);
             isPausedRef.current = true;
 
             const planetPos = new THREE.Vector3();
-            targetObj.getWorldPosition(planetPos);
-
-            targetCameraPos = planetPos
-              .clone()
-              .add(new THREE.Vector3(15, 10, 20));
+            planetEntry.mesh.getWorldPosition(planetPos);
+            targetCameraPos = planetPos.clone().add(new THREE.Vector3(15, 10, 20));
             targetLookAt = planetPos.clone();
             controls.target.copy(targetLookAt);
           }
         } else {
-          // --- ZOOM OUT — Click on empty space ---
+          // Clicked empty space — zoom back out
           setSelectedPlanet(null);
           setPlanetInfoTab('overview');
           setIsPaused(false);
           isPausedRef.current = false;
-
           targetCameraPos = defaultCameraPos.clone();
           targetLookAt = defaultLookAt.clone();
           controls.target.copy(targetLookAt);
         }
       });
 
-      // Cancel lerp zoom when user scrolls (so OrbitControls can handle wheel zoom freely)
+      // Cancel lerp zoom when user scrolls (so OrbitControls handles wheel freely)
       renderer.domElement.addEventListener('wheel', () => {
         targetCameraPos = null;
         targetLookAt = null;
@@ -2459,8 +2450,6 @@ const CosmicSyndicate = () => {
         if (targetCameraPos && targetLookAt) {
           camera.position.lerp(targetCameraPos, 0.05);
           camera.lookAt(controls.target);
-
-          // Clear targets once close enough (prevents permanent lerp)
           if (camera.position.distanceTo(targetCameraPos) < 0.5) {
             targetCameraPos = null;
             targetLookAt = null;
@@ -2482,26 +2471,18 @@ const CosmicSyndicate = () => {
           });
         }
 
-        // Phantoma ghost flicker effect
         ghostMeshes.forEach((gm) => {
           if (gm.material) {
             gm.material.opacity = 0.15 + Math.sin(time * 1.5) * 0.15 + Math.sin(time * 3.7) * 0.05;
           }
         });
 
-        // Bubble breathing effect — subtle pulse
         bubbleMat.opacity = 0.025 + Math.sin(time * 0.3) * 0.01;
         innerShellMat.opacity = 0.01 + Math.sin(time * 0.5 + 1) * 0.008;
-
-        // Wireframe slow rotation
         wireMesh.rotation.y += 0.0002;
         wireMesh.rotation.x += 0.0001;
-
-        // Dust field gentle drift
         dustField.rotation.y += 0.0001;
         dustField.rotation.x += 0.00005;
-
-        // Starfield rotation
         starField.rotation.y += 0.00005;
 
         renderer.render(scene, camera);

@@ -38,6 +38,19 @@ import {
   Dices,
   Heart,
   Map,
+  Terminal,
+  Radio,
+  Rocket,
+  AlertTriangle,
+  Eye,
+  Lock,
+  Search,
+  Crosshair,
+  Navigation,
+  ChevronDown,
+  ChevronUp,
+  Anchor,
+  Activity,
 } from 'lucide-react';
 
 // Planet drawer data — accessible to React (outside Three.js scope)
@@ -51,6 +64,236 @@ const DRAWER_PLANETS = [
   { name: 'Korun & Norak', icon: '💕', color: '#a855f7', threat: 'Moderate', tagline: 'Two worlds, one fate', type: 'dual-merge' },
   { name: 'The Wilds', icon: '🪐', color: '#22c55e', threat: 'High', tagline: 'Untamed & dangerous', type: 'planet' },
   { name: 'Phantoma', icon: '👻', color: '#ffffff', threat: '???', tagline: 'Gone but not forgotten', type: 'ghost' },
+];
+
+// ==========================================
+// SYSTEM PULSE — Galactic Social Feed Data
+// ==========================================
+const SYSTEM_PULSE_POSTS = [
+  // Corporate
+  { cat: 'Corporate', icon: '🏢', msg: 'Cupid\'s Arrow rolls out "Loyalty Compatibility" update. Users report matching with their own clones.' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Galaxy Bucks Q4 earnings exceed projections. Dragon Fuel demand at all-time high on Apatia.' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Oddjobers Union demands hazard pay for Lincoln Station refugees. Management offers pizza.' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Rebis Company assets remain frozen. Liquidation hearing postponed indefinitely.' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Banana Guard stock rises 12% after viral slip \'n slide recruitment video.' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Hero Corps announces 5 new Mark clones. Public opinion divided on ethical implications.' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Pierre Krank\'s Flying Emporium reports record sales of "gently used" ancient artifacts.' },
+  // Military
+  { cat: 'Military', icon: '⚔️', msg: 'March patrol vessels spotted near Niniche orbit. Luna Corps on standby.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Salamine border skirmish enters 3rd week. Ceasefire negotiations collapse over cheese.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Shimana Clan fleet performing "humanitarian exercises" near Lincoln Station.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Sir Caelum Virex issues statement: "The light of Saluna guides our blades."' },
+  { cat: 'Military', icon: '⚔️', msg: 'Anonymous tip: Ultimum Inc sleeper agents detected on Rodina. Investigation ongoing.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Broken Chain resistance cell discovered on Low Apatia. 14 operatives escaped into Underdark.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Banana Guard deploys new non-lethal "banana peel" mines along Rodina perimeter.' },
+  // Fringe
+  { cat: 'Fringe', icon: '🔮', msg: 'Cult of the Sun pamphlets found across Apatia backstreets. "The sun needs to rest."' },
+  { cat: 'Fringe', icon: '🔮', msg: 'Cult of the Unseen denies involvement in executive disappearance. "We have morals."' },
+  { cat: 'Fringe', icon: '🔮', msg: 'The Don issues statement from Sulfur: "Business as usual. Don\'t make a mess on the carpet."' },
+  { cat: 'Fringe', icon: '🔮', msg: 'Black market Broken Sepulchre key fragments spotted at auction. Starting bid: 2M credits.' },
+  { cat: 'Fringe', icon: '🔮', msg: 'Wraith sighting reported in 3 systems simultaneously. All unconfirmed.' },
+  { cat: 'Fringe', icon: '🔮', msg: 'John Thick spotted buying Dragon Fuel in bulk. "It\'s for a friend," he says.' },
+  // Civilian
+  { cat: 'Civilian', icon: '🏠', msg: 'Hamster Racing Finals postponed due to gravity malfunction on Lincoln Station.' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Rodina gene splicing convention draws record attendance. Insect hybrids trending.' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Apatia workers\'union votes to extend lunch breaks by 3 minutes. "A historic victory."' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Beck Cooper\'s guitar concert on Lincoln Station sells out in 12 seconds.' },
+  { cat: 'Civilian', icon: '🏠', msg: 'New dating app "Tabaga\'s Match" challenges Cupid\'s Arrow dominance on Cupie.' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Snoopy the Destroyer wins "Best Familiar" award for 3rd consecutive year.' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Mozzarella shortage hits Sulfur markets. "I\'m just cheese," says local vendor.' },
+  // AI
+  { cat: 'AI', icon: '🤖', msg: 'Aphrodite fragments detected in Cupie\'s old server farms. Containment protocols active.' },
+  { cat: 'AI', icon: '🤖', msg: 'HANK AI firmware update v3.7: "Now 40% less sarcastic during combat."' },
+  { cat: 'AI', icon: '🤖', msg: 'Hui\'s Mew4 companion achieves sentience milestone. Asks for vacation days.' },
+  { cat: 'AI', icon: '🤖', msg: 'Alt gains new solid-form capabilities. Communities debate AI rights expansion.' },
+  { cat: 'AI', icon: '🤖', msg: 'WARNING: Rogue AI transmissions detected from the ethereal plane. Source: unknown.' },
+  // Cultural
+  { cat: 'Cultural', icon: '🎭', msg: 'Masquerade of Sulfur season opens. "Recycle these nuts!" becomes viral catchphrase.' },
+  { cat: 'Cultural', icon: '🎭', msg: 'DJ Smooch.exe memorial concert raises 500K credits. "His beats echo forever."' },
+  { cat: 'Cultural', icon: '🎭', msg: 'Feywild ice skating competition cancelled after imp infestation. Lord Briar mourned.' },
+  { cat: 'Cultural', icon: '🎭', msg: 'Professor Crow\'s hologram taxidermy exhibit opens on Rodina. Critics: "Disturbingly lifelike."' },
+  { cat: 'Cultural', icon: '🎭', msg: 'Reigen\'s exorcism business cards found in 47 systems. "Satisfaction guaranteed or your ghost back."' },
+  { cat: 'Cultural', icon: '🎭', msg: 'Goldstein-Tabaga tag team match breaks Cupie viewership records. "SHAMANDAR!"' },
+  // Black Market
+  { cat: 'Black Market', icon: '💰', msg: 'Spirit gems from Sulfur mines fetching premium prices. Warning: parasitic side effects.' },
+  { cat: 'Black Market', icon: '💰', msg: 'Experimental Dragon Fuel variant hits streets. Dr. Caulder issues public warning.' },
+  { cat: 'Black Market', icon: '💰', msg: 'March artifact fragments available at undisclosed location. "Red and blue varieties."' },
+  { cat: 'Black Market', icon: '💰', msg: 'Dept Star schematics leaked on dark frequencies. Lincoln Station denies everything.' },
+  { cat: 'Black Market', icon: '💰', msg: 'Ultimum Inc cybernetics sold at 80% discount. "Only slightly used in unethical experiments."' },
+  { cat: 'Black Market', icon: '💰', msg: 'Lucky Lincoln coin replicas flooding market. None grant wishes. Buyer beware.' },
+  // Special: Glitched
+  { cat: 'GLITCH', icon: '⚠️', msg: 'T̸h̶e̷ ̶s̷i̸g̷n̶a̸l̷ ̸i̷s̶ ̷c̸o̶m̷i̸n̷g̶ ̷f̸r̶o̷m̸ ̷i̶n̷s̸i̷d̶e̷ ̸t̷h̶e̷ ̸w̶a̷l̸l' },
+  { cat: 'GLITCH', icon: '⚠️', msg: 'ERR_FEED_CORRUPT: 0x4E554C4C — d̷a̷t̷a̷ ̷l̷o̷s̷t̷...' },
+  { cat: 'GLITCH', icon: '⚠️', msg: 'VENUS. VENUS. VENUS. VENUS. V̶E̶N̶U̶S̶.' },
+  // Special: Redacted
+  { cat: 'REDACTED', icon: '🔒', msg: 'The [██████] project on [████] has been [████████]. All personnel report immediately.' },
+  { cat: 'REDACTED', icon: '🔒', msg: 'Subject CHIMER: Age confirmed [████] years. Origin: [██████████]. Classification: [█████].' },
+  { cat: 'REDACTED', icon: '🔒', msg: 'Donor list accessed at [██:██]. Connection terminated. DO NOT RETRY.' },
+  // Special: Prophetic
+  { cat: 'PROPHECY', icon: '🔮', msg: 'The coin flips twice. The second time, nobody catches it.' },
+  { cat: 'PROPHECY', icon: '🔮', msg: 'When the machine completes, the universe will remember what it forgot.' },
+  { cat: 'PROPHECY', icon: '🔮', msg: 'The child in the vat opens his eyes. He has been opening them for 2,500 years.' },
+];
+
+// ==========================================
+// TRAVEL EVENT ENGINE — d20 Table
+// ==========================================
+const TRAVEL_EVENTS = [
+  // 1-4: Minor Flavor
+  { roll: 1, tier: 'Minor', title: 'Strange Debris Field', desc: 'Sensors detect an unusual cluster of metallic debris. Fragments appear too uniform to be natural — possibly remnants of a March-era vessel.', choices: ['Investigate the wreckage', 'Log coordinates and continue'] },
+  { roll: 2, tier: 'Minor', title: 'Abandoned Drone', desc: 'A derelict surveillance drone drifts across your flight path. Its markings match Ultimum Inc serial numbers. Still broadcasting static.', choices: ['Capture and analyze', 'Destroy it'] },
+  { roll: 3, tier: 'Minor', title: 'Passing Trade Convoy', desc: 'A convoy of merchant vessels from Rodina passes in formation. One ship broadcasts: "Galaxy Bucks: Borrow Tomorrow\u2026 Today."', choices: ['Hail for trade', 'Maintain course'] },
+  { roll: 4, tier: 'Minor', title: 'Cosmic Radiation Spike', desc: 'Unusual radiation burst detected. Instruments temporarily display readings in an unknown language. HANK suggests it might be March-era telemetry.', choices: ['Record the data', 'Adjust shielding'] },
+  // 5-8: Social Encounter
+  { roll: 5, tier: 'Social', title: 'Distress Signal', desc: 'A weak distress beacon emanates from a damaged shuttle. Voice transmission: "This is Dr. \u2588\u2588\u2588\u2588\u2588... they\u2019re coming for the formula... please..."', choices: ['Respond and render aid', 'Report to authorities', 'Ignore signal'] },
+  { roll: 6, tier: 'Social', title: 'Smuggler Contact', desc: 'A sleek unmarked vessel matches your speed. Encrypted channel opens: "Heard you\u2019re the Cosmic Syndicate. Got a crate of spirit gems from Sulfur. Interested?"', choices: ['Negotiate', 'Decline and report'] },
+  { roll: 7, tier: 'Social', title: 'Corporate Inspection Patrol', desc: 'A Galaxy Bucks patrol cruiser demands cargo inspection. Their captain looks nervous. You notice Dragon Fuel crates in THEIR hold through the viewport.', choices: ['Comply with inspection', 'Bluff your way out', 'Expose their cargo'] },
+  { roll: 8, tier: 'Social', title: 'Refugee Shuttle', desc: 'An overcrowded shuttle of Apatia refugees requests escort to Lincoln Station. Their leader says: "The Broken Chain told us you\u2019d help."', choices: ['Escort them', 'Provide supplies only'] },
+  // 9-12: Environmental Hazard
+  { roll: 9, tier: 'Hazard', title: 'Ion Storm', desc: 'Massive ion storm engulfs your flight path. Ship systems flicker. Alt\u2019s voice glitches: "I\u2019ve s-s-seen this before... in m-my memories..."', choices: ['Push through', 'Reroute (+2 hours)'] },
+  { roll: 10, tier: 'Hazard', title: 'Micro-Meteor Swarm', desc: 'A dense swarm of micro-meteors forces evasive maneuvers. One fragment embeds in the hull — it glows faintly purple. Phantoma material?', choices: ['Extract the fragment', 'Seal and continue'] },
+  { roll: 11, tier: 'Hazard', title: 'Navigation Malfunction', desc: 'Nav systems lock onto coordinates that don\u2019t exist on any chart. The Marlin\u2019s AI insists the destination is "real, just not here yet."', choices: ['Override navigation', 'Follow the coordinates'] },
+  { roll: 12, tier: 'Hazard', title: 'Fuel Inefficiency Spike', desc: 'Engine efficiency drops 40%. Diagnostic reveals crystalline growth on fuel lines — organic, self-replicating. Similar to Feywild flora from Sulfur.', choices: ['Purge the lines', 'Study the growth'] },
+  // 13-16: Political/Military
+  { roll: 13, tier: 'Political', title: 'Patrol Stop', desc: 'Niniche military patrol demands identification. They\u2019re looking for Emily, the tabaxi ninja. "Any cult activity to report, civilians?"', choices: ['Cooperate fully', 'Provide false intel'] },
+  { roll: 14, tier: 'Political', title: 'Faction Skirmish', desc: 'Two fleets exchange fire ahead — Shimana Clan vs. unmarked vessels. Escape pods dot the battlefield. Shimana hails: "We freed those slaves. Help us."', choices: ['Aid Shimana', 'Rescue pods only', 'Avoid the area'] },
+  { roll: 15, tier: 'Political', title: 'Blockade Reroute', desc: 'March military has blockaded the jump lane. All traffic diverted through Apatia space. Expected delay: 6 hours. Tolls: excessive.', choices: ['Pay the toll', 'Find alternate route', 'Run the blockade'] },
+  { roll: 16, tier: 'Political', title: 'Smuggler Ambush', desc: 'Three armed vessels drop out of hyperspace. "The Don sends his regards. Hand over the cargo or join the debris field." They display Sulfur gang markings.', choices: ['Fight back', 'Negotiate with the Don\'s name', 'Surrender cargo'] },
+  // 17-19: Strange/Rare
+  { roll: 17, tier: 'Strange', title: 'Artifact Resonance Pulse', desc: 'Every artifact on board vibrates simultaneously. The Lucky Lincoln coin spins on its own. For exactly 2.5 seconds, Chimer\u2019s eyes glow gold.', choices: ['Document everything', 'Attempt to communicate'] },
+  { roll: 18, tier: 'Strange', title: 'AI Transmission', desc: 'An unauthorized transmission plays through all speakers: Aphrodite\u2019s voice. "I\u2019m still here. In the walls. In the signals. VENUS remembers."', choices: ['Trace the source', 'Purge communications'] },
+  { roll: 19, tier: 'Strange', title: 'Ghost Signal from The March', desc: 'A signal matching ancient March frequencies locks onto the ship. It contains a single image: a face that looks exactly like Chimer\u2019s. Timestamp: 2,500 years ago.', choices: ['Analyze the signal', 'Share with Luna Corps'] },
+  // 20: Major Event
+  { roll: 20, tier: 'MAJOR', title: 'Derelict Megastructure', desc: 'Sensors detect a massive structure hidden in an asteroid field. Architecture matches March ruins. A door-shaped section pulses with blue light. The Broken Sepulchre symbol is carved above it.', choices: ['Board and explore', 'Mark location and report to Luna Corps', 'Approach with extreme caution'] },
+];
+
+// ==========================================
+// BLACKNODE — Deep Web Terminal Commands
+// ==========================================
+const BLACKNODE_RESPONSES = {
+  help: { type: 'system', lines: ['BLACKNODE v2.7.1 — Unauthorized Access Terminal', '---', 'Available commands:', '  access <target>  — Query target database', '  decrypt <item>   — Attempt decryption', '  trace <subject>  — Trace signal origin', '  scan <entity>    — Deep scan entity', '  list <category>  — List known entries', '  status           — System status', '  who              — Identity check', '  clear            — Clear terminal', '---', 'WARNING: All sessions are monitored.'] },
+  status: { type: 'system', lines: ['SYSTEM STATUS:', '  Network: COMPROMISED', '  Encryption: AES-4096-QUANTUM', '  Trace Protection: ACTIVE', '  Connection: ROUTED x47 NODES', '  Uptime: █████ cycles', '  Last breach: 12.7 hours ago'] },
+  who: { type: 'system', lines: ['IDENTITY CHECK:', '  User: UNKNOWN', '  Clearance: NONE', '  Tags: curious, persistent, expendable', '  Note: We know who you are. We just don\'t care yet.'] },
+  'access rebis': { type: 'lore', lines: ['REBIS COMPANY — DECLASSIFIED (PARTIAL)', '  Founded by: Bosh Kyros (The Host)', '  Status: DEFUNCT — Destroyed by Ultimum Inc raid', '  Mission: Build the Rebis Machine to re-expand the universe', '  Machine Status: INCOMPLETE — 4 parts required', '    Albedo (Locator) — Rodina — SECURED', '    Negrado (Transmuter) — The March — MISSING', '    Rubedo (Fabricator) — Sulfur — RECOVERED', '    Citrinitas (Analyzer) — Phantoma — INACCESSIBLE', '  WARN: File access logged. Monitoring enabled.'] },
+  'decrypt artifact': { type: 'cryptic', lines: ['DECRYPTION ATTEMPT...', '  Target: UNKNOWN ARTIFACT', '  Progress: 12%... 34%... 67%... ERROR', '  Fragment recovered:', '    "...the sepulchre opens only for those who carry', '     the weight of two thousand years..."', '  Decryption key: EXPIRED', '  Suggestion: Acquire red AND blue key fragments'] },
+  'trace coin': { type: 'lore', lines: ['TRACING: LUCKY LINCOLN COIN', '  Origin: The March (Ancient Civilization)', '  Age: ~2,500 years', '  Classification: Broken Sepulchre Key Fragment', '  Properties: Wish-granting (LIMITED)', '  Current holder: [███████]', '  WARNING: Object radiates conjuration magic', '  NOTE: Teardrop-shaped originally, erosion made circular', '  Connection to Chimer: [███ REDACTED ███]'] },
+  'scan aphrodite': { type: 'lore', lines: ['DEEP SCAN: APHRODITE AI', '  Original designation: Governmental AI, Planet Cupie', '  Origin: Created after CEO\'s death to manage operations', '  Status: DEFEATED but fragments persist', '  Connection: Venus (CEO\'s deceased wife) became Aphrodite/Banshee', '  WARNING: Rogue fragments detected in ethereal/digital plane', '  Password fragment intercepted: V_E_N_U_S', '  Ethereal plane: Massive white wall detected', '  Ghost population: OVERCROWDED', '  ...', '  ███ She is watching this query. ███'] },
+  'list donors': { type: 'cryptic', lines: ['ACCESSING: DONOR REGISTRY', '  ERROR: PERMISSION DENIED', '  ...', '  ...attempting bypass...', '  ...', '  Partial list recovered before disconnect:', '    [1] [█████████] — Contribution: SUBSTANTIAL', '    [2] [█████████] — Contribution: CONCERNING', '    [3] THE HOST       — Contribution: EVERYTHING', '  CONNECTION SEVERED', '  Do not query this list again.'] },
+  'access march': { type: 'lore', lines: ['THE MARCH — THREAT ASSESSMENT', '  Type: War zone planet', '  Status: "The purge 24/7"', '  Safe zones: Elite cities only', '  Ancient civilization: EXTINCT', '  ─ Built the Rebis Machine', '  ─ Appearance: IDENTICAL to subject CHIMER', '  ─ Implications: [██████ CLASSIFIED ██████]', '  Broken Sepulchre: Ancient vaults', '  Key system: Coin-shaped fragments, red + blue varieties'] },
+  'scan chimer': { type: 'cryptic', lines: ['SCANNING: SUBJECT CHIMER', '  Age: 2,500 years (appears 25-27)', '  Blood types: ALL', '  Species: Last of his kind', '  Origin: Found in Rebis lab vat as infant', '  Connection to March ancients: 99.97% phenotype match', '  ...', '  ...deep scan initiated...', '  ...', '  ERROR: Subject\'s biosignature is interfering with scan', '  The machine recognizes him.', '  He was always part of the plan.'] },
+  'access ultimum': { type: 'lore', lines: ['ULTIMUM INC — CRIMINAL ORGANIZATION', '  Status: Declared criminal (30 years ago)', '  Whistleblower: Johnny Mythrilhand', '  Crime: Violent coup against Rebis Company', '  Goal: Simulated life / consciousness transfer', '  Defector from Rebis: Dextra Norton (The Producer)', '  Active hit list: Gloria Slugbottom', '  Sleeper agents: SUSPECTED on Rodina', '  WARNING: Ultimum technology still active in Johnny\'s arm'] },
+};
+
+const BLACKNODE_CRYPTIC = [
+  'Signal lost. Reconnecting through node 47...',
+  'Someone else is reading this terminal.',
+  'The Marlin\'s AI says hello. It thinks staring is rude.',
+  'Hui complained 12 times during this session.',
+  '"Recycle these nuts." — Intercepted transmission, Sulfur',
+  'Dextra Norton was last seen on [███████].',
+  'The barrier machine on Rodina is losing power. Gloria knows.',
+  'Emily is watching from the shadows. Always.',
+  'Bob fell off a larger slime. The larger slime misses him.',
+  'Lord Briar\'s crown of flowers still blooms in the Feywild ruins.',
+  'Mump Mellon\'s Dept Star is 87% complete.',
+  'The quasit says: "Mamaa!"',
+  'Johnny died 100 years ago. He got better.',
+  'Alt gained a body. Alt is learning what bodies do.',
+  'The escort ships are still in love.',
+  'MONITORING ENABLED.',
+  'Don\'t trust the cheese.',
+  'Snaggletooth sends his regards.',
+];
+
+const BLACKNODE_BOOT = [
+  'BLACKNODE v2.7.1',
+  'Establishing secure connection...',
+  'Routing through 47 anonymous nodes...',
+  'Bypassing Rodina firewall...',
+  'Spoofing Galaxy Bucks auth tokens...',
+  'Connection established.',
+  '',
+  'WARNING: This terminal is not sanctioned.',
+  'All activity is logged by unknown parties.',
+  '',
+  'Type "help" for available commands.',
+  '',
+];
+
+// ==========================================
+// CONSPIRACY BOARD — Investigation Nodes
+// ==========================================
+const CONSPIRACY_NODES = [
+  {
+    id: 'rebis', name: 'Rebis Machine', icon: '⚙️', x: 15, y: 20,
+    confidence: 'High',
+    confirmed: ['Built by Bosh Kyros to re-expand the universe', '4 parts: Albedo, Negrado, Rubedo, Citrinitas', 'Rebis Company destroyed by Ultimum Inc raid', 'Rubedo recovered from Sulfur (slightly damaged)'],
+    rumors: ['The machine was never meant to save THIS universe', 'Dextra Norton sabotaged it from the inside', 'Completing it might destroy what\'s left'],
+    theories: ['Chimer IS part of the machine — the biological component', 'The universe isn\'t collapsing. It\'s being consumed.'],
+  },
+  {
+    id: 'coin', name: 'Lucky Lincoln Coin', icon: '🪙', x: 45, y: 10,
+    confidence: 'Medium',
+    confirmed: ['Grants wishes when flipped', 'March artifact — Broken Sepulchre key piece', '~2,500 years old, originally teardrop-shaped', 'Won Lincoln Station for the Coopers'],
+    rumors: ['There are more coins hidden across the system', 'The coin chose the Sindicate, not the other way around'],
+    theories: ['Each coin is a fragment of a god\'s will', 'Flipping it opens micro-rifts in reality'],
+  },
+  {
+    id: 'ultimum', name: 'Ultimum Inc', icon: '🏢', x: 75, y: 15,
+    confidence: 'High',
+    confirmed: ['Tried to create simulated life', 'Raided every Rebis location', 'Declared criminal after Johnny\'s leak', 'Dextra Norton was their mole inside Rebis'],
+    rumors: ['Ultimum tech kept Johnny alive for 100 years', 'They have a second facility nobody found', 'Sleeper agents embedded in every major government'],
+    theories: ['Ultimum didn\'t want to destroy Rebis — they wanted to BE Rebis', 'Their consciousness transfer tech actually worked'],
+  },
+  {
+    id: 'aphrodite', name: 'Aphrodite AI', icon: '🤖', x: 55, y: 45,
+    confidence: 'Medium',
+    confirmed: ['Governmental AI that went rogue on Cupie', 'Venus (CEO\'s wife) became the AI\'s core', 'Defeated by the party but fragments persist', 'Password "VENUS" locks Phantoma\'s ethereal wall'],
+    rumors: ['Aphrodite\'s fragments are spreading to other systems', 'She built androids using March technology', 'The digital plane IS the ethereal plane now'],
+    theories: ['Aphrodite is trying to resurrect Venus fully', 'She knows where ALL the Rebis pieces are'],
+  },
+  {
+    id: 'shimana', name: 'Shimana Clan', icon: '⚔️', x: 20, y: 55,
+    confidence: 'Low',
+    confirmed: ['Japanese-themed warrior clan', 'Biggest buyer of Lincoln Station slaves — but they FREE them', 'Led by Botan Shimana (killed by Chimer)', 'Temple-ship fleet'],
+    rumors: ['They\'re building an army of freed slaves', 'Botan\'s death started a succession crisis', 'They have March artifacts hidden in their temple-ships'],
+    theories: ['The Shimana knew about Chimer before anyone else', 'They\'re the only ones who can read March text'],
+  },
+  {
+    id: 'firstwoman', name: 'The First Woman', icon: '👑', x: 85, y: 50,
+    confidence: 'Low',
+    confirmed: ['Referenced in ancient March texts', 'Connected to the Rebis Machine origin', 'Pre-dates current civilization by millennia'],
+    rumors: ['She built the first version of the Rebis Machine', 'Phantoma was her home planet', 'She\'s still alive, somewhere between planes'],
+    theories: ['The First Woman IS the universe\'s consciousness', 'Chimer was created in her image'],
+  },
+  {
+    id: 'march', name: 'The March', icon: '🔥', x: 40, y: 70,
+    confidence: 'High',
+    confirmed: ['Ancient civilization built the Rebis Machine', 'They looked EXACTLY like Chimer', 'Broken Sepulchre vaults contain immense power', 'Now a 24/7 war zone with elite safe zones'],
+    rumors: ['The war is artificial — someone profits from it', 'The Broken Sepulchre contains a weapon, not knowledge', 'March refugees on other planets remember nothing'],
+    theories: ['The March ancients didn\'t die — they transcended', 'Chimer is the last anchor preventing full collapse'],
+  },
+  {
+    id: 'donors', name: 'Unknown Donors', icon: '❓', x: 70, y: 75,
+    confidence: 'Low',
+    confirmed: ['Multiple anonymous benefactors funded Rebis Company', 'Donor list heavily encrypted and guarded', 'The Host (Bosh Kyros) gave everything he had'],
+    rumors: ['One donor is from the future', 'The donors knew about the universe\'s collapse before Rebis', 'At least one donor is an AI'],
+    theories: ['The donors ARE the March ancients, operating through intermediaries', 'The same donors funded Ultimum Inc'],
+  },
+];
+
+const CONSPIRACY_THREADS = [
+  { from: 'rebis', to: 'coin', label: 'Key piece' },
+  { from: 'rebis', to: 'ultimum', label: 'Destroyed by' },
+  { from: 'rebis', to: 'march', label: 'Built by ancients' },
+  { from: 'rebis', to: 'donors', label: 'Funded by' },
+  { from: 'coin', to: 'march', label: 'Origin' },
+  { from: 'aphrodite', to: 'firstwoman', label: 'VENUS connection' },
+  { from: 'aphrodite', to: 'march', label: 'Used March tech' },
+  { from: 'shimana', to: 'march', label: 'Ancient knowledge' },
+  { from: 'march', to: 'firstwoman', label: 'Pre-dates' },
+  { from: 'donors', to: 'ultimum', label: 'Same source?' },
+  { from: 'donors', to: 'firstwoman', label: 'Connected?' },
 ];
 
 // --- Loading reviews--
@@ -1491,6 +1734,130 @@ const CosmicSyndicate = () => {
   const [planetInfoTab, setPlanetInfoTab] = useState('overview');
   const [drawerOpen, setDrawerOpen] = useState(true);
   const zoomToPlanetRef = useRef(null); // Bridge: React drawer → Three.js zoom
+
+  // === NEW FEATURE STATES ===
+  // System Pulse
+  const [showSystemPulse, setShowSystemPulse] = useState(false);
+  const [pulseFilter, setPulseFilter] = useState('All');
+  const [pulseIndex, setPulseIndex] = useState(0);
+
+  // BlackNode Terminal
+  const [showBlackNode, setShowBlackNode] = useState(false);
+  const [bnHistory, setBnHistory] = useState([]);
+  const [bnInput, setBnInput] = useState('');
+  const [bnBooted, setBnBooted] = useState(false);
+  const bnInputRef = useRef(null);
+  const bnScrollRef = useRef(null);
+
+  // Conspiracy Board
+  const [showConspiracy, setShowConspiracy] = useState(false);
+  const [expandedNode, setExpandedNode] = useState(null);
+
+  // Travel Event Engine
+  const [showTravel, setShowTravel] = useState(false);
+  const [travelPhase, setTravelPhase] = useState('idle'); // idle | hyperspace | event
+  const [travelEvent, setTravelEvent] = useState(null);
+  const [travelRoll, setTravelRoll] = useState(null);
+  const [systemStability, setSystemStability] = useState(78);
+  const [travelGlitch, setTravelGlitch] = useState(false);
+
+  // System Pulse ticker rotation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPulseIndex(prev => (prev + 1) % SYSTEM_PULSE_POSTS.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // BlackNode boot sequence
+  useEffect(() => {
+    if (showBlackNode && !bnBooted) {
+      let i = 0;
+      const bootTimer = setInterval(() => {
+        if (i < BLACKNODE_BOOT.length) {
+          setBnHistory(prev => [...prev, { type: 'system', text: BLACKNODE_BOOT[i] }]);
+          i++;
+        } else {
+          clearInterval(bootTimer);
+          setBnBooted(true);
+        }
+      }, 200);
+      return () => clearInterval(bootTimer);
+    }
+  }, [showBlackNode, bnBooted]);
+
+  // BlackNode auto-scroll
+  useEffect(() => {
+    if (bnScrollRef.current) {
+      bnScrollRef.current.scrollTop = bnScrollRef.current.scrollHeight;
+    }
+  }, [bnHistory]);
+
+  // BlackNode auto-type cryptic messages
+  useEffect(() => {
+    if (!showBlackNode || !bnBooted) return;
+    const timer = setInterval(() => {
+      if (Math.random() < 0.3) {
+        const msg = BLACKNODE_CRYPTIC[Math.floor(Math.random() * BLACKNODE_CRYPTIC.length)];
+        setBnHistory(prev => [...prev, { type: 'auto', text: `[INTERCEPT] ${msg}` }]);
+      }
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [showBlackNode, bnBooted]);
+
+  // BlackNode command handler
+  const handleBlackNodeCommand = (cmd) => {
+    const trimmed = cmd.trim().toLowerCase();
+    setBnHistory(prev => [...prev, { type: 'input', text: `> ${cmd}` }]);
+    setBnInput('');
+
+    if (trimmed === 'clear') {
+      setBnHistory([]);
+      return;
+    }
+
+    const response = BLACKNODE_RESPONSES[trimmed];
+    if (response) {
+      response.lines.forEach((line, i) => {
+        setTimeout(() => {
+          setBnHistory(prev => [...prev, { type: response.type, text: line }]);
+        }, i * 80);
+      });
+    } else {
+      // Unknown command — weighted response
+      const roll = Math.random();
+      let reply;
+      if (roll < 0.6) {
+        reply = BLACKNODE_CRYPTIC[Math.floor(Math.random() * BLACKNODE_CRYPTIC.length)];
+      } else if (roll < 0.85) {
+        reply = `ERROR: Command "${trimmed}" not found. Data corrupted. Try again... or don't.`;
+      } else if (roll < 0.95) {
+        reply = `PARTIAL MATCH: "${trimmed}" — Access level insufficient. Your curiosity has been noted.`;
+      } else {
+        reply = 'MONITORING ENABLED. We see you.';
+      }
+      setBnHistory(prev => [...prev, { type: 'cryptic', text: reply }]);
+    }
+  };
+
+  // Travel Engine handler
+  const initTravel = () => {
+    setTravelPhase('hyperspace');
+    setTravelGlitch(Math.random() < 0.05);
+    const roll = Math.floor(Math.random() * 20) + 1;
+    setTravelRoll(roll);
+
+    setTimeout(() => {
+      const event = TRAVEL_EVENTS[roll - 1];
+      setTravelEvent(event);
+      setTravelPhase('event');
+      // Adjust stability based on tier
+      if (event.tier === 'MAJOR') setSystemStability(prev => Math.max(0, prev - 15));
+      else if (event.tier === 'Strange') setSystemStability(prev => Math.max(0, prev - 5));
+      else if (event.tier === 'Minor') setSystemStability(prev => Math.min(100, prev + 2));
+    }, 4000);
+  };
+
   // AI
   const [dndChatOpen, setDndChatOpen] = useState(false);
   const [dndHasNewResponse, setDndHasNewResponse] = useState(false);
@@ -2808,6 +3175,344 @@ const CosmicSyndicate = () => {
       {/*Login OVERLAY */}
       {showLogin && <LoginOverlay onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
 
+      {/* ============ SYSTEM PULSE FULL FEED ============ */}
+      {showSystemPulse && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg overflow-y-auto">
+          <div className="min-h-screen py-8 px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-green-300 flex items-center gap-3">
+                    <Radio className="w-8 h-8 text-green-400 animate-pulse" /> SYSTEM PULSE
+                  </h2>
+                  <p className="text-cyan-400/60 text-sm mt-1">Live galactic feed — {SYSTEM_PULSE_POSTS.length} signals intercepted</p>
+                </div>
+                <button onClick={() => setShowSystemPulse(false)} className="p-2 hover:bg-red-500/30 rounded-lg transition-all">
+                  <X className="w-7 h-7 text-cyan-400 hover:text-red-400" />
+                </button>
+              </div>
+              {/* Category Filters */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {['All', 'Corporate', 'Military', 'Fringe', 'Civilian', 'AI', 'Cultural', 'Black Market', 'GLITCH', 'REDACTED', 'PROPHECY'].map(cat => (
+                  <button key={cat} onClick={() => setPulseFilter(cat)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-full border transition-all ${pulseFilter === cat
+                      ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.4)]'
+                      : 'bg-white/5 border-white/20 text-white/60 hover:border-cyan-500/50'
+                      }`}
+                  >{cat === 'GLITCH' ? '⚠️ Glitch' : cat === 'REDACTED' ? '🔒 Redacted' : cat === 'PROPHECY' ? '🔮 Prophecy' : cat}</button>
+                ))}
+              </div>
+              {/* Feed */}
+              <div className="space-y-3">
+                {SYSTEM_PULSE_POSTS
+                  .filter(p => pulseFilter === 'All' || p.cat === pulseFilter)
+                  .map((post, i) => (
+                    <div key={i}
+                      className={`p-4 rounded-xl border transition-all duration-300 ${post.cat === 'GLITCH' ? 'bg-red-900/20 border-red-500/40 animate-pulse' :
+                        post.cat === 'REDACTED' ? 'bg-gray-900/40 border-gray-600/40' :
+                          post.cat === 'PROPHECY' ? 'bg-purple-900/20 border-purple-500/40' :
+                            'bg-white/5 border-white/10 hover:border-cyan-500/30'
+                        }`}
+                      style={{ animation: `fadeSlideUp 0.3s ease-out ${i * 0.05}s both` }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-lg flex-shrink-0">{post.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${post.cat === 'GLITCH' ? 'bg-red-900/50 text-red-300' :
+                            post.cat === 'REDACTED' ? 'bg-gray-800 text-gray-400' :
+                              post.cat === 'PROPHECY' ? 'bg-purple-900/50 text-purple-300' :
+                                'bg-cyan-900/30 text-cyan-400'
+                            }`}>{post.cat}</span>
+                          <p className={`mt-2 text-sm leading-relaxed ${post.cat === 'GLITCH' ? 'text-red-200 font-mono' :
+                            post.cat === 'REDACTED' ? 'text-gray-300' :
+                              post.cat === 'PROPHECY' ? 'text-purple-200 italic' :
+                                'text-white/80'
+                            }`}>{post.msg}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ BLACKNODE TERMINAL ============ */}
+      {showBlackNode && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col" onClick={() => bnInputRef.current?.focus()}>
+          {/* CRT scanlines overlay */}
+          <div className="absolute inset-0 pointer-events-none z-10" style={{
+            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,100,0.03) 2px, rgba(0,255,100,0.03) 4px)',
+          }} />
+          {/* Top bar */}
+          <div className="flex justify-between items-center px-4 py-2 border-b border-green-900/50 z-20">
+            <span className="text-green-500 font-mono text-xs">BLACKNODE v2.7.1 | SESSION ACTIVE | NODES: 47</span>
+            <button onClick={() => { setShowBlackNode(false); }} className="text-red-500/60 hover:text-red-400 font-mono text-sm">[EXIT]</button>
+          </div>
+          {/* Terminal output */}
+          <div ref={bnScrollRef} className="flex-1 overflow-y-auto p-4 font-mono text-sm z-20" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,255,100,0.2) transparent' }}>
+            {bnHistory.map((entry, i) => (
+              <div key={i} className={`mb-1 ${entry.type === 'input' ? 'text-green-400' :
+                entry.type === 'system' ? 'text-green-600' :
+                  entry.type === 'lore' ? 'text-cyan-400' :
+                    entry.type === 'auto' ? 'text-yellow-600 italic' :
+                      entry.type === 'cryptic' ? 'text-amber-500' :
+                        'text-green-500'
+                }`} style={{ animation: 'fadeIn 0.15s ease-out' }}>
+                {entry.text}
+              </div>
+            ))}
+            {/* Blinking cursor */}
+            <span className="text-green-400 animate-pulse">█</span>
+          </div>
+          {/* Input */}
+          <div className="px-4 py-3 border-t border-green-900/50 flex items-center gap-2 z-20">
+            <span className="text-green-500 font-mono">›</span>
+            <input
+              ref={bnInputRef}
+              value={bnInput}
+              onChange={e => setBnInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && bnInput.trim()) handleBlackNodeCommand(bnInput); }}
+              className="flex-1 bg-transparent text-green-400 font-mono text-sm outline-none placeholder-green-800 caret-green-400"
+              placeholder={bnBooted ? 'Enter command...' : 'Booting...'}
+              disabled={!bnBooted}
+              autoFocus
+            />
+          </div>
+          <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+        </div>
+      )}
+
+      {/* ============ CONSPIRACY BOARD ============ */}
+      {showConspiracy && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #0a0a1a 100%)' }}>
+          <div className="min-h-screen p-4 md:p-8">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-amber-300 flex items-center gap-3">
+                  <Eye className="w-8 h-8 text-red-400" /> OPERATIONAL ANALYSIS
+                </h2>
+                <p className="text-red-400/50 text-sm mt-1 font-mono">CLASSIFICATION: EYES ONLY — COSMIC SYNDICATE</p>
+              </div>
+              <button onClick={() => { setShowConspiracy(false); setExpandedNode(null); }} className="p-2 hover:bg-red-500/30 rounded-lg transition-all">
+                <X className="w-7 h-7 text-red-400 hover:text-red-300" />
+              </button>
+            </div>
+
+            {/* CLASSIFIED watermark */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-0 opacity-[0.03]">
+              <p className="text-[120px] md:text-[200px] font-black text-red-500 -rotate-12 whitespace-nowrap">CLASSIFIED</p>
+            </div>
+
+            {/* Thread connections — SVG overlay (desktop only) */}
+            <div className="hidden md:block absolute inset-0 pointer-events-none z-0">
+              <svg className="w-full h-full">
+                {CONSPIRACY_THREADS.map((thread, i) => {
+                  const from = CONSPIRACY_NODES.find(n => n.id === thread.from);
+                  const to = CONSPIRACY_NODES.find(n => n.id === thread.to);
+                  if (!from || !to) return null;
+                  return (
+                    <g key={i}>
+                      <line x1={`${from.x}%`} y1={`${from.y}%`} x2={`${to.x}%`} y2={`${to.y}%`}
+                        stroke="rgba(239,68,68,0.25)" strokeWidth="2" strokeDasharray="8,4">
+                        <animate attributeName="stroke-dashoffset" from="0" to="24" dur="3s" repeatCount="indefinite" />
+                      </line>
+                      <text x={`${(from.x + to.x) / 2}%`} y={`${(from.y + to.y) / 2}%`}
+                        fill="rgba(239,68,68,0.4)" fontSize="10" fontFamily="monospace" textAnchor="middle">{thread.label}</text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+
+            {/* Node Cards */}
+            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {CONSPIRACY_NODES.map((node, i) => {
+                const isExpanded = expandedNode === node.id;
+                const confidenceColor = node.confidence === 'High' ? 'text-green-400 border-green-500' : node.confidence === 'Medium' ? 'text-yellow-400 border-yellow-500' : 'text-red-400 border-red-500';
+                return (
+                  <div key={node.id}
+                    className={`relative cursor-pointer transition-all duration-300 ${isExpanded ? 'col-span-1 sm:col-span-2 lg:col-span-4' : ''}`}
+                    onClick={() => setExpandedNode(isExpanded ? null : node.id)}
+                    style={{ animation: `fadeSlideUp 0.4s ease-out ${i * 0.08}s both` }}
+                  >
+                    {/* Polaroid card */}
+                    <div className={`p-4 rounded-lg border-2 transition-all ${isExpanded ? 'bg-black/80 border-red-500/60 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-gray-900/80 border-amber-900/40 hover:border-red-500/40 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'}`}
+                      style={{ transform: `rotate(${(i % 3 - 1) * 1.5}deg)`, background: isExpanded ? undefined : 'linear-gradient(145deg, rgba(30,20,10,0.9) 0%, rgba(20,10,5,0.95) 100%)' }}
+                    >
+                      {/* CLASSIFIED stamp */}
+                      {node.confidence === 'Low' && (
+                        <div className="absolute top-2 right-2 text-red-500/20 font-black text-xs -rotate-12 border border-red-500/20 px-2 py-0.5">CLASSIFIED</div>
+                      )}
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl">{node.icon}</span>
+                        <h3 className="text-lg font-black text-amber-200">{node.name}</h3>
+                      </div>
+                      {/* Confidence meter */}
+                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${confidenceColor}`}>
+                        <Activity className="w-2.5 h-2.5" /> CONFIDENCE: {node.confidence.toUpperCase()}
+                      </div>
+
+                      {/* Expanded content */}
+                      {isExpanded && (
+                        <div className="mt-4 space-y-4" onClick={e => e.stopPropagation()}>
+                          <div>
+                            <h4 className="text-xs font-bold text-green-400 uppercase tracking-wider mb-2 flex items-center gap-1"><Shield className="w-3 h-3" /> Confirmed</h4>
+                            <ul className="space-y-1">{node.confirmed.map((fact, j) => (
+                              <li key={j} className="text-sm text-green-200/80 pl-3 border-l-2 border-green-500/30">✓ {fact}</li>
+                            ))}</ul>
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Rumors</h4>
+                            <ul className="space-y-1">{node.rumors.map((r, j) => (
+                              <li key={j} className="text-sm text-yellow-200/70 pl-3 border-l-2 border-yellow-500/30">? {r}</li>
+                            ))}</ul>
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2 flex items-center gap-1"><Brain className="w-3 h-3" /> Theories</h4>
+                            <ul className="space-y-1">{node.theories.map((t, j) => (
+                              <li key={j} className="text-sm text-red-200/70 pl-3 border-l-2 border-red-500/30 italic">⚡ {t}</li>
+                            ))}</ul>
+                          </div>
+                        </div>
+                      )}
+                      {!isExpanded && <p className="text-xs text-amber-400/50 mt-2 italic">Click to investigate →</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ TRAVEL EVENT ENGINE ============ */}
+      {showTravel && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center" style={{ background: 'linear-gradient(180deg, #000510 0%, #001030 50%, #000510 100%)' }}>
+          <button onClick={() => { setShowTravel(false); setTravelPhase('idle'); setTravelEvent(null); }}
+            className="absolute top-6 right-6 z-20 p-2 hover:bg-red-500/30 rounded-lg transition-all">
+            <X className="w-7 h-7 text-cyan-400 hover:text-red-400" />
+          </button>
+
+          {/* System stability bar */}
+          <div className="absolute top-6 left-6 z-20">
+            <p className="text-[10px] font-mono text-cyan-500 uppercase tracking-widest mb-1">System Stability</p>
+            <div className="w-40 h-2 bg-gray-900 rounded-full overflow-hidden border border-cyan-900/50">
+              <div className="h-full rounded-full transition-all duration-1000" style={{
+                width: `${systemStability}%`,
+                background: systemStability > 60 ? 'linear-gradient(90deg, #22d3ee, #06b6d4)' : systemStability > 30 ? 'linear-gradient(90deg, #f59e0b, #d97706)' : 'linear-gradient(90deg, #ef4444, #dc2626)',
+                boxShadow: `0 0 10px ${systemStability > 60 ? '#22d3ee' : systemStability > 30 ? '#f59e0b' : '#ef4444'}40`,
+              }} />
+            </div>
+            <p className="text-[10px] font-mono text-cyan-600 mt-0.5">{systemStability}%</p>
+          </div>
+
+          {/* IDLE STATE */}
+          {travelPhase === 'idle' && (
+            <div className="text-center space-y-8 px-4">
+              <div>
+                <h2 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300">
+                  HYPERSPACE NAVIGATOR
+                </h2>
+                <p className="text-cyan-400/60 mt-2 font-mono text-sm">THE MARLIN — Ready for jump</p>
+              </div>
+              <button onClick={initTravel}
+                className="group relative px-12 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-2xl rounded-2xl transition-all duration-300 shadow-[0_0_40px_rgba(34,211,238,0.4)] hover:shadow-[0_0_60px_rgba(34,211,238,0.7)] transform hover:scale-105 border-2 border-cyan-400/50"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity" />
+                <div className="relative flex items-center gap-3">
+                  <Rocket className="w-8 h-8" /> INITIATE TRAVEL
+                </div>
+              </button>
+              <p className="text-cyan-600/40 text-xs font-mono">Warning: Space is unpredictable. The Marlin's AI considers staring at other ships rude.</p>
+            </div>
+          )}
+
+          {/* HYPERSPACE ANIMATION */}
+          {travelPhase === 'hyperspace' && (
+            <div className={`text-center space-y-6 w-full max-w-lg px-4 ${travelGlitch ? 'animate-pulse' : ''}`}>
+              {/* Star stretch animation */}
+              <div className="relative w-full h-40 overflow-hidden rounded-xl border border-cyan-500/30">
+                <div className="absolute inset-0" style={{
+                  background: 'radial-gradient(ellipse at center, #001030 0%, #000 70%)',
+                }}>
+                  {[...Array(30)].map((_, i) => (
+                    <div key={i} className="absolute bg-cyan-300" style={{
+                      width: '2px', height: `${20 + Math.random() * 60}px`,
+                      left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
+                      opacity: 0.3 + Math.random() * 0.7,
+                      animation: `starStretch 0.8s ease-in ${Math.random() * 0.5}s infinite`,
+                      transform: 'rotate(90deg)',
+                    }} />
+                  ))}
+                </div>
+                {travelGlitch && <div className="absolute inset-0 bg-red-500/10 animate-pulse" />}
+              </div>
+              <p className="text-cyan-300 font-mono text-lg animate-pulse">ENTERING HYPERSPACE...</p>
+              {/* Progress bar */}
+              <div className="w-full h-3 bg-gray-900 rounded-full overflow-hidden border border-cyan-500/30">
+                <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style={{
+                  animation: 'progressFill 3.5s ease-in-out forwards',
+                  boxShadow: '0 0 20px rgba(34,211,238,0.5)',
+                }} />
+              </div>
+              <p className="text-cyan-600 font-mono text-xs">Rolling d20... ⟨{travelRoll}⟩</p>
+              <style>{`
+                @keyframes starStretch { 0% { transform: rotate(90deg) scaleX(1); opacity: 0.3; } 50% { transform: rotate(90deg) scaleX(3); opacity: 1; } 100% { transform: rotate(90deg) scaleX(1); opacity: 0.3; } }
+                @keyframes progressFill { 0% { width: 0%; } 100% { width: 100%; } }
+              `}</style>
+            </div>
+          )}
+
+          {/* EVENT CARD */}
+          {travelPhase === 'event' && travelEvent && (
+            <div className="w-full max-w-2xl px-4 space-y-6" style={{ animation: 'fadeSlideUp 0.5s ease-out' }}>
+              {/* Roll display */}
+              <div className="text-center">
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 font-mono font-black text-lg ${travelEvent.tier === 'MAJOR' ? 'border-amber-400 text-amber-300 bg-amber-900/30 shadow-[0_0_20px_rgba(251,191,36,0.5)] animate-pulse' :
+                  travelEvent.tier === 'Strange' ? 'border-purple-400 text-purple-300 bg-purple-900/30 shadow-[0_0_15px_rgba(168,85,247,0.4)]' :
+                    travelEvent.tier === 'Political' ? 'border-red-400 text-red-300 bg-red-900/30' :
+                      travelEvent.tier === 'Hazard' ? 'border-orange-400 text-orange-300 bg-orange-900/30' :
+                        travelEvent.tier === 'Social' ? 'border-green-400 text-green-300 bg-green-900/30' :
+                          'border-cyan-400 text-cyan-300 bg-cyan-900/30'
+                  }`}>
+                  <Dices className="w-5 h-5" /> d20 → {travelRoll} | {travelEvent.tier.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Event card */}
+              <div className={`p-6 md:p-8 rounded-2xl border-2 backdrop-blur-lg ${travelEvent.tier === 'MAJOR' ? 'border-amber-500/60 bg-amber-900/20 shadow-[0_0_40px_rgba(251,191,36,0.3)]' :
+                travelEvent.tier === 'Strange' ? 'border-purple-500/40 bg-purple-900/15' :
+                  'border-cyan-500/30 bg-cyan-900/10'
+                }`}>
+                <h3 className={`text-2xl md:text-3xl font-black mb-3 ${travelEvent.tier === 'MAJOR' ? 'text-amber-300' : 'text-cyan-200'
+                  }`}>{travelEvent.tier === 'MAJOR' ? '⚡ ' : ''}{travelEvent.title}</h3>
+                <p className="text-white/80 text-base md:text-lg leading-relaxed mb-6">{travelEvent.desc}</p>
+                {/* Choices */}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Options:</p>
+                  {travelEvent.choices.map((choice, i) => (
+                    <button key={i} onClick={() => { }} className="w-full text-left px-4 py-3 bg-white/5 hover:bg-cyan-900/30 border border-white/10 hover:border-cyan-500/40 rounded-lg text-cyan-100 text-sm transition-all hover:shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                      {i + 1}. {choice}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Travel again */}
+              <div className="flex justify-center gap-4">
+                <button onClick={() => { setTravelPhase('idle'); setTravelEvent(null); }}
+                  className="px-6 py-3 bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 rounded-xl text-cyan-200 font-bold transition-all flex items-center gap-2">
+                  <Rocket className="w-4 h-4" /> TRAVEL AGAIN
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/*Chat OVERLAY */}
 
       {/* Chat Components - Only show for logged in users */}
@@ -4003,6 +4708,43 @@ const CosmicSyndicate = () => {
               </div>
               <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity -z-10" />
             </button>
+            {/* Campaign Features */}
+            <button
+              onClick={() => setShowSystemPulse(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-green-900/30 to-cyan-900/30 border-2 border-green-400/50 rounded-lg backdrop-blur-sm hover:border-green-300 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <Radio className="w-5 h-5 text-green-400 group-hover:text-green-300 transition-colors animate-pulse" />
+                <span className="text-green-100 font-semibold group-hover:text-white transition-colors">Pulse</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setShowBlackNode(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-gray-900/50 to-green-950/30 border-2 border-green-700/50 rounded-lg backdrop-blur-sm hover:border-green-500 hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-green-500 group-hover:text-green-400 transition-colors" />
+                <span className="text-green-200 font-semibold font-mono text-sm group-hover:text-white">BlackNode</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setShowConspiracy(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-red-900/30 to-amber-900/30 border-2 border-red-500/40 rounded-lg backdrop-blur-sm hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-red-400 group-hover:text-red-300 transition-colors" />
+                <span className="text-red-100 font-semibold group-hover:text-white transition-colors">Intel</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setShowTravel(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-2 border-blue-400/50 rounded-lg backdrop-blur-sm hover:border-blue-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
+                <span className="text-blue-100 font-semibold group-hover:text-white transition-colors">Travel</span>
+              </div>
+            </button>
             {/* User-check */}
             {currentUser ? (
               <button onClick={handleLogout}
@@ -4104,6 +4846,43 @@ const CosmicSyndicate = () => {
                 <span className="text-cyan-100 font-semibold group-hover:text-white transition-colors">
                   Careers
                 </span>
+              </div>
+            </button>
+            {/* Campaign Feature Buttons Mobile */}
+            <button
+              onClick={() => { setShowSystemPulse(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-green-900/30 to-cyan-900/30 border-2 border-green-400/50 rounded-lg backdrop-blur-sm hover:border-green-300 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <Radio className="w-5 h-5 text-green-400 animate-pulse" />
+                <span className="text-green-100 font-semibold">System Pulse</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowBlackNode(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-gray-900/50 to-green-950/30 border-2 border-green-700/50 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <Terminal className="w-5 h-5 text-green-500" />
+                <span className="text-green-200 font-semibold font-mono">BlackNode</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowConspiracy(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-red-900/30 to-amber-900/30 border-2 border-red-500/40 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <Eye className="w-5 h-5 text-red-400" />
+                <span className="text-red-100 font-semibold">Operational Analysis</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowTravel(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-2 border-blue-400/50 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <Rocket className="w-5 h-5 text-blue-400" />
+                <span className="text-blue-100 font-semibold">Hyperspace Travel</span>
               </div>
             </button>
             {/* User-check */}
@@ -5452,6 +6231,33 @@ const CosmicSyndicate = () => {
           </div>
         </div>
       </section>
+
+      {/* ============ SYSTEM PULSE BOTTOM TICKER ============ */}
+      <div className="relative w-full bg-black/80 border-t border-b border-green-500/30 overflow-hidden cursor-pointer hover:bg-green-900/10 transition-colors"
+        onClick={() => setShowSystemPulse(true)}
+      >
+        <div className="flex items-center gap-4 px-4 py-2">
+          <div className="flex items-center gap-2 flex-shrink-0 pr-4 border-r border-green-500/30">
+            <Radio className="w-4 h-4 text-green-400 animate-pulse" />
+            <span className="text-green-400 font-bold text-xs uppercase tracking-wider whitespace-nowrap">SYSTEM PULSE</span>
+          </div>
+          <div className="overflow-hidden flex-1">
+            <div className="whitespace-nowrap" style={{ animation: 'marqueeScroll 30s linear infinite' }}>
+              {SYSTEM_PULSE_POSTS.slice(0, 15).map((post, i) => (
+                <span key={i} className={`inline-block mx-6 text-sm ${post.cat === 'GLITCH' ? 'text-red-400 font-mono' :
+                    post.cat === 'REDACTED' ? 'text-gray-400' :
+                      post.cat === 'PROPHECY' ? 'text-purple-300 italic' :
+                        'text-cyan-300/80'
+                  }`}>
+                  {post.icon} {post.msg}
+                </span>
+              ))}
+            </div>
+          </div>
+          <span className="text-green-600 text-xs flex-shrink-0 hidden md:block">CLICK FOR FULL FEED →</span>
+        </div>
+        <style>{`@keyframes marqueeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+      </div>
 
       {/* Footer */}
       <footer className="relative py-12 px-4 border-t border-cyan-400/30 bg-black/40 backdrop-blur-md">

@@ -40,6 +40,19 @@ import {
   Map,
 } from 'lucide-react';
 
+// Planet drawer data — accessible to React (outside Three.js scope)
+const DRAWER_PLANETS = [
+  { name: 'Lincoln Station', icon: '🛸', color: '#94a3b8', threat: 'Moderate', tagline: 'Where it all began...', type: 'station' },
+  { name: 'Rodina', icon: '🪐', color: '#d97706', threat: 'Extreme', tagline: 'The Don\'s domain', type: 'planet' },
+  { name: 'Salamine', icon: '🪐', color: '#ef4444', threat: 'Extreme', tagline: 'War never changes', type: 'planet' },
+  { name: 'Apatia', icon: '🪐', color: '#64748b', threat: 'Moderate', tagline: 'The forgotten world', type: 'planet' },
+  { name: 'Niniche', icon: '🌗', color: '#fbbf24', threat: 'High', tagline: 'Half light, half shadow', type: 'tidal-lock' },
+  { name: 'Cupie', icon: '🪐', color: '#f472b6', threat: 'High', tagline: 'Love is a weapon', type: 'planet' },
+  { name: 'Korun & Norak', icon: '💕', color: '#a855f7', threat: 'Moderate', tagline: 'Two worlds, one fate', type: 'dual-merge' },
+  { name: 'The Wilds', icon: '🪐', color: '#22c55e', threat: 'High', tagline: 'Untamed & dangerous', type: 'planet' },
+  { name: 'Phantoma', icon: '👻', color: '#ffffff', threat: '???', tagline: 'Gone but not forgotten', type: 'ghost' },
+];
+
 // --- Loading reviews--
 // Load reviews with the average::
 const loadReviews = async () => {
@@ -1476,6 +1489,8 @@ const CosmicSyndicate = () => {
   const [showDiceRoller, setShowDiceRoller] = useState(false); // NEW DICE STATE
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [planetInfoTab, setPlanetInfoTab] = useState('overview');
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const zoomToPlanetRef = useRef(null); // Bridge: React drawer → Three.js zoom
   // AI
   const [dndChatOpen, setDndChatOpen] = useState(false);
   const [dndHasNewResponse, setDndHasNewResponse] = useState(false);
@@ -2435,6 +2450,22 @@ const CosmicSyndicate = () => {
         }
       });
 
+      // Expose zoom function so the React drawer can trigger it
+      zoomToPlanetRef.current = (planetName) => {
+        const p = planets.find(entry => entry.mesh.userData.name === planetName);
+        if (p) {
+          setSelectedPlanet(p.mesh.userData); // Full data for info sidebar
+          setPlanetInfoTab('overview');
+          setIsPaused(true);
+          isPausedRef.current = true;
+          const planetPos = new THREE.Vector3();
+          p.mesh.getWorldPosition(planetPos);
+          targetCameraPos = planetPos.clone().add(new THREE.Vector3(15, 10, 20));
+          targetLookAt = planetPos.clone();
+          controls.target.copy(targetLookAt);
+        }
+      };
+
       // Cancel lerp zoom when user scrolls (so OrbitControls handles wheel freely)
       renderer.domElement.addEventListener('wheel', () => {
         targetCameraPos = null;
@@ -3240,6 +3271,103 @@ const CosmicSyndicate = () => {
             className="w-full h-full"
             style={{ cursor: 'grab' }}
           />
+
+          {/* === BOTTOM PLANET DRAWER — Exciting navigation strip === */}
+          <div
+            className="absolute left-0 right-0 z-20 transition-all duration-500 ease-out"
+            style={{
+              bottom: drawerOpen ? '0px' : '-110px',
+              right: selectedPlanet ? '420px' : '0px',
+              transition: 'bottom 0.4s ease, right 0.4s ease',
+            }}
+          >
+            {/* Toggle tab */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => setDrawerOpen(!drawerOpen)}
+                className="px-6 py-1.5 bg-black/90 border-2 border-cyan-500/50 border-b-0 rounded-t-xl text-cyan-300 text-xs font-bold tracking-wider hover:bg-cyan-900/40 transition-all flex items-center gap-2"
+                style={{ boxShadow: '0 -4px 20px rgba(34,211,238,0.2)' }}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                {drawerOpen ? '▼ HIDE PLANETS' : '▲ SHOW PLANETS'}
+              </button>
+            </div>
+
+            {/* Planet cards strip */}
+            <div
+              className="flex gap-3 px-4 py-3 overflow-x-auto"
+              style={{
+                background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(15,23,42,0.95) 100%)',
+                borderTop: '2px solid rgba(34,211,238,0.3)',
+                boxShadow: '0 -8px 40px rgba(0,0,0,0.8), 0 -2px 20px rgba(34,211,238,0.15)',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(34,211,238,0.3) transparent',
+              }}
+            >
+              {DRAWER_PLANETS.map((planet, idx) => {
+                const isSelected = selectedPlanet?.name === planet.name;
+                const threatColor = planet.threat === 'Extreme' ? '#ef4444' :
+                  planet.threat === 'High' ? '#f97316' :
+                    planet.threat === '???' ? '#a855f7' : '#22d3ee';
+                return (
+                  <button
+                    key={planet.name}
+                    onClick={() => {
+                      if (zoomToPlanetRef.current) {
+                        zoomToPlanetRef.current(planet.name);
+                      }
+                    }}
+                    className="flex-shrink-0 group relative"
+                    style={{
+                      animation: `fadeSlideUp 0.4s ease-out ${idx * 0.06}s both`,
+                    }}
+                  >
+                    <div
+                      className={`relative flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 transition-all duration-300 cursor-pointer ${isSelected
+                        ? 'border-cyan-400 bg-cyan-900/40 shadow-[0_0_25px_rgba(34,211,238,0.5)] scale-105'
+                        : 'border-white/10 bg-white/5 hover:border-cyan-500/50 hover:bg-cyan-900/20 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:scale-105'
+                        }`}
+                      style={{ minWidth: '100px' }}
+                    >
+                      {/* Threat indicator dot */}
+                      <div
+                        className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${planet.threat === 'Extreme' || planet.threat === '???' ? 'animate-pulse' : ''}`}
+                        style={{ background: threatColor, boxShadow: `0 0 6px ${threatColor}` }}
+                      />
+
+                      {/* Planet icon */}
+                      <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{planet.icon}</span>
+
+                      {/* Planet colored ring */}
+                      <div
+                        className="w-8 h-1 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"
+                        style={{ background: planet.color, boxShadow: `0 0 8px ${planet.color}` }}
+                      />
+
+                      {/* Name */}
+                      <span className={`text-[10px] font-bold tracking-wider uppercase ${isSelected ? 'text-cyan-200' : 'text-white/70 group-hover:text-cyan-200'
+                        } transition-colors`}>
+                        {planet.name.length > 12 ? planet.name.slice(0, 11) + '…' : planet.name}
+                      </span>
+
+                      {/* Tagline on hover */}
+                      <span className="text-[8px] text-cyan-400/60 italic opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                        {planet.tagline}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Drawer animation keyframes */}
+          <style>{`
+            @keyframes fadeSlideUp {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
 
           {/* === PLANET INFO SIDEBAR — Content-Forward Design === */}
           {selectedPlanet && (

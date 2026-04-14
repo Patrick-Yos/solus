@@ -51,6 +51,13 @@ import {
   ChevronUp,
   Anchor,
   Activity,
+  FileText,
+  Coins,
+  Package,
+  CircleDot,
+  UserCheck,
+  Skull,
+  HelpCircle,
 } from 'lucide-react';
 
 // Planet drawer data — accessible to React (outside Three.js scope)
@@ -64,6 +71,7 @@ const DRAWER_PLANETS = [
   { name: 'Korun & Norak', icon: '💕', color: '#a855f7', threat: 'Moderate', tagline: 'Two worlds, one fate', type: 'dual-merge' },
   { name: 'The Wilds', icon: '🪐', color: '#22c55e', threat: 'High', tagline: 'Untamed & dangerous', type: 'planet' },
   { name: 'Phantoma', icon: '👻', color: '#ffffff', threat: '???', tagline: 'Gone but not forgotten', type: 'ghost' },
+  { name: 'Sulfur', icon: '🔥', color: '#ff6b35', threat: 'Extreme', tagline: 'City of Brass burns eternal', type: 'tidal-lock' },
 ];
 
 // ==========================================
@@ -133,6 +141,31 @@ const SYSTEM_PULSE_POSTS = [
   { cat: 'PROPHECY', icon: '🔮', msg: 'The coin flips twice. The second time, nobody catches it.' },
   { cat: 'PROPHECY', icon: '🔮', msg: 'When the machine completes, the universe will remember what it forgot.' },
   { cat: 'PROPHECY', icon: '🔮', msg: 'The child in the vat opens his eyes. He has been opening them for 2,500 years.' },
+  // Sulfur Arc
+  { cat: 'Corporate', icon: '🏢', msg: 'Sulfur Mining Corp reports 300% spike in spirit gem extraction. Dark-side operations "running smoothly."' },
+  { cat: 'Corporate', icon: '🏢', msg: 'City of Brass tourism board launches campaign: "Visit the eternal night side. Bring sunscreen anyway."' },
+  { cat: 'Corporate', icon: '🏢', msg: 'Gloria Slugbottom\'s barrier machine maintenance budget approved. Clone Edna signs the paperwork.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Don Mikey\'s security detail doubles patrols in City of Brass. Nephew Hasan seen training recruits.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Banana Guard HQ moon base reports full operational status. New recruits slip on orientation day.' },
+  { cat: 'Military', icon: '⚔️', msg: 'Shimana Clan fleet purchases 200 freed slaves from Lincoln Station auction. "They leave as warriors."' },
+  { cat: 'Fringe', icon: '🔮', msg: 'Lord Erixus issues decree from City of Brass: "All tribute to the eternal flame." Fire genie enforcers mobilize.' },
+  { cat: 'Fringe', icon: '🔮', msg: 'Feywild vegetation spotted growing through Sulfur crater tunnel walls. Miners refuse to enter Sector 7.' },
+  { cat: 'Fringe', icon: '🔮', msg: 'The Traveler sighted in 3 systems simultaneously. Witnesses describe an archfey "who smells like old machines."' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Ruba\'s political science thesis "On the Abolition of Cosmic Monarchies" goes viral on Sulfur dark-net.' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Professor Crow keynotes gene splicing convention on Rodina. Unveils "Ethical Chimera Guidelines."' },
+  { cat: 'Civilian', icon: '🏠', msg: 'Moon Man (reverse werewolf wizard) opens consulting firm. Snoopy the Destroyer handles security.' },
+  { cat: 'AI', icon: '🤖', msg: 'HANK AI now installed in Johnny\'s car. First words: "Please use your turn signal. I\'m begging you."' },
+  { cat: 'AI', icon: '🤖', msg: 'Aphrodite AI fragments purged from Cupie servers after Tabaga\'s assault. Goldstein rivalry "resolved."' },
+  { cat: 'Cultural', icon: '🎭', msg: 'Lord Briar\'s Masquerade of Sulfur draws record fey attendance. Ice skater briarling wins Best Performance.' },
+  { cat: 'Cultural', icon: '🎭', msg: 'Hero Corps moon unveils new exhibit: "The Mark Clones — One Face, Many Heroes."' },
+  { cat: 'Black Market', icon: '💰', msg: 'Coins bearing the Rubedo symbol circulate in Sulfur underbelly. Origin: Lord Briar\'s court. Price: your name.' },
+  { cat: 'Black Market', icon: '💰', msg: 'Bob\'s handler Elizabeth flagged in 4 intelligence databases. "She doesn\'t exist," says everyone who\'s met her.' },
+  { cat: 'GLITCH', icon: '⚠️', msg: 'F̸e̷y̶w̷i̸l̷d̶ ̸s̷i̷g̷n̸a̷l̶ ̸b̷l̶e̷e̸d̷i̸n̷g̶ ̸t̸h̶r̷o̸u̷g̶h̸ ̷c̸r̷a̶t̷e̸r̷ ̸w̶a̷l̸l̷s̶' },
+  { cat: 'GLITCH', icon: '⚠️', msg: 'REBIS_LAB_PHOTO.jpg — T̶h̸e̷ ̶H̷o̸s̷t̶.̸ ̷T̸h̸e̷ ̶B̸r̷a̸i̶n̷.̸ ̷T̷h̸e̶ ̸G̷e̸n̶e̷r̸a̷l̶.̸ ̸T̶h̷e̸ ̷T̶r̷a̸v̶e̸l̷e̸r̶.̷ ̸T̸h̷e̶ ̷M̸e̷c̶h̸a̷n̶i̷c̸.' },
+  { cat: 'REDACTED', icon: '🔒', msg: 'Agent BOB: Handler [████████] confirms asset is [████]. Next dead drop: [██████]. Codename: SLIME.' },
+  { cat: 'REDACTED', icon: '🔒', msg: 'PAILOR entity detected near Rodina barrier. Classification: [████]. Threat level: [██████████]. DO NOT ENGAGE.' },
+  { cat: 'PROPHECY', icon: '🔮', msg: 'The green vat remembers. The symbol on the wall remembers. The boy inside never forgot.' },
+  { cat: 'PROPHECY', icon: '🔮', msg: 'Where brass meets briar, the old machine stirs. The Traveler always arrives on time.' },
 ];
 
 // ==========================================
@@ -165,6 +198,11 @@ const TRAVEL_EVENTS = [
   { roll: 19, tier: 'Strange', title: 'Ghost Signal from The March', desc: 'A signal matching ancient March frequencies locks onto the ship. It contains a single image: a face that looks exactly like Chimer\u2019s. Timestamp: 2,500 years ago.', choices: ['Analyze the signal', 'Share with Luna Corps'] },
   // 20: Major Event
   { roll: 20, tier: 'MAJOR', title: 'Derelict Megastructure', desc: 'Sensors detect a massive structure hidden in an asteroid field. Architecture matches March ruins. A door-shaped section pulses with blue light. The Broken Sepulchre symbol is carved above it.', choices: ['Board and explore', 'Mark location and report to Luna Corps', 'Approach with extreme caution'] },
+  // 21-24: Sulfur/Feywild Bonus Events
+  { roll: 21, tier: 'Strange', title: 'Feywild Breach', desc: 'A shimmering tear in space opens near Sulfur orbit. Vines and glowing pollen spill into the vacuum. Sensors detect fey magic signatures — and something ancient watching from inside.', choices: ['Fly through the breach', 'Collect pollen samples', 'Seal it if possible'] },
+  { roll: 22, tier: 'Social', title: 'Masquerade Invitation', desc: 'A gilt envelope materializes on the bridge. Inside: an invitation to the Masquerade of Sulfur, signed by Lord Briar. The ink smells like roses and regret. A briarling courier waves from outside the viewport.', choices: ['Accept the invitation', 'Politely decline', 'Question the courier'] },
+  { roll: 23, tier: 'Hazard', title: 'Brass Storm', desc: 'A superheated wind from Sulfur\'s tidally locked bright side sweeps across your trajectory. Hull temperature spikes. HANK reports: "This isn\'t natural. Someone turned up the thermostat."', choices: ['Emergency dive to dark side', 'Ride it out with shields', 'Trace the heat source'] },
+  { roll: 24, tier: 'Political', title: 'Traveler\'s Toll', desc: 'An archfey figure materializes on the sensors — then on the bridge. The Traveler offers passage through a shortcut, but demands "a memory worth keeping" as payment.', choices: ['Pay the memory toll', 'Negotiate a different price', 'Refuse and find another route'] },
 ];
 
 // ==========================================
@@ -182,6 +220,10 @@ const BLACKNODE_RESPONSES = {
   'access march': { type: 'lore', lines: ['THE MARCH — THREAT ASSESSMENT', '  Type: War zone planet', '  Status: "The purge 24/7"', '  Safe zones: Elite cities only', '  Ancient civilization: EXTINCT', '  ─ Built the Rebis Machine', '  ─ Appearance: IDENTICAL to subject CHIMER', '  ─ Implications: [██████ CLASSIFIED ██████]', '  Broken Sepulchre: Ancient vaults', '  Key system: Coin-shaped fragments, red + blue varieties'] },
   'scan chimer': { type: 'cryptic', lines: ['SCANNING: SUBJECT CHIMER', '  Age: 2,500 years (appears 25-27)', '  Blood types: ALL', '  Species: Last of his kind', '  Origin: Found in Rebis lab vat as infant', '  Connection to March ancients: 99.97% phenotype match', '  ...', '  ...deep scan initiated...', '  ...', '  ERROR: Subject\'s biosignature is interfering with scan', '  The machine recognizes him.', '  He was always part of the plan.'] },
   'access ultimum': { type: 'lore', lines: ['ULTIMUM INC — CRIMINAL ORGANIZATION', '  Status: Declared criminal (30 years ago)', '  Whistleblower: Johnny Mythrilhand', '  Crime: Violent coup against Rebis Company', '  Goal: Simulated life / consciousness transfer', '  Defector from Rebis: Dextra Norton (The Producer)', '  Active hit list: Gloria Slugbottom', '  Sleeper agents: SUSPECTED on Rodina', '  WARNING: Ultimum technology still active in Johnny\'s arm'] },
+  'scan traveler': { type: 'lore', lines: ['DEEP SCAN: THE TRAVELER', '  Classification: Archfey entity', '  Status: ACTIVE — sighted across multiple systems', '  Connection: Rebis Machine / Spirit production', '  Known associates: Lord Briar (Masquerade of Sulfur)', '  Identified in Rebis lab photo (nickname: "The Traveler")', '  Other photo subjects: The Host, The Brain, The General, The Mechanic', '  Behavior: Appears at nexus points of fey/material overlap', '  ─ Connected to spirit gem creation process', '  ─ Feywild expansion on Sulfur correlates with sightings', '  WARNING: Entity awareness level EXTREME', '  ...', '  It knows you are reading this.'] },
+  'access sulfur': { type: 'lore', lines: ['PLANET SULFUR — INTELLIGENCE BRIEF', '  Type: Tidally locked planet', '  Bright side: Uninhabitable solar wasteland', '  Dark side: City of Brass (primary settlement)', '  Ruler: Lord Erixus (Fire Genie, Brass Lord)', '  Crime lord: Don Mikey (nephew: Hasan)', '  Notable: Ruba — translator, shopkeeper\'s daughter, political activist', '  Economy: Spirit gem mining, black market trade', '  ANOMALY: Feywild biome growing inside crater tunnels', '  ─ Fey portal discovered leading to old Rebis research facility', '  ─ Masquerade of Sulfur (fey court) operates in tunnel network', '  Threat level: EXTREME', '  Note: Do not anger Lord Erixus. Do not owe Don Mikey.'] },
+  'access feywild': { type: 'cryptic', lines: ['FEYWILD INCURSION — SULFUR TUNNELS', '  Status: EXPANDING', '  Origin: Unknown — predates current mining operations', '  Flora: Aggressive, bioluminescent, self-propagating', '  Fauna: Briarlings, ice skaters, fey courtiers', '  Governing entity: Lord Briar', '  ─ Distributes coins bearing Rubedo symbol', '  ─ Connection to Rebis fabrication process: [██ CLASSIFIED ██]', '  Portal network: Links to abandoned Rebis research facility', '  ...', '  Scanning deeper...', '  ERROR: Fey magic corrupting scan protocols', '  The forest is scanning US back.'] },
+  'scan gloria': { type: 'lore', lines: ['DEEP SCAN: GLORIA SLUGBOTTOM', '  Location: Rodina', '  Status: ALIVE — under Ultimum Inc hit list', '  Role: Barrier machine operator/guardian', '  Clone designation: EDNA (active, handles daily operations)', '  Rebis connection: Original team member', '  ─ Appeared in Rebis lab photo alongside Bosh Kyros', '  ─ Maintains critical barrier infrastructure on Rodina', '  Associated entity: PAILOR (deity/angel class)', '  ─ Detected near barrier machine', '  ─ Classification: [████████]', '  WARNING: Gloria\'s barrier is weakening.', '  WARNING: If the barrier falls, [██████████████████].'] },
 };
 
 const BLACKNODE_CRYPTIC = [
@@ -203,6 +245,14 @@ const BLACKNODE_CRYPTIC = [
   'MONITORING ENABLED.',
   'Don\'t trust the cheese.',
   'Snaggletooth sends his regards.',
+  'The Traveler left a coin on your doorstep. Don\'t flip it.',
+  'Ruba\'s thesis was downloaded 47,000 times. Lord Erixus is not amused.',
+  'Bob is not who he says he is. Elizabeth knows. Elizabeth always knows.',
+  'The green vat in the Rebis lab still hums. Chimer hears it in his sleep.',
+  'Don Mikey sends his regards. Hasan sends a bill.',
+  'Feywild roots have reached Sulfur\'s core. The planet is dreaming.',
+  'HANK AI log: "Johnny drives like the universe is ending. It is."',
+  'Pailor spoke once near the barrier. Gloria wept for three days.',
 ];
 
 const BLACKNODE_BOOT = [
@@ -280,6 +330,20 @@ const CONSPIRACY_NODES = [
     rumors: ['One donor is from the future', 'The donors knew about the universe\'s collapse before Rebis', 'At least one donor is an AI'],
     theories: ['The donors ARE the March ancients, operating through intermediaries', 'The same donors funded Ultimum Inc'],
   },
+  {
+    id: 'traveler', name: 'The Traveler', icon: '🎭', x: 30, y: 40,
+    confidence: 'Low',
+    confirmed: ['Archfey entity sighted across multiple systems', 'Connected to Rebis Machine and spirit production', 'Appeared in old Rebis lab photo (nicknamed "The Traveler")', 'Photo also shows: The Host, The Brain, The General, The Mechanic'],
+    rumors: ['The Traveler was the one who taught Rebis to harvest spirits', 'It can exist in multiple places at once', 'Lord Briar answers to the Traveler, not the other way around'],
+    theories: ['The Traveler is a fragment of the First Woman\'s will', 'It created the Feywild on Sulfur deliberately to grow a new Rebis lab'],
+  },
+  {
+    id: 'feywild', name: 'Sulfur Feywild', icon: '🌿', x: 55, y: 60,
+    confidence: 'Medium',
+    confirmed: ['Feywild biome growing inside Sulfur crater tunnels', 'Lord Briar governs the Masquerade of Sulfur from within', 'Fey portal connects to abandoned Rebis research facility', 'Lord Briar distributes coins bearing Rubedo symbol', 'Chimer had flashback of green vat next to Rubedo symbol'],
+    rumors: ['The Feywild is not growing — it is RETURNING', 'Sulfur\'s crater was originally a Rebis test site', 'The ice skater briarling is Lord Briar\'s spy'],
+    theories: ['The Feywild IS the Rebis Machine\'s biological byproduct', 'Completing the Rubedo piece will either heal or consume all of Sulfur'],
+  },
 ];
 
 const CONSPIRACY_THREADS = [
@@ -294,6 +358,64 @@ const CONSPIRACY_THREADS = [
   { from: 'march', to: 'firstwoman', label: 'Pre-dates' },
   { from: 'donors', to: 'ultimum', label: 'Same source?' },
   { from: 'donors', to: 'firstwoman', label: 'Connected?' },
+  { from: 'traveler', to: 'rebis', label: 'Spirit production' },
+  { from: 'traveler', to: 'feywild', label: 'Created?' },
+  { from: 'traveler', to: 'firstwoman', label: 'Fragment of?' },
+  { from: 'feywild', to: 'rebis', label: 'Rubedo link' },
+  { from: 'feywild', to: 'march', label: 'Ancient site' },
+  { from: 'traveler', to: 'donors', label: 'Lab photo' },
+];
+
+// ==========================================
+// CREW DOSSIERS - Character Profile Cards
+// ==========================================
+const CREW_DOSSIERS = [
+  { name: 'Reigen', species: 'Changeling', role: 'Con Artist / Exorcist', classification: 'ENIGMA', status: 'active', threat: 'Moderate', color: '#a78bfa', icon: '\uD83C\uDFAD', traits: ['Master of deception', 'Surprisingly effective leader', 'Heart of gold (hidden under 12 layers of BS)'], quotes: ['"I\'m not a fraud - I\'m an entrepreneur of truth."', '"The spirits told me to bill you double."'], bio: 'Fraud with a heart of gold. Somehow keeps failing upward into heroism.' },
+  { name: 'Johnny Mythrilhand', species: 'Human (Revenant)', role: 'Gunslinger', classification: 'TEMPORAL ANOMALY', status: 'active', threat: 'High', color: '#f59e0b', icon: '\uD83D\uDD2B', traits: ['Died 100 years ago', 'Consciousness transferred to new body', 'Has Alt - an AI companion'], quotes: ['"Back in my day, we settled things with a duel."', '"Alt, run the numbers." - "The numbers say we\'re screwed."'], bio: 'A gunslinger out of time. Died a century ago but refuses to stay dead. Alt keeps him grounded.' },
+  { name: 'Chimer', species: 'Unknown', role: 'Druid / Monk', classification: 'ELDER ENTITY', status: 'active', threat: 'Extreme', color: '#22d3ee', icon: '\uD83C\uDF3F', traits: ['2500 years old', 'Last of his kind', 'Ancient wisdom meets dry humor'], quotes: ['"I have watched civilizations rise and fall. Yours is mid."', '"Patience is a virtue I had... 2000 years ago."'], bio: 'The last of an unknown species. Has seen it all and is tired of most of it.' },
+  { name: 'Hui', species: 'Robot', role: 'Engineer / Artificer', classification: 'SYNTHETIC ASSET', status: 'active', threat: 'Moderate', color: '#06b6d4', icon: '\uD83E\uDD16', traits: ['Created by Newton', 'Has MewFour companion', 'Constantly upgrading and tinkering'], quotes: ['"I calculated a 12% chance of survival. Let\'s proceed."', '"MewFour, hand me the plasma wrench."'], bio: 'A robot built by Newton with a knack for engineering miracles and a cat-like companion.' },
+  { name: 'Bob', species: 'Plasmoid / Slime', role: 'Secret Spy / Master of Disguise', classification: 'UNKNOWN - DO NOT TRUST', status: 'active', threat: 'CLASSIFIED', color: '#4ade80', icon: '\uD83E\uDEE7', traits: ['Can assume any form', 'Founded the Dishwasher God religion', 'Nobody knows his true allegiance'], quotes: ['"I am everyone and no one."', '"Praise be to the Dishwasher God, cleanser of sins and plates."'], bio: 'A sentient slime with more secrets than forms. Founder of the galaxy\'s strangest religion.' },
+  { name: 'Tabaga', species: 'Orc', role: 'Wrestler', classification: 'KINETIC THREAT', status: 'active', threat: 'Extreme', color: '#ef4444', icon: '\uD83D\uDCAA', traits: ['From Cupie', 'Legendary war cry', 'Solves problems with suplex'], quotes: ['"SHAMANDAR!!!"', '"Why talk when SMASH works?"', '"Tabaga does not negotiate. Tabaga BODY SLAMS."'], bio: 'Orc wrestler from Cupie. Her solution to every problem involves high-velocity impacts.' },
+];
+
+// ==========================================
+// REBIS MACHINE PARTS - Artifact Vault
+// ==========================================
+const REBIS_PARTS = [
+  { name: 'Albedo', fn: 'Locator', location: 'Rodina', holder: 'Gloria', status: 'secured', statusLabel: 'SECURED', glowColor: 'rgba(34,197,94,0.4)', desc: 'The Locator - capable of finding anything in the known galaxy. Currently secured by Gloria on Rodina under heavy guard.', icon: '\uD83D\uDD0D' },
+  { name: 'Negrado', fn: 'Transmuter', location: 'The March', holder: 'Unknown', status: 'missing', statusLabel: 'MISSING', glowColor: 'rgba(239,68,68,0.4)', desc: 'The Transmuter - can alter the fundamental properties of matter. Lost somewhere on The March. Multiple factions are searching.', icon: '\uD83D\uDD04' },
+  { name: 'Rubedo', fn: 'Fabricator', location: 'Recovered', holder: 'The Party', status: 'recovered', statusLabel: 'RECOVERED', glowColor: 'rgba(245,158,11,0.4)', desc: 'The Fabricator - creates objects from pure energy. Recovered from the Traveler after a harrowing confrontation.', icon: '\u2692\uFE0F' },
+  { name: 'Citrinitas', fn: 'Analyzer', location: 'Phantoma', holder: 'Inaccessible', status: 'inaccessible', statusLabel: 'INACCESSIBLE', glowColor: 'rgba(107,114,128,0.4)', desc: 'The Analyzer - deciphers any code, language, or encryption. Was on Phantoma before the planet became a ghost world.', icon: '\uD83D\uDD2E' },
+];
+
+// ==========================================
+// FATE COIN - Lucky Lincoln Prophecies
+// ==========================================
+const FATE_PROPHECIES = [
+  'The stars align for a heist most daring. Trust the slime.',
+  'A shadow from the past returns. Johnny knows the face.',
+  'The Dishwasher God demands a sacrifice - of dirty dishes.',
+  'Betrayal lurks where you least expect it. Check your pockets.',
+  'An ancient ally awakens. Chimer feels it in his bones... all 2500 years of them.',
+  'The next jump will not go as planned. Pack snacks.',
+  'A deal with a devil - but which devil? There are so many.',
+  'SHAMANDAR echoes across the void. Something big approaches.',
+  'The coin remembers what you have forgotten.',
+  'Gloria sends her regards. They are not friendly.',
+  'The March holds secrets older than Chimer. That is saying something.',
+  'MewFour knows the way. Follow the robot cat.',
+  'A door opens that should stay closed. Alt recommends running.',
+  'The Rebis Machine stirs. Can you feel it?',
+  'Someone on the crew is not who they claim to be. Then again, that is most of you.',
+  'Lincoln Station remembers. Lincoln Station never forgets.',
+  'The next planet will test your resolve. Tabaga suggests suplexing it.',
+  'Reigen\'s next con might actually be the truth. Terrifying.',
+  'A message from the void: "STOP FLIPPING THIS COIN."',
+  'Fortune favors the bold. Unfortunately, it also favors the reckless.',
+  'The Traveler watches. The Traveler waits. The Traveler judges your outfit choices.',
+  'Two paths diverge in the cosmos. Both lead to trouble. Pick the funnier one.',
+  'The ghost planet whispers. If only you could hear it over Tabaga\'s war cry.',
+  'Someone will betray someone. This is space DND, it was inevitable.',
 ];
 
 // --- Loading reviews--
@@ -1761,6 +1883,18 @@ const CosmicSyndicate = () => {
   const [systemStability, setSystemStability] = useState(78);
   const [travelGlitch, setTravelGlitch] = useState(false);
 
+  // Crew Dossiers
+  const [showCrewDossiers, setShowCrewDossiers] = useState(false);
+
+  // Artifact Vault
+  const [showArtifactVault, setShowArtifactVault] = useState(false);
+
+  // Fate Coin
+  const [showFateCoin, setShowFateCoin] = useState(false);
+  const [coinFlipping, setCoinFlipping] = useState(false);
+  const [coinResult, setCoinResult] = useState(null);
+  const [coinProphecy, setCoinProphecy] = useState('');
+
   // System Pulse ticker rotation
   useEffect(() => {
     const timer = setInterval(() => {
@@ -1856,6 +1990,21 @@ const CosmicSyndicate = () => {
       else if (event.tier === 'Strange') setSystemStability(prev => Math.max(0, prev - 5));
       else if (event.tier === 'Minor') setSystemStability(prev => Math.min(100, prev + 2));
     }, 4000);
+  };
+
+  // Fate Coin flip handler
+  const flipFateCoin = () => {
+    if (coinFlipping) return;
+    setCoinFlipping(true);
+    setCoinResult(null);
+    setCoinProphecy('');
+    setTimeout(() => {
+      const result = Math.random() < 0.5 ? 'heads' : 'tails';
+      const prophecy = FATE_PROPHECIES[Math.floor(Math.random() * FATE_PROPHECIES.length)];
+      setCoinResult(result);
+      setCoinProphecy(prophecy);
+      setCoinFlipping(false);
+    }, 2000);
   };
 
   // AI
@@ -3513,6 +3662,321 @@ const CosmicSyndicate = () => {
         </div>
       )}
 
+      {/* ============ CREW DOSSIERS ============ */}
+      {showCrewDossiers && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg overflow-y-auto">
+          <div className="min-h-screen py-8 px-4">
+            <div className="max-w-6xl mx-auto">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-red-300 flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-purple-400" /> CREW DOSSIERS
+                  </h2>
+                  <p className="text-purple-400/60 text-sm mt-1 font-mono">CLASSIFICATION: EYES ONLY | COSMIC SYNDICATE PERSONNEL FILES</p>
+                </div>
+                <button onClick={() => setShowCrewDossiers(false)} className="p-2 hover:bg-red-500/30 rounded-lg transition-all">
+                  <X className="w-7 h-7 text-purple-400 hover:text-red-400" />
+                </button>
+              </div>
+
+              {/* CLASSIFIED watermark */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-0 opacity-[0.02]">
+                <p className="text-[150px] md:text-[200px] font-black text-purple-500 -rotate-12 whitespace-nowrap">DOSSIER</p>
+              </div>
+
+              {/* Dossier Cards Grid */}
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {CREW_DOSSIERS.map((char, i) => (
+                  <div key={char.name}
+                    className="relative group"
+                    style={{ animation: `fadeSlideUp 0.4s ease-out ${i * 0.1}s both` }}
+                  >
+                    {/* Dossier Card */}
+                    <div className="relative p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-lg"
+                      style={{
+                        borderColor: char.color + '40',
+                        background: `linear-gradient(145deg, ${char.color}10 0%, rgba(0,0,0,0.8) 100%)`,
+                        boxShadow: `0 0 20px ${char.color}15`,
+                      }}
+                    >
+                      {/* Classification stamp */}
+                      <div className="absolute top-3 right-3 px-2 py-0.5 text-[9px] font-black tracking-widest border rounded"
+                        style={{ borderColor: char.color + '60', color: char.color, opacity: 0.7, transform: 'rotate(3deg)' }}>
+                        {char.classification}
+                      </div>
+
+                      {/* Icon and Name */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl">{char.icon}</span>
+                        <div>
+                          <h3 className="text-xl font-black" style={{ color: char.color }}>{char.name}</h3>
+                          <p className="text-white/40 text-xs font-mono">{char.species} | {char.role}</p>
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-2 h-2 rounded-full ${char.status === 'active' ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : char.status === 'MIA' ? 'bg-red-400 animate-pulse' : 'bg-gray-500'}`} />
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${char.status === 'active' ? 'text-green-400' : char.status === 'MIA' ? 'text-red-400' : 'text-gray-400'}`}>
+                          {char.status.toUpperCase()}
+                        </span>
+                        <span className="text-white/20 mx-1">|</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${char.threat === 'Extreme' ? 'text-red-400' : char.threat === 'High' ? 'text-orange-400' : char.threat === 'CLASSIFIED' ? 'text-yellow-400 animate-pulse' : 'text-cyan-400'}`}>
+                          THREAT: {char.threat}
+                        </span>
+                      </div>
+
+                      {/* Bio */}
+                      <p className="text-white/60 text-sm mb-3 italic">{char.bio}</p>
+
+                      {/* Traits */}
+                      <div className="mb-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1" style={{ color: char.color }}>
+                          <Shield className="w-3 h-3" /> Notable Traits
+                        </p>
+                        <div className="space-y-1">
+                          {char.traits.map((trait, j) => (
+                            <div key={j} className="text-xs text-white/50 pl-3 border-l-2" style={{ borderColor: char.color + '40' }}>
+                              {trait}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Quotes */}
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5 text-amber-400/70 flex items-center gap-1">
+                          <Book className="w-3 h-3" /> Field Recordings
+                        </p>
+                        {char.quotes.map((quote, j) => (
+                          <p key={j} className="text-xs text-amber-200/50 italic pl-3 border-l-2 border-amber-500/20 mb-1">{quote}</p>
+                        ))}
+                      </div>
+
+                      {/* Bottom scanner line effect */}
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-xl opacity-50"
+                        style={{ background: `linear-gradient(90deg, transparent, ${char.color}, transparent)` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ ARTIFACT VAULT ============ */}
+      {showArtifactVault && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: 'linear-gradient(180deg, #0a0508 0%, #1a0a15 50%, #0a0508 100%)' }}>
+          <div className="min-h-screen py-8 px-4">
+            <div className="max-w-5xl mx-auto">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 flex items-center gap-3">
+                    <Package className="w-8 h-8 text-amber-400" /> ARTIFACT VAULT
+                  </h2>
+                  <p className="text-amber-400/50 text-sm mt-1 font-mono">REBIS MACHINE COMPONENT TRACKER | {REBIS_PARTS.filter(p => p.status === 'secured' || p.status === 'recovered').length}/4 ACQUIRED</p>
+                </div>
+                <button onClick={() => setShowArtifactVault(false)} className="p-2 hover:bg-red-500/30 rounded-lg transition-all">
+                  <X className="w-7 h-7 text-amber-400 hover:text-red-400" />
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-8 p-4 rounded-xl border border-amber-500/30 bg-amber-900/10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-amber-300 font-bold text-sm">MACHINE COMPLETION</span>
+                  <span className="text-amber-400 font-mono text-sm font-bold">{Math.round((REBIS_PARTS.filter(p => p.status === 'secured' || p.status === 'recovered').length / 4) * 100)}%</span>
+                </div>
+                <div className="w-full h-3 bg-gray-900 rounded-full overflow-hidden border border-amber-900/50">
+                  <div className="h-full rounded-full transition-all duration-1000"
+                    style={{
+                      width: `${(REBIS_PARTS.filter(p => p.status === 'secured' || p.status === 'recovered').length / 4) * 100}%`,
+                      background: 'linear-gradient(90deg, #f59e0b, #eab308, #f59e0b)',
+                      boxShadow: '0 0 15px rgba(245,158,11,0.5)',
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-2">
+                  {REBIS_PARTS.map((part) => (
+                    <div key={part.name} className="flex items-center gap-1">
+                      <div className={`w-2.5 h-2.5 rounded-full ${part.status === 'secured' ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]' : part.status === 'recovered' ? 'bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.8)]' : part.status === 'missing' ? 'bg-red-400 animate-pulse shadow-[0_0_6px_rgba(248,113,113,0.8)]' : 'bg-gray-600'}`} />
+                      <span className="text-[10px] font-mono text-white/40">{part.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Parts Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {REBIS_PARTS.map((part, i) => {
+                  const statusColor = part.status === 'secured' ? '#22c55e' : part.status === 'recovered' ? '#eab308' : part.status === 'missing' ? '#ef4444' : '#6b7280';
+                  return (
+                    <div key={part.name}
+                      className="relative p-6 rounded-xl border-2 transition-all duration-300"
+                      style={{
+                        borderColor: statusColor + '40',
+                        background: `linear-gradient(145deg, ${statusColor}08 0%, rgba(0,0,0,0.8) 100%)`,
+                        boxShadow: `0 0 25px ${part.glowColor}`,
+                        animation: `fadeSlideUp 0.4s ease-out ${i * 0.15}s both`,
+                      }}
+                    >
+                      {/* Status Badge */}
+                      <div className="absolute top-4 right-4 px-3 py-1 text-[10px] font-black tracking-widest rounded-full border"
+                        style={{ borderColor: statusColor, color: statusColor, background: statusColor + '15' }}>
+                        {part.statusLabel}
+                      </div>
+
+                      {/* Icon and Name */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-4xl">{part.icon}</span>
+                        <div>
+                          <h3 className="text-2xl font-black text-amber-200">{part.name}</h3>
+                          <p className="text-amber-400/60 text-xs font-mono uppercase tracking-wider">{part.fn}</p>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-white/60 text-sm leading-relaxed mb-4">{part.desc}</p>
+
+                      {/* Location and Holder */}
+                      <div className="flex gap-4">
+                        <div className="flex-1 p-2 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-[9px] font-bold text-amber-400/50 uppercase tracking-widest mb-0.5">Location</p>
+                          <p className="text-sm text-white/70 font-mono flex items-center gap-1">
+                            <Globe className="w-3 h-3 text-amber-400/50" /> {part.location}
+                          </p>
+                        </div>
+                        <div className="flex-1 p-2 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-[9px] font-bold text-amber-400/50 uppercase tracking-widest mb-0.5">Holder</p>
+                          <p className="text-sm text-white/70 font-mono flex items-center gap-1">
+                            <Shield className="w-3 h-3 text-amber-400/50" /> {part.holder}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Bottom glow line */}
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-xl"
+                        style={{ background: `linear-gradient(90deg, transparent, ${statusColor}, transparent)`, opacity: 0.5 }} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Connection Diagram */}
+              <div className="mt-8 p-6 rounded-xl border border-amber-500/20 bg-amber-900/5 text-center">
+                <p className="text-amber-400/40 text-xs font-mono uppercase tracking-widest mb-3">Assembly Sequence</p>
+                <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
+                  {REBIS_PARTS.map((part, i) => (
+                    <React.Fragment key={part.name}>
+                      <div className={`px-3 py-2 rounded-lg border text-sm font-bold ${part.status === 'secured' || part.status === 'recovered' ? 'border-amber-400/50 text-amber-300 bg-amber-900/20' : 'border-gray-700 text-gray-500 bg-gray-900/30'}`}>
+                        {part.icon} {part.name}
+                      </div>
+                      {i < REBIS_PARTS.length - 1 && (
+                        <span className="text-amber-500/30 font-mono">{'>>>'}</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  <span className="text-amber-500/30 font-mono">{'>>>'}</span>
+                  <div className="px-4 py-2 rounded-lg border-2 border-dashed border-amber-500/30 text-amber-400/50 font-black text-sm animate-pulse">
+                    REBIS MACHINE
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ FATE COIN ============ */}
+      {showFateCoin && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center" style={{ background: 'radial-gradient(ellipse at center, #1a1000 0%, #000 70%)' }}>
+          <button onClick={() => { setShowFateCoin(false); setCoinResult(null); setCoinProphecy(''); }}
+            className="absolute top-6 right-6 z-20 p-2 hover:bg-red-500/30 rounded-lg transition-all">
+            <X className="w-7 h-7 text-amber-400 hover:text-red-400" />
+          </button>
+
+          <div className="text-center space-y-8 px-4 max-w-lg">
+            {/* Title */}
+            <div>
+              <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-400">
+                LUCKY LINCOLN
+              </h2>
+              <p className="text-amber-400/50 mt-2 font-mono text-sm">Flip the coin. Accept your fate.</p>
+            </div>
+
+            {/* The Coin */}
+            <div className="flex justify-center">
+              <button
+                onClick={flipFateCoin}
+                disabled={coinFlipping}
+                className="relative w-40 h-40 md:w-48 md:h-48 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 focus:outline-none"
+                style={{
+                  background: 'radial-gradient(circle at 35% 35%, #fcd34d, #b45309, #78350f)',
+                  boxShadow: coinFlipping
+                    ? '0 0 60px rgba(252,211,77,0.8), 0 0 120px rgba(245,158,11,0.4), inset 0 0 30px rgba(0,0,0,0.3)'
+                    : '0 0 30px rgba(252,211,77,0.4), 0 0 60px rgba(245,158,11,0.2), inset 0 0 20px rgba(0,0,0,0.3)',
+                  animation: coinFlipping ? 'coinSpin 0.3s linear infinite' : 'none',
+                  border: '4px solid rgba(252,211,77,0.6)',
+                }}
+              >
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {coinFlipping ? (
+                    <Coins className="w-12 h-12 md:w-16 md:h-16 text-yellow-900/80" />
+                  ) : coinResult ? (
+                    <>
+                      <span className="text-3xl md:text-4xl">{coinResult === 'heads' ? '\uD83C\uDFB0' : '\uD83C\uDF1F'}</span>
+                      <span className="text-yellow-900/80 font-black text-sm mt-1 uppercase">{coinResult}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Coins className="w-12 h-12 md:w-16 md:h-16 text-yellow-900/60" />
+                      <span className="text-yellow-900/60 font-bold text-xs mt-2">FLIP ME</span>
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {/* Result */}
+            {coinResult && !coinFlipping && (
+              <div style={{ animation: 'fadeSlideUp 0.5s ease-out' }}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-amber-400/50 bg-amber-900/30 mb-4">
+                  <span className="text-amber-300 font-black text-lg uppercase">{coinResult === 'heads' ? 'HEADS - Fortune Smiles' : 'TAILS - Fate Frowns'}</span>
+                </div>
+                <div className="p-6 rounded-xl border border-amber-500/30 bg-amber-950/30 backdrop-blur-sm">
+                  <p className="text-[10px] font-bold text-amber-500/50 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                    <Star className="w-3 h-3" /> Prophecy of Lincoln <Star className="w-3 h-3" />
+                  </p>
+                  <p className="text-amber-200/80 text-lg italic leading-relaxed">{coinProphecy}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Flip prompt */}
+            {!coinResult && !coinFlipping && (
+              <p className="text-amber-600/40 text-xs font-mono">Click the coin to reveal your destiny</p>
+            )}
+            {coinFlipping && (
+              <p className="text-amber-400 font-mono text-sm animate-pulse">The cosmos deliberates...</p>
+            )}
+          </div>
+
+          {/* Coin spin animation */}
+          <style>{`
+            @keyframes coinSpin {
+              0% { transform: rotateY(0deg) scale(1.1); }
+              25% { transform: rotateY(90deg) scale(0.9); }
+              50% { transform: rotateY(180deg) scale(1.1); }
+              75% { transform: rotateY(270deg) scale(0.9); }
+              100% { transform: rotateY(360deg) scale(1.1); }
+            }
+          `}</style>
+        </div>
+      )}
+
       {/*Chat OVERLAY */}
 
       {/* Chat Components - Only show for logged in users */}
@@ -4745,6 +5209,33 @@ const CosmicSyndicate = () => {
                 <span className="text-blue-100 font-semibold group-hover:text-white transition-colors">Travel</span>
               </div>
             </button>
+            <button
+              onClick={() => setShowCrewDossiers(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-2 border-purple-400/50 rounded-lg backdrop-blur-sm hover:border-purple-300 hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                <span className="text-purple-100 font-semibold group-hover:text-white transition-colors">Dossiers</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setShowArtifactVault(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border-2 border-amber-400/50 rounded-lg backdrop-blur-sm hover:border-amber-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors" />
+                <span className="text-amber-100 font-semibold group-hover:text-white transition-colors">Vault</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setShowFateCoin(true)}
+              className="group relative px-4 py-3 bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-2 border-yellow-500/50 rounded-lg backdrop-blur-sm hover:border-yellow-400 hover:shadow-[0_0_30px_rgba(234,179,8,0.6)] transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2">
+                <Coins className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300 transition-colors animate-pulse" />
+                <span className="text-yellow-100 font-semibold group-hover:text-white transition-colors">Fate</span>
+              </div>
+            </button>
             {/* User-check */}
             {currentUser ? (
               <button onClick={handleLogout}
@@ -4883,6 +5374,33 @@ const CosmicSyndicate = () => {
               <div className="flex items-center gap-3">
                 <Rocket className="w-5 h-5 text-blue-400" />
                 <span className="text-blue-100 font-semibold">Hyperspace Travel</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowCrewDossiers(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-2 border-purple-400/50 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-purple-400" />
+                <span className="text-purple-100 font-semibold">Crew Dossiers</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowArtifactVault(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border-2 border-amber-400/50 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <Package className="w-5 h-5 text-amber-400" />
+                <span className="text-amber-100 font-semibold">Artifact Vault</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowFateCoin(true); setMobileMenuOpen(false); }}
+              className="w-full group relative px-6 py-3 bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-2 border-yellow-500/50 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <Coins className="w-5 h-5 text-yellow-400" />
+                <span className="text-yellow-100 font-semibold">Fate Coin</span>
               </div>
             </button>
             {/* User-check */}

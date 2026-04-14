@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CosmicSyndicate from './CosmicSyndicate';
 import InquisitionDashboard from './InquisitionDashboard';
 import { Skull, Rocket, ShieldAlert, ChevronRight } from 'lucide-react';
+
+// HACK ENGINE — Import triggers auto-init on module load
+import './HackEngine';
 
 // Add this CSS for the selection screen
 const SelectionScreenStyles = () => (
